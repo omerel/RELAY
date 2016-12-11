@@ -15,4 +15,21 @@ public interface BLConstants {
 
     // Message from BluetoothServer
     int DEVICE_CONNECTED_SUCCESSFULLY_TO_BLUETOOTH_SERVER = 10;
+
+
+    // Message from BluetoothConnect
+    int FAILED_CONNECTING_TO_DEVICE = 20;
+    int SUCCEED_CONNECTING_TO_DEVICE = 21;
+
+    // Message from BLEAdvertising
+    int FAILED_ADVERTISING = 30;
+
+    // Constants used in BLEAdvertising
+    int TIMEOUT_ADVERTISING = 5;
+
+    // Message from BLEScan
+    int FOUND_NEW_DEVICE = 40;
+
+    // Constants used in BLEScan
+    int SCAN_PERIOD = 5000;
 }

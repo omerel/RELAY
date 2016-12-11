@@ -19,7 +19,7 @@ import java.io.IOException;
 
 public class BluetoothServer extends Thread implements BLConstants {
 
-    private final String TAG = "RELAY_DEBUG: "+this.getName();
+    private final String TAG = "RELAY_DEBUG: "+BluetoothServer.class.getSimpleName();
 
     private final BluetoothServerSocket mmServerSocket;
     private BluetoothAdapter mBluetoothAdapter;
@@ -32,8 +32,8 @@ public class BluetoothServer extends Thread implements BLConstants {
         // Use messanger to update bluetooth manger
         this.mMessenger = messenger;
         this.mBluetoothAdapter = bluetoothAdapter;
-        mBluetoothSocket = null;
-        mConnectedDevice = null;
+        this.mBluetoothSocket = null;
+        this.mConnectedDevice = null;
 
         // Use a temporary object that is later assigned to mmServerSocket,
         // because mmServerSocket is final
@@ -45,14 +45,13 @@ public class BluetoothServer extends Thread implements BLConstants {
             // TODO check if the listening should be insecure
             // tmp = mBluetoothAdapter.listenUsingInsecureRfcommWithServiceRecord("RELAY", APP_UUID);
         } catch (IOException e) {
-            Log.e(TAG, "Problem in creating listenUsingRfcommWithServiceRecord");
+            Log.e(TAG, "Problem with creating listenUsingRfcommWithServiceRecord");
         }
         mmServerSocket = tmp;
 
         Log.d(TAG, "Class created");
     }
 
-    @Override
     public void run() {
         super.run();
         Log.d(TAG, "Start Thread");
@@ -76,7 +75,7 @@ public class BluetoothServer extends Thread implements BLConstants {
                 // get connceted device
                 mConnectedDevice = mBluetoothSocket.getRemoteDevice();
 
-                // Send message back to the Activity connecting succeeds
+                // Send message back to the bluetooth manager
                 sendMessageToManager(DEVICE_CONNECTED_SUCCESSFULLY_TO_BLUETOOTH_SERVER);
 
                 Log.d(TAG, "DEVICE_CONNECTED_SUCCESSFULLY_TO_BLUETOOTH_SERVER");
@@ -104,7 +103,9 @@ public class BluetoothServer extends Thread implements BLConstants {
         return mConnectedDevice;
     }
 
-    // Send message to the class that created bluetoothServer
+    /**
+     * Send message to the bluetooth manager
+     */
     private void sendMessageToManager(int msg)  {
         try {
             mMessenger.send(Message.obtain(null, msg));
