@@ -161,13 +161,3 @@ public class BLEScan implements BLConstants{
     }
 
 }
-/*   use this on bluetooth manager
-    private Handler mHandler;
-// Will stop the scanning after a set time.
-mHandler.postDelayed(new Runnable() {
-@Override
-public void run() {
-        stopScanning();
-        }
-        }, SCAN_PERIOD);
-*/

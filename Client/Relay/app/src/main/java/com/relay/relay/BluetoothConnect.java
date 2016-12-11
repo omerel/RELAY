@@ -87,6 +87,13 @@ public class BluetoothConnect extends Thread implements BLConstants {
     }
 
     /**
+     * BluetoothSocket getter
+     */
+    public BluetoothSocket getBluetoothSocket(){
+        return mBluetoothSocket;
+    }
+
+    /**
      * Send message to the bluetooth manager
      */
     private void sendMessageToManager(int msg)  {

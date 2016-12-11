@@ -83,7 +83,9 @@ public class BluetoothServer extends Thread implements BLConstants {
         }
     }
 
-    // Close thread
+    /**
+     * Close thread
+     */
     public void cancel() {
         try {
             mmServerSocket.close();
@@ -93,12 +95,16 @@ public class BluetoothServer extends Thread implements BLConstants {
         }
     }
 
-    // BluetoothSocket getter
+    /**
+     * BluetoothSocket getter
+     */
     public BluetoothSocket getBluetoothSocket(){
         return mBluetoothSocket;
     }
 
-    // BluetoothDevice getter
+    /**
+     * BluetoothDevice getter
+     */
     public BluetoothDevice getConnectedDevice(){
         return mConnectedDevice;
     }

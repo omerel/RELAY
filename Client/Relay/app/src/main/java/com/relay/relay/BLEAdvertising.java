@@ -28,24 +28,21 @@ public class BLEAdvertising implements BLConstants {
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothLeAdvertiser mBluetoothLeAdvertiser;
     private AdvertiseCallback mAdvertiseCallback;
-    private String mDeviceUUID;
 
-    //Length of time to allow advertising before automatically shutting off. (TIMEOUT_ADVERTISING)
-    private long TIMEOUT = TimeUnit.MILLISECONDS.convert(TIMEOUT_ADVERTISING, TimeUnit.MINUTES);
+    //Length of time to allow advertising before automatically shutting off. (TIMEOUT_ADVERTISING_IN_MINUTES)
+    private long TIMEOUT = TimeUnit.MILLISECONDS.convert(TIMEOUT_ADVERTISING_IN_MINUTES, TimeUnit.MINUTES);
     private Handler mHandler;
     private Runnable timeoutRunnable;
 
-    public BLEAdvertising(BluetoothAdapter bluetoothAdapter, Messenger messenger ,String deviceUUID) {
+    public BLEAdvertising(BluetoothAdapter bluetoothAdapter, Messenger messenger) {
 
         this.mMessenger = messenger;
         this.mBluetoothAdapter = bluetoothAdapter;
-        this.mDeviceUUID = deviceUUID;
         this.mAdvertiseCallback = null;
 
         if (mBluetoothAdapter != null) {
             mBluetoothLeAdvertiser = mBluetoothAdapter.getBluetoothLeAdvertiser();
         } else {
-            sendMessageToManager(FAILED_ADVERTISING);
             Log.e(TAG, "FAILED_ADVERTISING");
         }
 
@@ -114,8 +111,8 @@ public class BLEAdvertising implements BLConstants {
         AdvertiseData.Builder dataBuilder = new AdvertiseData.Builder();
         // no need name
         dataBuilder.setIncludeDeviceName(false);
-        // set device UUID
-        dataBuilder.addServiceData(new ParcelUuid(APP_UUID), mDeviceUUID.getBytes());
+        // add service UUID
+        dataBuilder.addServiceUuid(new ParcelUuid(APP_UUID));
 
         return dataBuilder.build();
     }

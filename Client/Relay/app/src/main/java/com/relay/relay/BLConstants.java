@@ -22,14 +22,23 @@ public interface BLConstants {
     int SUCCEED_CONNECTING_TO_DEVICE = 21;
 
     // Message from BLEAdvertising
-    int FAILED_ADVERTISING = 30;
 
     // Constants used in BLEAdvertising
-    int TIMEOUT_ADVERTISING = 5;
+    int TIMEOUT_ADVERTISING_IN_MINUTES = 5;
 
     // Message from BLEScan
     int FOUND_NEW_DEVICE = 40;
 
-    // Constants used in BLEScan
-    int SCAN_PERIOD = 5000;
+    // Constants used in BluetoothManager
+    int TIME_RELAY_SEARCH_INTERVAL_IN_SECONDS = 30*1000;
+    int MAX_TIME_RELAY_SEARCH_INTERVAL_IN_SECONDS = 1920*1000;
+    int TIME_RELAY_SCAN_IN_SECONDS = 5000;
+    int TIME_RELAY_KEEPS_FOUND_DEVICE_IN_LIST_IN_MINUTES = 30;
+    int MAX_SEARCHS_WITHOUT_CHANGE = 5;
+    int SCAN_FINISHED_WITHOUT_CHANGES = 50;
+
+    // Message from BluetoothHandShake
+    int FINISHED_HANDSHAKE = 60;
+
+
 }
