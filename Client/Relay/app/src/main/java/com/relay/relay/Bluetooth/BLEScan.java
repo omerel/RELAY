@@ -1,4 +1,4 @@
-package com.relay.relay;
+package com.relay.relay.Bluetooth;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.le.BluetoothLeScanner;
@@ -23,23 +23,19 @@ import java.util.List;
  * bluetooth manager
  */
 
-public class BLEScan implements BLConstants{
+public class BLEScan implements BLConstants {
 
     private final String TAG = "RELAY_DEBUG: "+ BLEScan.class.getSimpleName();
 
-    private Messenger mMessenger;
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothLeScanner mBluetoothLeScanner;
     private ScanCallback mScanCallback;
-    private List<String> mLastConnectedDevices;
+    private Messenger mMessenger;
 
-
-    public BLEScan(BluetoothAdapter bluetoothAdapter, Messenger messenger,
-                   List<String> lastConnectedDevices ) {
-        this.mMessenger = messenger;
+    public BLEScan(BluetoothAdapter bluetoothAdapter,Messenger messenger) {
         this.mBluetoothAdapter = bluetoothAdapter;
-        this.mLastConnectedDevices = lastConnectedDevices;
         this.mScanCallback = null;
+        this.mMessenger =messenger;
 
         mBluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
 
@@ -58,7 +54,7 @@ public class BLEScan implements BLConstants{
             mBluetoothLeScanner.startScan(buildScanFilters(), buildScanSettings(), mScanCallback);
             Log.d(TAG, "Start Scanning for BLE Advertisements");
         } else {
-            Log.e(TAG, "Problem - Called Scan while already scanning");
+            Log.e(TAG, "Error - Called Scan while already scanning");
         }
     }
 
@@ -78,12 +74,10 @@ public class BLEScan implements BLConstants{
      */
     private List<ScanFilter> buildScanFilters() {
         List<ScanFilter> scanFilters = new ArrayList<>();
-
         ScanFilter.Builder builder = new ScanFilter.Builder();
         // Comment out the below line to see all BLE devices around you
-        builder.setServiceUuid(new ParcelUuid(APP_UUID));
+        builder.setServiceUuid(new ParcelUuid(RELAY_SERVICE_UUID));
         scanFilters.add(builder.build());
-
         return scanFilters;
     }
 
@@ -92,7 +86,7 @@ public class BLEScan implements BLConstants{
      */
     private ScanSettings buildScanSettings() {
         ScanSettings.Builder builder = new ScanSettings.Builder();
-        builder.setScanMode(ScanSettings.SCAN_MODE_LOW_POWER);
+        builder.setScanMode(ScanSettings.SCAN_MODE_BALANCED);
         // TODO only works in api 23 an above. I guess that its default in the current api
         //builder.setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES);
         return builder.build();
@@ -108,56 +102,51 @@ public class BLEScan implements BLConstants{
         public void onBatchScanResults(List<ScanResult> results) {
             super.onBatchScanResults(results);
         }
-
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
             super.onScanResult(callbackType, result);
 
-            String address = result.getDevice().getAddress();
+            // TODO delete? or no .need to check with few devices
+            stopScanning();
 
-            if (!mLastConnectedDevices.contains(address))
-            {
-                // found new device that not been sync
-                // send result to bluetooth manager
-                sendResultToManager(result);
-            }
-            Log.d(TAG, "onScanResult - found new result");
+            sendResultToBLECentral(FOUND_NEW_DEVICE,result);
+
+//// TODO CHANGE
+//            if (!mLastConnectedDevices.contains(address))
+//            {
+//                // found new device that not been sync
+//                // send result to bluetooth manager
+//                sendResultToBLECentral(FOUND_NEW_DEVICE,result);
+//            }
+
+            Log.e(TAG, "Found new result - "+"Name :  "+result.getDevice().getName() +
+                    " ,Mac device : "+result.getDevice().getAddress());
         }
 
         @Override
         public void onScanFailed(int errorCode) {
             super.onScanFailed(errorCode);
-            Log.e(TAG, "Scan failed with error: "+ errorCode);
-        }
-    }
-
-
-    /**
-     * Send message to the bluetooth manager
-     */
-    private void sendMessageToManager(int msg)  {
-        try {
-            mMessenger.send(Message.obtain(null, msg));
-        } catch (RemoteException e) {
-            Log.e(TAG, "Problem with sendMessageToManager ");
+            Log.e(TAG, "Error - Scan failed with error: "+ errorCode);
         }
     }
 
     /**
-     * Send result value to bluetooth manager
+     * Send scan result value to BLECentral
      */
-    private void sendResultToManager(ScanResult result) {
+    private void sendResultToBLECentral(int m, ScanResult result)  {
 
-        // Send data as a String
+        // Send data
         Bundle bundle = new Bundle();
         bundle.putParcelable("result", result);
-        Message msg = Message.obtain(null, FOUND_NEW_DEVICE);
+        Message msg = Message.obtain(null, m);
         msg.setData(bundle);
+
         try {
             mMessenger.send(msg);
         } catch (RemoteException e) {
-            e.printStackTrace();
+            Log.e(TAG, "Error with sendResultToBLECentral ");
         }
     }
+
 
 }

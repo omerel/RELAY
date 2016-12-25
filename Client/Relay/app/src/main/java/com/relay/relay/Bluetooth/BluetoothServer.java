@@ -1,4 +1,4 @@
-package com.relay.relay;
+package com.relay.relay.Bluetooth;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -41,9 +41,9 @@ public class BluetoothServer extends Thread implements BLConstants {
 
         try {
             // APP_UUID is the app's UUID string, also used by the client code
-            tmp = mBluetoothAdapter.listenUsingRfcommWithServiceRecord("RELAY", APP_UUID);
+            //tmp = mBluetoothAdapter.listenUsingRfcommWithServiceRecord("RELAY", APP_UUID);
             // TODO check if the listening should be insecure
-            // tmp = mBluetoothAdapter.listenUsingInsecureRfcommWithServiceRecord("RELAY", APP_UUID);
+             tmp = mBluetoothAdapter.listenUsingInsecureRfcommWithServiceRecord("RELAY", APP_UUID);
         } catch (IOException e) {
             Log.e(TAG, "Problem with creating listenUsingRfcommWithServiceRecord");
         }
@@ -53,7 +53,6 @@ public class BluetoothServer extends Thread implements BLConstants {
     }
 
     public void run() {
-        super.run();
         Log.d(TAG, "Start Thread");
 
         BluetoothSocket socket = null;
@@ -61,7 +60,9 @@ public class BluetoothServer extends Thread implements BLConstants {
         // Keep listening until exception occurs or a socket is returned
         while (true) {
             try {
+                Log.e(TAG, "WAINTING TO mmServerSocket.accept() ");
                 socket = mmServerSocket.accept();
+                Log.e(TAG, "SUCCESSFULLY CONNECTED");
             } catch (IOException e) {
                 Log.e(TAG, "Problem with mmServerSocket.accept() ");
                 break;
@@ -80,6 +81,7 @@ public class BluetoothServer extends Thread implements BLConstants {
 
                 Log.d(TAG, "DEVICE_CONNECTED_SUCCESSFULLY_TO_BLUETOOTH_SERVER");
             }
+
         }
     }
 

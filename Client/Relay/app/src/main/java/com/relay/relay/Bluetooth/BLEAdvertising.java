@@ -1,18 +1,15 @@
-package com.relay.relay;
+package com.relay.relay.Bluetooth;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.le.AdvertiseCallback;
 import android.bluetooth.le.AdvertiseData;
 import android.bluetooth.le.AdvertiseSettings;
 import android.bluetooth.le.BluetoothLeAdvertiser;
-import android.os.Handler;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.ParcelUuid;
 import android.os.RemoteException;
 import android.util.Log;
-
-import java.util.concurrent.TimeUnit;
 
 /**
  * Created by omer on 10/12/2016.
@@ -24,28 +21,23 @@ public class BLEAdvertising implements BLConstants {
 
     private final String TAG = "RELAY_DEBUG: "+ BLEAdvertising.class.getSimpleName();
 
-    private Messenger mMessenger;
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothLeAdvertiser mBluetoothLeAdvertiser;
     private AdvertiseCallback mAdvertiseCallback;
+    private BLEService mBleService;
 
-    //Length of time to allow advertising before automatically shutting off. (TIMEOUT_ADVERTISING_IN_MINUTES)
-    private long TIMEOUT = TimeUnit.MILLISECONDS.convert(TIMEOUT_ADVERTISING_IN_MINUTES, TimeUnit.MINUTES);
-    private Handler mHandler;
-    private Runnable timeoutRunnable;
 
-    public BLEAdvertising(BluetoothAdapter bluetoothAdapter, Messenger messenger) {
+    public BLEAdvertising(BluetoothAdapter bluetoothAdapter,BLEService bleService) {
 
-        this.mMessenger = messenger;
         this.mBluetoothAdapter = bluetoothAdapter;
+        this.mBleService = bleService;
         this.mAdvertiseCallback = null;
 
         if (mBluetoothAdapter != null) {
             mBluetoothLeAdvertiser = mBluetoothAdapter.getBluetoothLeAdvertiser();
         } else {
-            Log.e(TAG, "FAILED_ADVERTISING");
+            Log.e(TAG, "Error - FAILED_ADVERTISING");
         }
-
         Log.d(TAG, "Class created");
     }
 
@@ -54,16 +46,19 @@ public class BLEAdvertising implements BLConstants {
      */
     public void startAdvertising() {
         if (mAdvertiseCallback == null) {
+
             AdvertiseSettings settings = buildAdvertiseSettings();
+
             // setup device uuid in data
             AdvertiseData data = buildAdvertiseData();
+
+            AdvertiseData dataRes = buildAdvertiseScanResponse();
+
             // set custom callback to get information about the connection status
             mAdvertiseCallback = new CustomAdvertiseCallback();
 
             if (mBluetoothLeAdvertiser != null) {
-                mBluetoothLeAdvertiser.startAdvertising(settings, data, mAdvertiseCallback);
-                // set timer to timeout
-                setTimeout();
+                mBluetoothLeAdvertiser.startAdvertising(settings, data, dataRes, mAdvertiseCallback);
                 Log.d(TAG, "Starting Advertising");
             }
         }
@@ -73,11 +68,9 @@ public class BLEAdvertising implements BLConstants {
      * Stops BLE Advertising
      */
     public void stopAdvertising() {
-        if (mBluetoothLeAdvertiser != null) {
+        if (mBluetoothLeAdvertiser != null && mAdvertiseCallback!= null) {
             mBluetoothLeAdvertiser.stopAdvertising(mAdvertiseCallback);
             mAdvertiseCallback = null;
-            // stop timeout
-            mHandler.removeCallbacks(timeoutRunnable);
             Log.d(TAG, " System Stopping Advertising");
         }
     }
@@ -89,8 +82,10 @@ public class BLEAdvertising implements BLConstants {
      */
     private AdvertiseSettings buildAdvertiseSettings() {
         AdvertiseSettings.Builder settingsBuilder = new AdvertiseSettings.Builder();
-        settingsBuilder.setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_POWER);
-        settingsBuilder.setTimeout(0);
+        settingsBuilder.setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_BALANCED);//check
+        settingsBuilder.setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_MEDIUM);//check
+        settingsBuilder.setConnectable(true);
+        settingsBuilder.setTimeout(0); //disable time limit
         return settingsBuilder.build();
     }
 
@@ -107,42 +102,21 @@ public class BLEAdvertising implements BLConstants {
          *  AdvertiseCallback.ADVERTISE_FAILED_DATA_TOO_LARGE. Catch this error in the
          *  onStartFailure() method of an AdvertiseCallback implementation.
          */
-
         AdvertiseData.Builder dataBuilder = new AdvertiseData.Builder();
-        // no need name
-        dataBuilder.setIncludeDeviceName(false);
+        dataBuilder.setIncludeDeviceName(true);
         // add service UUID
-        dataBuilder.addServiceUuid(new ParcelUuid(APP_UUID));
-
+        dataBuilder.addServiceUuid(new ParcelUuid(RELAY_SERVICE_UUID));
+        dataBuilder.setIncludeTxPowerLevel(true);
         return dataBuilder.build();
     }
 
-
     /**
-     * Starts a delayed Runnable that will cause the BLE Advertising to timeout and stop after a
-     * set amount of time.
+     * Returns an AdvertiseScanResponse.
      */
-    private void setTimeout(){
-        mHandler = new Handler();
-        timeoutRunnable = new Runnable() {
-            @Override
-            public void run() {
-                Log.d(TAG, "AdvertiserService has reached timeout of "+TIMEOUT+" milliseconds, stopping advertising.");
-                stopAdvertising();
-            }
-        };
-        mHandler.postDelayed(timeoutRunnable, TIMEOUT);
-    }
-
-    /**
-     * Send message to the bluetooth manager
-     */
-    private void sendMessageToManager(int msg)  {
-        try {
-            mMessenger.send(Message.obtain(null, msg));
-        } catch (RemoteException e) {
-            Log.e(TAG, "Problem with sendMessageToManager ");
-        }
+    private AdvertiseData buildAdvertiseScanResponse() {
+        AdvertiseData.Builder dataBuilder = new AdvertiseData.Builder();
+        dataBuilder.setIncludeDeviceName(true);
+        return dataBuilder.build();
     }
 
     /**
@@ -153,7 +127,24 @@ public class BLEAdvertising implements BLConstants {
         @Override
         public void onStartFailure(int errorCode) {
             super.onStartFailure(errorCode);
-            Log.d(TAG, "Advertising failed. code: "+errorCode);
+            Log.e(TAG, "Error - Not broadcasting, code: "+errorCode);
+            switch (errorCode) {
+                case ADVERTISE_FAILED_ALREADY_STARTED:
+                    Log.e(TAG, "ADVERTISE_FAILED_ALREADY_STARTED");
+                    break;
+                case ADVERTISE_FAILED_DATA_TOO_LARGE:
+                    Log.e(TAG, "ADVERTISE_FAILED_DATA_TOO_LARGE");
+                    break;
+                case ADVERTISE_FAILED_FEATURE_UNSUPPORTED:
+                    Log.e(TAG, "ADVERTISE_FAILED_FEATURE_UNSUPPORTED");
+                    break;
+                case ADVERTISE_FAILED_INTERNAL_ERROR:
+                    Log.e(TAG, "ADVERTISE_FAILED_INTERNAL_ERROR");
+                    break;
+                case ADVERTISE_FAILED_TOO_MANY_ADVERTISERS:
+                    Log.e(TAG, "ADVERTISE_FAILED_TOO_MANY_ADVERTISERS");
+                    break;
+            }
         }
         @Override
         public void onStartSuccess(AdvertiseSettings settingsInEffect) {

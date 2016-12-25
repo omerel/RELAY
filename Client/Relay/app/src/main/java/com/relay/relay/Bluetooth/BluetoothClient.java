@@ -1,6 +1,5 @@
-package com.relay.relay;
+package com.relay.relay.Bluetooth;
 
-import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.os.Message;
@@ -12,25 +11,22 @@ import java.io.IOException;
 
 /**
  * Created by omer on 10/12/2016.
- * BluetoothConnect , a thread which connect to other device.
+ * BluetoothClient , a thread which connect to other device.
  */
 
-public class BluetoothConnect extends Thread implements BLConstants {
+public class BluetoothClient extends Thread implements BLConstants {
 
-    private final String TAG = "RELAY_DEBUG: "+BluetoothConnect.class.getSimpleName();
+    private final String TAG = "RELAY_DEBUG: "+BluetoothClient.class.getSimpleName();
     private final BluetoothDevice mBluetoothDevice;
-    private BluetoothAdapter mBluetoothAdapter;
     private Messenger mMessenger;
     private final BluetoothSocket mBluetoothSocket;
 
 
-    public BluetoothConnect(BluetoothAdapter bluetoothAdapter, Messenger messenger,
-                            BluetoothDevice bluetoothDevice) {
+    public BluetoothClient(Messenger messenger, BluetoothDevice bluetoothDevice) {
 
 
         // Use messanger to update bluetooth manger
         this.mMessenger = messenger;
-        this.mBluetoothAdapter = bluetoothAdapter;
         this.mBluetoothDevice = bluetoothDevice;
 
         // Use a temporary object that is later assigned to mBluetoothSocket,
@@ -40,7 +36,9 @@ public class BluetoothConnect extends Thread implements BLConstants {
         // Get a BluetoothSocket to connect with the given BluetoothDevice
         try {
             // MY_UUID is the app's UUID string, also used by the server code
-            tmp = mBluetoothDevice.createRfcommSocketToServiceRecord(APP_UUID);
+            //tmp = mBluetoothDevice.createRfcommSocketToServiceRecord(APP_UUID);
+            tmp = mBluetoothDevice.createInsecureRfcommSocketToServiceRecord(APP_UUID);
+
         } catch (IOException e) {
             Log.e(TAG, "Problem with creating createRfcommSocketToServiceRecord");
         }
@@ -66,10 +64,8 @@ public class BluetoothConnect extends Thread implements BLConstants {
 
             // Send message back to the bluetooth manager
             sendMessageToManager(FAILED_CONNECTING_TO_DEVICE);
-
             return;
         }
-
         // Send message back to the bluetooth manager
         sendMessageToManager(SUCCEED_CONNECTING_TO_DEVICE);
 
@@ -82,7 +78,7 @@ public class BluetoothConnect extends Thread implements BLConstants {
             mBluetoothSocket.close();
             Log.d(TAG, "Thread was closed");
         } catch (IOException e) {
-            Log.e(TAG, "Problem with mBluetoothSocket.close() ");
+            Log.e(TAG, "Error with mBluetoothSocket.close() ");
         }
     }
 
