@@ -13,13 +13,10 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.PowerManager;
 import android.util.Log;
-import android.view.WindowManager;
 import android.widget.Toast;
 
 import com.relay.relay.Bluetooth.BLConstants;
-import com.relay.relay.Bluetooth.BLManager;
-
-import static java.lang.System.exit;
+import com.relay.relay.Bluetooth.*;
 
 
 /**
@@ -103,7 +100,7 @@ public class ConnectivityManager extends Service implements BLConstants {
         mBluetoothManager.powerConnectionDetected(isCharging);
     }
 
-public void updateActivityNewMessage(String message) {
+    public void updateActivityNewMessage(String message) {
 
     //  BroadCast relay message to activity
         Intent updateActivity = new Intent(MainActivity.MESSAGE_RECEIVED);
@@ -114,7 +111,6 @@ public void updateActivityNewMessage(String message) {
     private void initialBluetoothMode(){
         this.mBluetoothManager = new BLManager(mDeviceUUID,mMessenger,this);
     }
-
 
     private void startBluetoothMode(){
         mBluetoothManager.start();
@@ -146,9 +142,9 @@ public void updateActivityNewMessage(String message) {
                     // When incoming message received
                     case KILL_SERVICE:
                        // mBluetoothManager.cancel();
-                        //stopSelf();
+                        stopSelf();
                         // TODO  the stopSelf()  does'nt working from some reason????
-                        exit(0);
+                        //exit(0);
                         break;
 
                     // When bluetooth state changed

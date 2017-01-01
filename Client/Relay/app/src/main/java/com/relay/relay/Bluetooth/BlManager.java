@@ -3,9 +3,6 @@ package com.relay.relay.Bluetooth;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.os.BatteryManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -53,7 +50,7 @@ public class BLManager extends Thread implements BLConstants {
     private int mStatus;
 
 
-    public BLManager(String deviceUUID, Messenger connectivityMessenger, ConnectivityManager connectivityManager){
+     public BLManager(String deviceUUID, Messenger connectivityMessenger, ConnectivityManager connectivityManager){
 
         this.mDeviceUUID = deviceUUID;
         this.mLastConnectedDevices = new ArrayList<>();
