@@ -5,16 +5,13 @@ import android.bluetooth.le.AdvertiseCallback;
 import android.bluetooth.le.AdvertiseData;
 import android.bluetooth.le.AdvertiseSettings;
 import android.bluetooth.le.BluetoothLeAdvertiser;
-import android.os.Message;
-import android.os.Messenger;
 import android.os.ParcelUuid;
-import android.os.RemoteException;
 import android.util.Log;
 
 /**
  * Created by omer on 10/12/2016.
- * The bluetooth advertising uses BLE abilities to be discoverable for other bluetooth devices.
- * the period time of advertising set by the caller class.
+ * The bluetooth advertising uses BLE abilities to be discoverable to other BLE devices.
+ * the period time of advertising set by the bluetooth manager class.
  */
 
 public class BLEAdvertising implements BLConstants {
@@ -24,13 +21,14 @@ public class BLEAdvertising implements BLConstants {
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothLeAdvertiser mBluetoothLeAdvertiser;
     private AdvertiseCallback mAdvertiseCallback;
-    private BLEService mBleService;
 
-
-    public BLEAdvertising(BluetoothAdapter bluetoothAdapter,BLEService bleService) {
+    /**
+     * BLEAdvertising constructor
+     * @param bluetoothAdapter helps to check if bluetooth enable or disable
+     */
+    public BLEAdvertising(BluetoothAdapter bluetoothAdapter) {
 
         this.mBluetoothAdapter = bluetoothAdapter;
-        this.mBleService = bleService;
         this.mAdvertiseCallback = null;
 
         if (mBluetoothAdapter != null) {
@@ -42,22 +40,24 @@ public class BLEAdvertising implements BLConstants {
     }
 
     /**
-     * Start BLE Advertising
+     * StartAdvertising
      */
     public void startAdvertising() {
         if (mAdvertiseCallback == null) {
 
+            // setup advertising setting
             AdvertiseSettings settings = buildAdvertiseSettings();
 
             // setup device uuid in data
             AdvertiseData data = buildAdvertiseData();
 
+            // setup device respond when found
             AdvertiseData dataRes = buildAdvertiseScanResponse();
 
             // set custom callback to get information about the connection status
             mAdvertiseCallback = new CustomAdvertiseCallback();
 
-            if (mBluetoothLeAdvertiser != null) {
+            if (mBluetoothLeAdvertiser != null && mBluetoothAdapter.isEnabled()) {
                 mBluetoothLeAdvertiser.startAdvertising(settings, data, dataRes, mAdvertiseCallback);
                 Log.d(TAG, "Starting Advertising");
             }
@@ -65,13 +65,13 @@ public class BLEAdvertising implements BLConstants {
     }
 
     /**
-     * Stops BLE Advertising
+     * Stop advertising
      */
     public void stopAdvertising() {
-        if (mBluetoothLeAdvertiser != null && mAdvertiseCallback!= null) {
+        if (mBluetoothLeAdvertiser != null && mAdvertiseCallback!= null && mBluetoothAdapter.isEnabled()) {
             mBluetoothLeAdvertiser.stopAdvertising(mAdvertiseCallback);
             mAdvertiseCallback = null;
-            Log.d(TAG, " System Stopping Advertising");
+            Log.d(TAG, "System Stopping Advertising");
         }
     }
 
@@ -94,14 +94,6 @@ public class BLEAdvertising implements BLConstants {
      */
     private AdvertiseData buildAdvertiseData() {
 
-        /**
-         * Note: There is a strict limit of 31 Bytes on packets sent over BLE Advertisements.
-         *  This includes everything put into AdvertiseData including UUIDs, device info, &
-         *  arbitrary service or manufacturer data.
-         *  Attempting to send packets over this limit will result in a failure with error code
-         *  AdvertiseCallback.ADVERTISE_FAILED_DATA_TOO_LARGE. Catch this error in the
-         *  onStartFailure() method of an AdvertiseCallback implementation.
-         */
         AdvertiseData.Builder dataBuilder = new AdvertiseData.Builder();
         dataBuilder.setIncludeDeviceName(true);
         // add service UUID

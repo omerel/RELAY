@@ -1,36 +1,26 @@
 package com.relay.relay.Bluetooth;
-/*
- * Copyright 2015 Google Inc. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+/**
+ * BLEService
+ * create the service that given to ble client
+ * the service share the Mac address of the bluetooth
  */
 
 
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
-import android.os.ParcelUuid;
-
-import java.util.UUID;
-
 
 public class BLEService implements BLConstants  {
 
-
-    // GATT
     private BluetoothGattService mAddressService;
     private BluetoothGattCharacteristic mAddressCharacteristic;
 
+    /**
+     * BLEService constructor
+     * @param address Mac address of the device
+     */
     public BLEService(String address) {
+
+        // create Characteristic
         mAddressCharacteristic =
                 new BluetoothGattCharacteristic(MAC_ADDRESS_UUID,
                         BluetoothGattCharacteristic.PROPERTY_READ | BluetoothGattCharacteristic.PROPERTY_NOTIFY,
@@ -38,17 +28,17 @@ public class BLEService implements BLConstants  {
 
         mAddressCharacteristic.setValue(address);
 
-//        mAddressCharacteristic.addDescriptor(
-//                new BluetoothGattDescriptor(CLIENT_CHARACTERISTIC_CONFIGURATION_UUID,
-//                        (BluetoothGattDescriptor.PERMISSION_READ | BluetoothGattDescriptor.PERMISSION_WRITE)));
-
+        // create Characteristic service
         mAddressService = new BluetoothGattService(RELAY_SERVICE_UUID,
                 BluetoothGattService.SERVICE_TYPE_PRIMARY);
 
         mAddressService.addCharacteristic(mAddressCharacteristic);
     }
 
-
+    /**
+     * BluetoothGattService getter
+     * @return BluetoothGattService
+     */
     public BluetoothGattService getBluetoothGattService() {
         return mAddressService;
     }

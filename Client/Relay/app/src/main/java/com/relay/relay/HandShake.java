@@ -1,5 +1,7 @@
 package com.relay.relay;
 
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.os.Bundle;
@@ -47,11 +49,10 @@ public class HandShake implements BLConstants {
      */
     private void startHandshake() {
 
-        String testout = mBluetoothSocket.getRemoteDevice().getAddress() + " PING";
-        mBluetoothConnected.writePacket(testout.getBytes());
+        String testout = BluetoothAdapter.getDefaultAdapter().getAddress() + " PING";
+        mBluetoothConnected.writePacket(testout);
 
     }
-
 
     /**
      * Finish handshake process
@@ -105,14 +106,14 @@ public class HandShake implements BLConstants {
             public void run() {
                 finishHandshake();
             }
-        }, 1000);
+        }, 2000);
 
     }
 
     /**
      * Getter of incoming messages from one of the BluetoothConnected
      */
-    public void getPacket(byte[] packet){
+    public void getPacket(String packet){
 
         // convert the packet to relay message
          String relayMessage = convertPacketToRelayMessage(packet);
@@ -131,11 +132,11 @@ public class HandShake implements BLConstants {
      * Convert packet to relay message
      */
     // TODO change string to relay message
-    private String convertPacketToRelayMessage(byte[] packet) {
+    private String convertPacketToRelayMessage(String packet) {
 
-        String relayMessage  = new String(packet, 0, packet.length);
+        //String relayMessage  = new String(packet, 0, packet.length);
         testReceieved = true;
-        return relayMessage;
+        return packet;
     }
 
     /**

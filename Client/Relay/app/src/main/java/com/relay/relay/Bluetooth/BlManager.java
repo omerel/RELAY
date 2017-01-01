@@ -3,16 +3,17 @@ package com.relay.relay.Bluetooth;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.os.BatteryManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
-
 import com.relay.relay.ConnectivityManager;
 import com.relay.relay.HandShake;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,17 +21,15 @@ import static java.lang.System.exit;
 
 /**
  * Created by omer on 11/12/2016.
- * The bluetooth manager controls  the ‘when’ and for ‘how long’ relay device is
+ * The bluetooth manager controls the ‘when’ and for ‘how long’ relay device is
  * searching for other device in it’s close area, advertising(being discoverable) itself
  * and waiting to accept other devices request for handshake(sync).
  */
 
-public class BlManager extends Thread implements BLConstants {
+public class BLManager extends Thread implements BLConstants {
 
-    private final String TAG = "RELAY_DEBUG: "+ BlManager.class.getSimpleName();
+    private final String TAG = "RELAY_DEBUG: "+ BLManager.class.getSimpleName();
 
-    //private BLEAdvertising mBLEAdvertising;
-    //private BLEScan mBLEScan;
     private BLEPeripheral mBlePeripheral;
     private BLECentral mBLECentral;
     private BluetoothClient mBluetoothClient;
@@ -40,6 +39,8 @@ public class BlManager extends Thread implements BLConstants {
     private List<String>  mLastConnectedDevices;
     // The interval time to search for connection with other device.
     private int mIntervalSearchTime;
+    // Time relay keeps found devices that synced in waiting list
+    private int mWaitingList;
     // Counter the number of times that search result returns 0 new device;
     private int mSearchWithoutChangeCounter;
     // Handler for all incoming messages from BL classes
@@ -49,79 +50,48 @@ public class BlManager extends Thread implements BLConstants {
     private Handler mHandler;
     private HandShake mHandShake;
     private final String mDeviceUUID;
-    private  ConnectivityManager mConnectivityManager;
+    private int mStatus;
 
-    public BlManager(String deviceUUID, Messenger connectivityMessenger, ConnectivityManager connectivityManager){
+
+    public BLManager(String deviceUUID, Messenger connectivityMessenger, ConnectivityManager connectivityManager){
 
         this.mDeviceUUID = deviceUUID;
         this.mLastConnectedDevices = new ArrayList<>();
         this.mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (mBluetoothAdapter == null) {
-            Log.e(TAG, "Unable to initialize BlManager.");
+            Log.e(TAG, "Unable to initialize BLManager.");
             exit(1);
         }
-        this.mConnectivityManager = connectivityManager;
         this.mBLECentral = new BLECentral(mBluetoothAdapter,mMessenger,mLastConnectedDevices,connectivityManager);
         this.mBlePeripheral = new BLEPeripheral(mBluetoothAdapter,mMessenger,connectivityManager);
-        //this.mBLEAdvertising = new BLEAdvertising(mBluetoothAdapter,mMessenger);
-        //this.mBLEScan = new BLEScan(mBluetoothAdapter,mMessenger,mLastConnectedDevices);
         this.mBluetoothClient =  null;
         this.mBluetoothServer = new BluetoothServer(mBluetoothAdapter,mMessenger);
-        this.mIntervalSearchTime = TIME_RELAY_SEARCH_INTERVAL_IN_SECONDS;
+        this.mIntervalSearchTime = TIME_RELAY_SEARCH_INTERVAL;
+        this.mWaitingList = TIME_RELAY_KEEPS_FOUND_DEVICE_IN_LIST;
         this.mSearchWithoutChangeCounter = 0;
         this.mConnectivityMessenger = connectivityMessenger;
         this.mHandler = new Handler();
         this.mHandShake = null;
-
-        this.mBluetoothAdapter.setName(mBluetoothAdapter.getAddress());
+        this.mStatus = DISCONNECTED;
         Log.d(TAG, "Class created");
-
-        // TODO
-        Log.e(TAG, "I am :" +mBluetoothAdapter.getName()+", MAC : "+ mBluetoothAdapter.getAddress());
+        Log.d(TAG, "I am :" +mBluetoothAdapter.getName()+", MAC : "+ mBluetoothAdapter.getAddress());
 
     }
 
-    /**
-     * Start thread
-     */
+    // Start thread
     @Override
     public void run() {
 
         // Open server socket
         mBluetoothServer.start();
-
         startSearchImmediately();
-
-        // TODO delete
-//
-//         if (mBluetoothAdapter.getAddress().equals("74:23:44:75:27:1D")){
-//             // Open server socket
-//             if(mBluetoothServer != null )
-//                 mBluetoothServer.cancel();
-//             mBluetoothServer = new BluetoothServer(mBluetoothAdapter,mMessenger);
-//             mBluetoothServer.start();
-//         }
-//        else{
-//             // create bluetooth device with the mac address of the founded device
-//             BluetoothDevice bl  = mBluetoothAdapter.getRemoteDevice("74:23:44:75:27:1D");
-//             mBluetoothClient =  new BluetoothClient(mMessenger, bl);
-//
-//             Log.d(TAG, "Connect to device : "+ "74:23:44:75:27:1D");
-//
-//             mBluetoothClient.start();
-//         }
-
-
         Log.d(TAG, "Start thread");
-
     }
 
 
-    /**
-     * Close thread
-     */
+    // Close thread
     public void cancel() {
-        stopSearch(FOUND_NEW_DEVICE); // the code used to init the counter
+        stopSearch(FOUND_NEW_DEVICE); // the parameter used to init the counter
         if (mBluetoothClient != null)
             mBluetoothClient.cancel();
         if (mBluetoothServer != null)
@@ -131,19 +101,35 @@ public class BlManager extends Thread implements BLConstants {
         Log.d(TAG, "Cancel thread");
     }
 
-
     /**
      * When service receive Power connection it will update the bluetooth manger in this method
+     * @param isConnected boolean connect to power
      */
-    public void powerConncetionDedected(boolean isConnected){
+    public void powerConnectionDetected(boolean isConnected){
         if (isConnected){
-            mIntervalSearchTime = 6000;
-            mSearchWithoutChangeCounter = -100;
+            mIntervalSearchTime = TIME_RELAY_SEARCH_INTERVAL_POWER_MODE;
+            mSearchWithoutChangeCounter = -1000;
+            mWaitingList = TIME_RELAY_KEEPS_FOUND_DEVICE_IN_LIST_POWER_MODE;
+            // clear connect devices list
+            mLastConnectedDevices.clear();
+            if (mStatus == DISCONNECTED) {
+                stopSearch(RESET_SEARCH_COUNTER);
+                resetSearch();
+                intervalSearch();
+            }
             Log.d(TAG, "changed interval setting to connected to power mode");
         }
         else{
-            mIntervalSearchTime = TIME_RELAY_SEARCH_INTERVAL_IN_SECONDS;
+            mIntervalSearchTime = TIME_RELAY_SEARCH_INTERVAL;
             mSearchWithoutChangeCounter = 0;
+            mWaitingList = TIME_RELAY_KEEPS_FOUND_DEVICE_IN_LIST;
+            // clear connect devices list
+            mLastConnectedDevices.clear();
+            if (mStatus == DISCONNECTED) {
+                stopSearch(RESET_SEARCH_COUNTER);
+                resetSearch();
+                intervalSearch();
+            }
             Log.d(TAG, "changed interval setting to connected to default");
         }
     }
@@ -152,6 +138,7 @@ public class BlManager extends Thread implements BLConstants {
      * Start search with timer
      */
     private void startSearchImmediately(){
+
 
         // Start advertising
         mBlePeripheral.startPeripheral();
@@ -165,32 +152,27 @@ public class BlManager extends Thread implements BLConstants {
                 sendMessageToManager(SCAN_FINISHED_WITHOUT_CHANGES);
                 Log.d(TAG, "SCAN_FINISHED_WITHOUT_CHANGES");
             }
-        }, TIME_RELAY_SCAN_IN_SECONDS);
+        }, TIME_RELAY_SCAN);
         Log.d(TAG, "Start startSearchImmediately");
     }
 
 
     /**
      * Stop search
-     * the code is to deal with the counter
+     * @param stopReason parameter deals with the  search counter
      */
-    private void stopSearch( int code ){
+    private void stopSearch( int stopReason ){
 
         // remove handler callback
         mHandler.removeCallbacksAndMessages(null);
-
-        if (code == SCAN_FINISHED_WITHOUT_CHANGES)
+        if (stopReason == SCAN_FINISHED_WITHOUT_CHANGES)
             // add to search counter
             mSearchWithoutChangeCounter++;
         Log.d(TAG, "COUNTER SEARCH WITHOUT CHANGES: "+mSearchWithoutChangeCounter );
-
         // stop scan
         mBLECentral.getBleScan().stopScanning();
-
         // stop advertising
         mBlePeripheral.stopPeripheral();
-
-
         Log.d(TAG, "StopSearch()");
 
     }
@@ -201,9 +183,9 @@ public class BlManager extends Thread implements BLConstants {
     private void intervalSearch(){
 
         // check search without changes in results counter
-        if (mSearchWithoutChangeCounter > MAX_SEARCHS_WITHOUT_CHANGE_BEFORE_CHANGES)
+        if (mSearchWithoutChangeCounter > MAX_SEARCH_WITHOUT_CHANGE_BEFORE_CHANGES)
             // set limit to interval search time
-            if (mIntervalSearchTime < MAX_TIME_RELAY_SEARCH_INTERVAL_IN_SECONDS) {
+            if (mIntervalSearchTime < MAX_TIME_RELAY_SEARCH_INTERVAL) {
                 // increase interval search time
                 mIntervalSearchTime = mIntervalSearchTime * 2;
                 // reset the counter
@@ -216,13 +198,14 @@ public class BlManager extends Thread implements BLConstants {
             public void run() {
                 startSearchImmediately();
             }
-        }, TIME_RELAY_SEARCH_INTERVAL_IN_SECONDS);
+        }, mIntervalSearchTime);
 
         Log.d(TAG, "Start intervalSearch()");
     }
 
     /**
-     * Send message to the IncomingHandler
+     *
+     * @param msg to bluetooth manager IncomingHandler
      */
     private void sendMessageToManager(int msg)  {
         try {
@@ -234,7 +217,7 @@ public class BlManager extends Thread implements BLConstants {
 
     /**
      * Add Device to last connected list and remove it after
-     * TIME_RELAY_KEEPS_FOUND_DEVICE_IN_LIST_IN_SECOND
+     * mWaitingList
      */
     private void addToLastConnectedDevicesList(String address){
         mLastConnectedDevices.add(address);
@@ -244,8 +227,9 @@ public class BlManager extends Thread implements BLConstants {
             public void run() {
                 // remove the oldest device in the list
                 mLastConnectedDevices.remove(mLastConnectedDevices.get(0));
+                Log.e(TAG, " Device removed from connected devices list ");
             }
-        }, TIME_RELAY_KEEPS_FOUND_DEVICE_IN_LIST_IN_SECOND);
+        }, mWaitingList);
 
         Log.d(TAG, "device added to connected devices list");
 
@@ -256,16 +240,17 @@ public class BlManager extends Thread implements BLConstants {
      *  Reset interval search time and counter
      */
     private void resetSearch()  {
-        mIntervalSearchTime = TIME_RELAY_SEARCH_INTERVAL_IN_SECONDS;
+        mIntervalSearchTime = TIME_RELAY_SEARCH_INTERVAL;
         mSearchWithoutChangeCounter = 0;
 
-        Log.d(TAG, "reset mIntervalSearchTime and mSearchWithoutChangeCounter ");
+        Log.d(TAG, "Reset mIntervalSearchTime and mSearchWithoutChangeCounter ");
 
     }
 
-
     /**
      * Send relay message to the ConnectivityManager class
+     * @param m message
+     * @param relayMessage
      */
     private void sendRelayMessageToConnectivityManager(int m,String relayMessage)  {
 
@@ -282,6 +267,7 @@ public class BlManager extends Thread implements BLConstants {
         }
     }
 
+
     /**
      * Handler of incoming messages from one of the BL classes
      */
@@ -295,47 +281,49 @@ public class BlManager extends Thread implements BLConstants {
             switch (msg.what) {
 
                 case DEVICE_CONNECTED_SUCCESSFULLY_TO_BLUETOOTH_SERVER:
-
+                    Log.e(TAG, "DEVICE_CONNECTED_SUCCESSFULLY_TO_BLUETOOTH_SERVER");
+                    // update status
+                    mStatus = CONNECTED;
                     // cancel socket
                     mBluetoothServer.cancel();
-
                     bluetoothSocket = mBluetoothServer.getBluetoothSocket();
-
                     stopSearch(FOUND_NEW_DEVICE);
-
                     // reset interval search time and counter
                     resetSearch();
-
                     // Start handshake
                     mHandShake = new HandShake(mDeviceUUID,bluetoothSocket,mMessenger);
-
                     break;
 
                 case FAILED_CONNECTING_TO_DEVICE:
-
+                    Log.e(TAG, "FAILED_CONNECTING_TO_DEVICE");
+                    // update status
+                    mStatus = DISCONNECTED;
+                    // Open server socket
+                    mBluetoothServer.cancel();
+                    mBluetoothServer = new BluetoothServer(mBluetoothAdapter,mMessenger);
+                    mBluetoothServer.start();
                     startSearchImmediately();
-
                     break;
 
                 case SUCCEED_CONNECTING_TO_DEVICE:
-
+                    Log.e(TAG, "SUCCEED_CONNECTING_TO_DEVICE");
+                    // update status
+                    mStatus = CONNECTED;
                     bluetoothSocket = mBluetoothClient.getBluetoothSocket();
-
                     // cancel socket if working
                     mBluetoothServer.cancel();
-
                     // Start handshake
                     mHandShake = new HandShake(mDeviceUUID,bluetoothSocket,mMessenger);
 
                     break;
 
                 case FOUND_MAC_ADDRESS:
-
+                    Log.e(TAG, "FOUND_MAC_ADDRESS");
+                    // update status
+                    mStatus = CONNECTING;
                     stopSearch(FOUND_NEW_DEVICE);
-
                     // reset interval search time and counter
                     resetSearch();
-
                     address = msg.getData().getString("address");
                     Log.d(TAG, "Found MAC device : "+ address);
 
@@ -346,49 +334,45 @@ public class BlManager extends Thread implements BLConstants {
                     mBluetoothClient =  new BluetoothClient(mMessenger, bl);
 
                     Log.d(TAG, "Connect to device : "+ address);
-
                     mBluetoothClient.start();
-
                     break;
 
                 case SCAN_FINISHED_WITHOUT_CHANGES:
+                    Log.e(TAG, "SCAN_FINISHED_WITHOUT_CHANGES");
                     stopSearch(SCAN_FINISHED_WITHOUT_CHANGES);
                     intervalSearch();
                     break;
 
                 case FINISHED_HANDSHAKE:
-
+                    Log.e(TAG, "FINISHED_HANDSHAKE");
+                    // update status
+                    mStatus = DISCONNECTED;
                     address = msg.getData().getString("address");
                     addToLastConnectedDevicesList(address);
-
-                    Log.e(TAG, "THERE IS :" + mLastConnectedDevices.size() +" DEVICES IN LIST");
-
                     // close handShake connection
                     mHandShake.closeConnection();
-
                     // Open server socket
                     mBluetoothServer.cancel();
                     mBluetoothServer = new BluetoothServer(mBluetoothAdapter,mMessenger);
                     mBluetoothServer.start();
-
                     startSearchImmediately();
-
                     break;
 
                 case READ_PACKET:
+                    Log.e(TAG, "READ_PACKET");
+
                     // test
-                    Log.e(TAG, "Read Packet in BLManager");
-                    byte[] packet = msg.getData().getByteArray("packet");
+                    Log.d(TAG, "Read Packet in BLManager");
+                    String packet = msg.getData().getString("packet");
                     // update handshake with the new packet
                     mHandShake.getPacket(packet);
                     break;
 
-                case NEW_RELAY_MESSAGE:
-
-                    // TODO change string to relay message
-                    Log.e(TAG, "Received  new relay message from Handshake");
+               case NEW_RELAY_MESSAGE:
+                   Log.e(TAG, "NEW_RELAY_MESSAGE");
+                   // When the message is for this device
+                    Log.d(TAG, "Received  new relay message from Handshake");
                     String relayMessage = msg.getData().getString("relayMessage");
-
                     sendRelayMessageToConnectivityManager(NEW_RELAY_MESSAGE,relayMessage);
                     break;
                 default:

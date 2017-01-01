@@ -35,23 +35,19 @@ public class BLEScan implements BLConstants {
     public BLEScan(BluetoothAdapter bluetoothAdapter,Messenger messenger) {
         this.mBluetoothAdapter = bluetoothAdapter;
         this.mScanCallback = null;
-        this.mMessenger =messenger;
-
+        this.mMessenger = messenger;
         mBluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
-
         Log.d(TAG, "Class created");
     }
 
-
     /**
-     * Start scanning for BLE Advertisements (& set it up to stop after a set period of time).
+     * Start scanning for BLE Advertisements.
      */
     public void startScanning() {
-        if (mScanCallback == null) {
-
-            // Kick off a new scan.
+        if (true){//mScanCallback == null) {
             mScanCallback = new CustomScanCallback();
-            mBluetoothLeScanner.startScan(buildScanFilters(), buildScanSettings(), mScanCallback);
+            if (mBluetoothAdapter.isEnabled())
+                mBluetoothLeScanner.startScan(buildScanFilters(), buildScanSettings(), mScanCallback);
             Log.d(TAG, "Start Scanning for BLE Advertisements");
         } else {
             Log.e(TAG, "Error - Called Scan while already scanning");
@@ -63,8 +59,10 @@ public class BLEScan implements BLConstants {
      */
     public void stopScanning() {
         // Stop the scan, wipe the callback.
-        mBluetoothLeScanner.stopScan(mScanCallback);
-        mScanCallback = null;
+        if (mBluetoothAdapter.isEnabled() && mScanCallback != null ) {
+            mBluetoothLeScanner.stopScan(mScanCallback);
+          //  mScanCallback = null;
+        }
         Log.d(TAG, "Stopping Scanning");
     }
 
@@ -87,8 +85,6 @@ public class BLEScan implements BLConstants {
     private ScanSettings buildScanSettings() {
         ScanSettings.Builder builder = new ScanSettings.Builder();
         builder.setScanMode(ScanSettings.SCAN_MODE_BALANCED);
-        // TODO only works in api 23 an above. I guess that its default in the current api
-        //builder.setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES);
         return builder.build();
     }
 
@@ -105,27 +101,15 @@ public class BLEScan implements BLConstants {
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
             super.onScanResult(callbackType, result);
-
-            // TODO delete? or no .need to check with few devices
             stopScanning();
-
             sendResultToBLECentral(FOUND_NEW_DEVICE,result);
-
-//// TODO CHANGE
-//            if (!mLastConnectedDevices.contains(address))
-//            {
-//                // found new device that not been sync
-//                // send result to bluetooth manager
-//                sendResultToBLECentral(FOUND_NEW_DEVICE,result);
-//            }
-
-            Log.e(TAG, "Found new result - "+"Name :  "+result.getDevice().getName() +
+            Log.d(TAG, "Found new result - "+"Name :  "+result.getDevice().getName() +
                     " ,Mac device : "+result.getDevice().getAddress());
         }
-
         @Override
         public void onScanFailed(int errorCode) {
             super.onScanFailed(errorCode);
+            sendResultToBLECentral(SCAN_FAILED,null);
             Log.e(TAG, "Error - Scan failed with error: "+ errorCode);
         }
     }

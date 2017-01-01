@@ -8,7 +8,6 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
-
 import java.io.IOException;
 
 /**
@@ -27,9 +26,15 @@ public class BluetoothServer extends Thread implements BLConstants {
     private BluetoothDevice mConnectedDevice;
     private BluetoothSocket mBluetoothSocket;
 
+
+    /**
+     * BluetoothServer constructor
+     * @param bluetoothAdapter to create socket
+     * @param messenger to bluetooth manager
+     */
     public BluetoothServer(BluetoothAdapter bluetoothAdapter, Messenger messenger) {
 
-        // Use messanger to update bluetooth manger
+        // Use messenger to update bluetooth manger
         this.mMessenger = messenger;
         this.mBluetoothAdapter = bluetoothAdapter;
         this.mBluetoothSocket = null;
@@ -48,21 +53,20 @@ public class BluetoothServer extends Thread implements BLConstants {
             Log.e(TAG, "Problem with creating listenUsingRfcommWithServiceRecord");
         }
         mmServerSocket = tmp;
-
         Log.d(TAG, "Class created");
     }
 
+    // Start thread
     public void run() {
         Log.d(TAG, "Start Thread");
 
         BluetoothSocket socket = null;
-
         // Keep listening until exception occurs or a socket is returned
         while (true) {
             try {
-                Log.e(TAG, "WAINTING TO mmServerSocket.accept() ");
+                Log.d(TAG, "Waiting to mmServerSocket.accept() ");
                 socket = mmServerSocket.accept();
-                Log.e(TAG, "SUCCESSFULLY CONNECTED");
+                Log.d(TAG, "SUCCESSFULLY CONNECTED");
             } catch (IOException e) {
                 Log.e(TAG, "Problem with mmServerSocket.accept() ");
                 break;
@@ -72,13 +76,10 @@ public class BluetoothServer extends Thread implements BLConstants {
 
                 // update socket
                 mBluetoothSocket = socket;
-
                 // get connceted device
                 mConnectedDevice = mBluetoothSocket.getRemoteDevice();
-
                 // Send message back to the bluetooth manager
                 sendMessageToManager(DEVICE_CONNECTED_SUCCESSFULLY_TO_BLUETOOTH_SERVER);
-
                 Log.d(TAG, "DEVICE_CONNECTED_SUCCESSFULLY_TO_BLUETOOTH_SERVER");
             }
 
@@ -99,20 +100,16 @@ public class BluetoothServer extends Thread implements BLConstants {
 
     /**
      * BluetoothSocket getter
+     * @return BluetoothSocket
      */
     public BluetoothSocket getBluetoothSocket(){
         return mBluetoothSocket;
     }
 
-    /**
-     * BluetoothDevice getter
-     */
-    public BluetoothDevice getConnectedDevice(){
-        return mConnectedDevice;
-    }
 
     /**
      * Send message to the bluetooth manager
+     * @param msg message type
      */
     private void sendMessageToManager(int msg)  {
         try {
