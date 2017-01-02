@@ -18,6 +18,8 @@ import android.widget.Toast;
 import com.relay.relay.Bluetooth.BLConstants;
 import com.relay.relay.Bluetooth.*;
 
+import static java.lang.System.exit;
+
 
 /**
  * Created by omer on 13/12/2016.
@@ -44,10 +46,8 @@ public class ConnectivityManager extends Service implements BLConstants {
     // TODO change device uuid
     private  final String mDeviceUUID = "0002280F-0000-1000-8000-00805f9234f1";
 
-
     @Override
-    public void onCreate() {
-        super.onCreate();
+    public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "Service started");
         // set off data mobile uses
         this.mMobileDataUses = false;
@@ -56,13 +56,12 @@ public class ConnectivityManager extends Service implements BLConstants {
         checkPowerConnection();
         startBluetoothMode();
         setWakeLock();
+        return  START_NOT_STICKY;
     }
 
-    private void setWakeLock() {
-        mPowerManager = (PowerManager) getSystemService(POWER_SERVICE);
-        mWakeLock = mPowerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
-                "MyWakelockTag");
-        mWakeLock.acquire();
+    @Override
+    public void onCreate() {
+        super.onCreate();
     }
 
     @Override
@@ -87,6 +86,14 @@ public class ConnectivityManager extends Service implements BLConstants {
         unregisterReceiver(this.mBroadcastReceiver);
         mWakeLock.release();
         Log.d(TAG, "Service destroyed");
+    }
+
+
+    private void setWakeLock() {
+        mPowerManager = (PowerManager) getSystemService(POWER_SERVICE);
+        mWakeLock = mPowerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
+                "MyWakelockTag");
+        mWakeLock.acquire();
     }
 
     private void checkPowerConnection() {
@@ -143,8 +150,6 @@ public class ConnectivityManager extends Service implements BLConstants {
                     case KILL_SERVICE:
                        // mBluetoothManager.cancel();
                         stopSelf();
-                        // TODO  the stopSelf()  does'nt working from some reason????
-                        //exit(0);
                         break;
 
                     // When bluetooth state changed

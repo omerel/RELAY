@@ -65,9 +65,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         BluetoothAdapter.getDefaultAdapter().enable();
 
         checkPermissions();
-
-
-
     }
 
     @TargetApi(23)
@@ -114,8 +111,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             Toast.LENGTH_LONG).show();
                     killService();
                 }
-
-
                 break;
         }
     }

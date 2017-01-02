@@ -93,7 +93,7 @@ public class BLEPeripheral implements BLConstants {
     public void close(){
 
         if (mGattServer != null) {
-            disconnectFromDevices();
+          //TODO  disconnectFromDevices(); do i need it? creates problem with M version
             mGattServer.close();
         }
         mBleAdvertising.stopAdvertising();
@@ -105,7 +105,7 @@ public class BLEPeripheral implements BLConstants {
     public void stopPeripheral(){
 
         if (mGattServer != null) {
-            disconnectFromDevices();
+           //TODO disconnectFromDevices(); do i need it? creates problem with M version
             mGattServer.close();
         }
         mBleAdvertising.stopAdvertising();

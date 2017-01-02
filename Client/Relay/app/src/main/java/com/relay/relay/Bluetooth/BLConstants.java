@@ -43,7 +43,7 @@ public interface BLConstants {
     int TIME_RELAY_SCAN = 20*SECOND; // working with out bugs -20
     int TIME_RELAY_KEEPS_FOUND_DEVICE_IN_LIST = 5*SECOND; // working with out bugs - 20
     int TIME_RELAY_KEEPS_FOUND_DEVICE_IN_LIST_POWER_MODE = 5*SECOND;
-    int MAX_SEARCH_WITHOUT_CHANGE_BEFORE_CHANGES = 20;
+    int MAX_SEARCH_WITHOUT_CHANGE_COUNTER = 100; // TODO need to determine
     int SCAN_FINISHED_WITHOUT_CHANGES = 50;
     int RESET_SEARCH_COUNTER = 51;
 

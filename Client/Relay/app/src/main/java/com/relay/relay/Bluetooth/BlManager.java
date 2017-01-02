@@ -180,7 +180,7 @@ public class BLManager extends Thread implements BLConstants {
     private void intervalSearch(){
 
         // check search without changes in results counter
-        if (mSearchWithoutChangeCounter > MAX_SEARCH_WITHOUT_CHANGE_BEFORE_CHANGES)
+        if (mSearchWithoutChangeCounter > MAX_SEARCH_WITHOUT_CHANGE_COUNTER)
             // set limit to interval search time
             if (mIntervalSearchTime < MAX_TIME_RELAY_SEARCH_INTERVAL) {
                 // increase interval search time
