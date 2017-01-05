@@ -4,7 +4,7 @@
     android:layout_height="wrap_content"
     android:id="@+id/textView_item_device"
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:textSize="40dp"
+    android:textSize="20dp"
     android:text="Test"
     android:textAlignment="center"
     android:textStyle="normal"

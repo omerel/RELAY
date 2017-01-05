@@ -5,6 +5,7 @@ import android.bluetooth.le.AdvertiseCallback;
 import android.bluetooth.le.AdvertiseData;
 import android.bluetooth.le.AdvertiseSettings;
 import android.bluetooth.le.BluetoothLeAdvertiser;
+import android.os.Build;
 import android.os.ParcelUuid;
 import android.util.Log;
 
@@ -61,6 +62,7 @@ public class BLEAdvertising implements BLConstants {
                 mBluetoothLeAdvertiser.startAdvertising(settings, data, dataRes, mAdvertiseCallback);
                 Log.d(TAG, "Starting Advertising");
             }
+
         }
     }
 
@@ -82,8 +84,8 @@ public class BLEAdvertising implements BLConstants {
      */
     private AdvertiseSettings buildAdvertiseSettings() {
         AdvertiseSettings.Builder settingsBuilder = new AdvertiseSettings.Builder();
-        settingsBuilder.setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_BALANCED);//check
-        settingsBuilder.setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_MEDIUM);//check
+        settingsBuilder.setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY);//check
+        //settingsBuilder.setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_MEDIUM);//check
         settingsBuilder.setConnectable(true);
         settingsBuilder.setTimeout(0); //disable time limit
         return settingsBuilder.build();

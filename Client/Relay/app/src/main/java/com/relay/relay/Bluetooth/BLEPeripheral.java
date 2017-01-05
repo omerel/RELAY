@@ -16,7 +16,11 @@ import android.bluetooth.BluetoothGattServerCallback;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
+import android.os.Build;
+import android.os.Bundle;
+import android.os.Message;
 import android.os.Messenger;
+import android.os.RemoteException;
 import android.util.Log;
 import com.relay.relay.ConnectivityManager;
 
@@ -32,6 +36,7 @@ public class BLEPeripheral implements BLConstants {
     private BLEService mBLEService;
     private BLEAdvertising mBleAdvertising;
     private BluetoothGattServer mGattServer;
+    private Messenger mMessenger;
 
     /**
      * BluetoothGattServerCallback
@@ -46,12 +51,13 @@ public class BLEPeripheral implements BLConstants {
                     mGattServer.connect(device,false);
                     // Stop advertising
                     mBleAdvertising.stopAdvertising();
-                    Log.d(TAG, "Connected to device: " + device.getAddress());
+                    Log.e(TAG, "Connected to device(SERVER SIDE): " + device.getAddress());
 
                 } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
                     Log.d(TAG, "Disconnected from device");
-                    // Continue advertising to others device
-                    mBleAdvertising.startAdvertising();
+                    // create new advertising to others device TODO maybe i need here only mBleAdvertising.start
+                    stopPeripheral();
+                    startPeripheral();
                 }
             } else {
                 Log.e(TAG, "Error when connecting: " + status);
@@ -82,7 +88,7 @@ public class BLEPeripheral implements BLConstants {
         this.mBLEService = new BLEService(mBluetoothAdapter.getAddress());
         this.mBluetoothGattService = mBLEService.getBluetoothGattService();
         this.mBleAdvertising = new BLEAdvertising(mBluetoothAdapter);
-
+        this.mMessenger =messenger;
         this.mBluetoothManager = (BluetoothManager) mConnectivityManager.getSystemService(Context.BLUETOOTH_SERVICE);
 
     }
@@ -93,7 +99,7 @@ public class BLEPeripheral implements BLConstants {
     public void close(){
 
         if (mGattServer != null) {
-          //TODO  disconnectFromDevices(); do i need it? creates problem with M version
+           disconnectFromDevices();
             mGattServer.close();
         }
         mBleAdvertising.stopAdvertising();
@@ -105,7 +111,7 @@ public class BLEPeripheral implements BLConstants {
     public void stopPeripheral(){
 
         if (mGattServer != null) {
-           //TODO disconnectFromDevices(); do i need it? creates problem with M version
+           disconnectFromDevices(); //TODO do i need it? is there any limit fot it?
             mGattServer.close();
         }
         mBleAdvertising.stopAdvertising();
@@ -115,19 +121,32 @@ public class BLEPeripheral implements BLConstants {
      * Start Peripheral - start advertising
      */
     public void startPeripheral(){
-        mBleAdvertising.startAdvertising();
+
         // If the user disabled Bluetooth when the app was in the background,
         // openGattServer() will return null.
         if (mGattServer!= null)
             mGattServer.close();
-        mGattServer = mBluetoothManager.openGattServer( mConnectivityManager , mGattServerCallback);
 
-        // TODO why does I get null sometimes?
-        if(mGattServer == null){
-            Log.e(TAG, "ERROR - didn't open gattServer . return null");
+        // open GattServer
+        mGattServer = mBluetoothManager.openGattServer(mConnectivityManager, mGattServerCallback);
+
+        if (mGattServer == null) {
+            Log.e(TAG, "ERROR - didn't open gattServer. returns null");
+            // reset mBluetoothManager and start Peripheral in the next interval
+            // TODO sendResultToManager(BLE_ADVERTISE_ERROR);
+            return;
         }
+
         // Add BLEService
         mGattServer.addService(mBluetoothGattService);
+
+        // check mBleAdvertising not null
+        if(mBleAdvertising != null)
+            mBleAdvertising.startAdvertising();
+        //else
+            // TODO why does I get null sometimes?
+           // sendResultToManager(BLE_ADVERTISE_ERROR);
+
 
     }
 
@@ -142,6 +161,24 @@ public class BLEPeripheral implements BLConstants {
                 Log.d(TAG, "Devices: " + device.getAddress() + " " + device.getName());
                 mGattServer.cancelConnection(device);
             }
+        }
+    }
+
+    /**
+     * Send message to bluetooth manager
+     * @param m message
+     */
+    private void sendResultToManager(int m)  {
+
+        // Send data
+        Bundle bundle = new Bundle();
+        Message msg = Message.obtain(null, m);
+        msg.setData(bundle);
+
+        try {
+            mMessenger.send(msg);
+        } catch (RemoteException e) {
+            Log.e(TAG, "Error -  sendResultToManager ");
         }
     }
 

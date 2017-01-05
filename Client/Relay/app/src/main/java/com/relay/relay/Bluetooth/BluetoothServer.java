@@ -70,6 +70,9 @@ public class BluetoothServer extends Thread implements BLConstants {
             } catch (IOException e) {
                 Log.e(TAG, "Problem with mmServerSocket.accept() ");
                 break;
+            }catch (NullPointerException e){
+                Log.e(TAG, "Problem with mmServerSocket.accept() [null] ");
+                break;
             }
             // If a connection was accepted
             if (socket != null) {
@@ -91,8 +94,9 @@ public class BluetoothServer extends Thread implements BLConstants {
      */
     public void cancel() {
         try {
-            mmServerSocket.close();
-            Log.d(TAG, "Thread was closed");
+            if (mmServerSocket != null)
+                mmServerSocket.close();
+                Log.d(TAG, "Thread was closed");
         } catch (IOException e) {
             Log.e(TAG, "Problem with mmServerSocket.close() ");
         }

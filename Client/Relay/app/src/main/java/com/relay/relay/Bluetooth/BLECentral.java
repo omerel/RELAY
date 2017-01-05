@@ -7,6 +7,7 @@ import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
+import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
 import android.bluetooth.le.ScanResult;
 import android.os.Bundle;
@@ -48,11 +49,11 @@ public class BLECentral implements BLConstants {
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
 
             if (newState == BluetoothProfile.STATE_CONNECTED) {
-                Log.d(TAG, "Connected to GATT server.");
+                Log.e(TAG, "Connected to GATT server.(CLIENT SIDE)");
                 // Attempts to discover services after successful connection.
                 Log.d(TAG, "Attempting to start service discovery:" + mBluetoothGatt.discoverServices());
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                Log.d(TAG, "Disconnected from GATT server.");
+                Log.d(TAG, "Disconnected from GATT server!");
             }
         }
 
@@ -70,8 +71,13 @@ public class BLECentral implements BLConstants {
                 Log.d(TAG, "Get Characteristic ");
                 // read Characteristic
                 // relay BlePeripheral has only one Characteristic ==> index 0
-                gatt.readCharacteristic(mBluetoothGattCharacteristic.get(0));
-                Log.d(TAG, "Read Characteristic");
+                for (int i = 0; i < mBluetoothGattCharacteristic.size(); i++ ){
+                    if (mBluetoothGattCharacteristic.get(i).getUuid().equals(MAC_ADDRESS_UUID)) {
+                        gatt.readCharacteristic(mBluetoothGattCharacteristic.get(i));
+                        Log.d(TAG, "Read Characteristic");
+                    }
+                }
+
             } else {
                 Log.d(TAG, "onServicesDiscovered received: " + status);
             }
@@ -94,9 +100,9 @@ public class BLECentral implements BLConstants {
                         Log.d(TAG, "Found new device that not in connected list :" + address);
                     }
                     else{
-                        Log.d(TAG, "Found device that is in the connected list :" + address+
+                        Log.e(TAG, "Found device that is in the connected list :" + address+
                                 "\n restart scan.");
-                        mBleScan.startScanning();
+                        // Wait to the next interval with scanning and let others find you
                     }
                 }
             }
@@ -192,8 +198,9 @@ public class BLECentral implements BLConstants {
                     // connect to gat server device
                     connect(result.getDevice());
                     break;
-                case SCAN_FAILED:
-                    close();
+                case BLE_SCAN_ERROR:
+                    mBleScan.stopScanning();
+                    sendResultToManager(BLE_SCAN_ERROR,null);
                     break;
 
                 default:

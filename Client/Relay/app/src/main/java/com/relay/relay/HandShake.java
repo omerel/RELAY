@@ -27,17 +27,20 @@ public class HandShake implements BLConstants {
     private BluetoothSocket mBluetoothSocket;
     private BluetoothConnected mBluetoothConnected;
     private final String mDeviceUUID;
+    private boolean mInitiator;
 
 
     // TEST
     private boolean testReceieved = false;
     //
 
-    public HandShake(String deviceUUID, BluetoothSocket bluetoothSocket, Messenger messenger){
+    public HandShake(String deviceUUID, BluetoothSocket bluetoothSocket, Messenger messenger
+            ,boolean initiator){
 
         this.mDeviceUUID = deviceUUID;
         this.mMessenger = messenger;
         this.mBluetoothSocket = bluetoothSocket;
+        this.mInitiator = initiator;
         this.mBluetoothConnected = new BluetoothConnected(mBluetoothSocket,messenger);
         this.mBluetoothConnected.start();
 
@@ -49,7 +52,7 @@ public class HandShake implements BLConstants {
      */
     private void startHandshake() {
 
-        String testout = BluetoothAdapter.getDefaultAdapter().getAddress() + " PING";
+        String testout = BluetoothAdapter.getDefaultAdapter().getAddress();
         mBluetoothConnected.writePacket(testout);
 
     }

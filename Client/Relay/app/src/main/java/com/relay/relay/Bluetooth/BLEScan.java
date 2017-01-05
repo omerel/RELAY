@@ -16,6 +16,8 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.List;
 
+import static java.lang.System.exit;
+
 /**
  * Created by omer on 10/12/2016.
  * The bluetooth scan uses BLE abilities to search for other bluetooth device advertisements.
@@ -44,14 +46,11 @@ public class BLEScan implements BLConstants {
      * Start scanning for BLE Advertisements.
      */
     public void startScanning() {
-        if (true){//mScanCallback == null) {
-            mScanCallback = new CustomScanCallback();
-            if (mBluetoothAdapter.isEnabled())
-                mBluetoothLeScanner.startScan(buildScanFilters(), buildScanSettings(), mScanCallback);
-            Log.d(TAG, "Start Scanning for BLE Advertisements");
-        } else {
-            Log.e(TAG, "Error - Called Scan while already scanning");
-        }
+        mScanCallback = new CustomScanCallback();
+        if (mBluetoothAdapter.isEnabled())
+            mBluetoothLeScanner.startScan(buildScanFilters(), buildScanSettings(), mScanCallback);
+        Log.d(TAG, "Start Scanning for BLE Advertisements");
+
     }
 
     /**
@@ -61,7 +60,6 @@ public class BLEScan implements BLConstants {
         // Stop the scan, wipe the callback.
         if (mBluetoothAdapter.isEnabled() && mScanCallback != null ) {
             mBluetoothLeScanner.stopScan(mScanCallback);
-          //  mScanCallback = null;
         }
         Log.d(TAG, "Stopping Scanning");
     }
@@ -84,7 +82,7 @@ public class BLEScan implements BLConstants {
      */
     private ScanSettings buildScanSettings() {
         ScanSettings.Builder builder = new ScanSettings.Builder();
-        builder.setScanMode(ScanSettings.SCAN_MODE_BALANCED);
+        builder.setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY);
         return builder.build();
     }
 
@@ -109,7 +107,8 @@ public class BLEScan implements BLConstants {
         @Override
         public void onScanFailed(int errorCode) {
             super.onScanFailed(errorCode);
-            sendResultToBLECentral(SCAN_FAILED,null);
+            // TODO
+            //sendResultToBLECentral(BLE_SCAN_ERROR,null);
             Log.e(TAG, "Error - Scan failed with error: "+ errorCode);
         }
     }

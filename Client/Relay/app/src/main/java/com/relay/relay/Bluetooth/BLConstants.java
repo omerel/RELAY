@@ -31,26 +31,29 @@ public interface BLConstants {
     int SUCCEED_CONNECTING_TO_DEVICE = 21;
 
     // Message from BLEAdvertising
+    int BLE_ADVERTISE_ERROR = 30;
+    int BLE_SCAN_ERROR = 31;
+
 
     // Message from BLEScan
     int FOUND_NEW_DEVICE = 40;
     int SCAN_FAILED = 41;
 
     // Constants used in BLManager
-    int TIME_RELAY_SEARCH_INTERVAL = 5*SECOND;  // working with out bugs -10
-    int TIME_RELAY_SEARCH_INTERVAL_POWER_MODE = 5*SECOND;
+    int TIME_RELAY_SEARCH_INTERVAL = 20*SECOND;  // working with out bugs -10
+    int TIME_RELAY_SEARCH_INTERVAL_POWER_MODE = 5*SECOND; //5
     int MAX_TIME_RELAY_SEARCH_INTERVAL = 16*MINUTE;
     int TIME_RELAY_SCAN = 20*SECOND; // working with out bugs -20
-    int TIME_RELAY_KEEPS_FOUND_DEVICE_IN_LIST = 5*SECOND; // working with out bugs - 20
-    int TIME_RELAY_KEEPS_FOUND_DEVICE_IN_LIST_POWER_MODE = 5*SECOND;
+    int TIME_RELAY_KEEPS_FOUND_DEVICE_IN_LIST = 20*SECOND; // working with out bugs - 20
+    int TIME_RELAY_KEEPS_FOUND_DEVICE_IN_LIST_POWER_MODE =10*SECOND;//10
+    int DELAY_AFTER_HANDSHAKE = 10*SECOND;
     int MAX_SEARCH_WITHOUT_CHANGE_COUNTER = 100; // TODO need to determine
     int SCAN_FINISHED_WITHOUT_CHANGES = 50;
     int RESET_SEARCH_COUNTER = 51;
-
+    int BLE_ERROR = 32;
 
 
     // status
-
     int CONNECTED = 51;
     int DISCONNECTED = 52;
     int CONNECTING = 53;
@@ -58,12 +61,17 @@ public interface BLConstants {
     // Message from BluetoothConnected
     int READ_PACKET = 60;
 
-
     // Message from HandShake
     int FINISHED_HANDSHAKE = 70;
     int  NEW_RELAY_MESSAGE = 71;
 
     // Message from BLECentral
     int FOUND_MAC_ADDRESS = 80;
+
+    // Constants used in BluetoothScan
+    int SCAN_TIME = 5*SECOND;
+    int DISCOVERABLE_TIME = 5;
+    int FOUND_MAC_ADDRESS_FROM_BLSCAN = 90;
+    int NOT_FOUND_ADDRESS_FROM_BLSCAN = 91;
 
 }

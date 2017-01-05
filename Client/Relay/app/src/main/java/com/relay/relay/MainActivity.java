@@ -24,6 +24,12 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
+
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -34,8 +40,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     // Views
     private ListView mDevicesList;
     private Button mStartButton;
+    private Button mManualSyncButton;
     private boolean clicked = false;
 
+    //for testing
+    RelayDevice mRelayDevice;
+    Map<String,RelayDevice> mHashMapRelayDevice = new HashMap<>();
 
     private ArrayAdapter<String> mArrayAdapter;
 
@@ -48,23 +58,60 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        checkBluetoothAndBleSupport();
+
         createBroadcastReceiver();
 
         // Bind layout's view to class
         mStartButton = (Button) findViewById(R.id.button);
         mDevicesList = (ListView)findViewById(R.id.listview);
+        mManualSyncButton = (Button) findViewById(R.id.button2);
 
         // Set on click listener
         mStartButton.setOnClickListener(this);
+        mManualSyncButton.setOnClickListener(this);
 
         // bind device list
         mArrayAdapter = new ArrayAdapter<>(this,R.layout.item_device);
         mDevicesList.setAdapter(mArrayAdapter);
 
-        // make sure bluetooth enable
-        BluetoothAdapter.getDefaultAdapter().enable();
-
         checkPermissions();
+    }
+
+    private void checkBluetoothAndBleSupport() {
+
+        if (BluetoothAdapter.getDefaultAdapter() == null)
+            createAlertDialog("ERROR","Your device doesn't support bluetooth. you can't use" +
+                    "this application",true);
+        else {
+            if (BluetoothAdapter.getDefaultAdapter().isEnabled())
+                checkAdvertiseSupport();
+            else
+                enableBluetooth();
+        }
+    }
+
+    private void checkAdvertiseSupport(){
+        if (!BluetoothAdapter.getDefaultAdapter().isMultipleAdvertisementSupported())
+            createAlertDialog("NOTICE", "Your device doesn't support Bluetooth Low Energy " +
+                    "advertisement (Beacon Transmission).\n Unfortunately your App's performance ,to get " +
+                    "new messages from other users will be poor.\n To get better results use manual sync button" +
+                    " when you are closes to another user.", false);
+    }
+
+    private void enableBluetooth(){
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("This app needs Bluetooth to be available");
+        builder.setMessage("By pressing ok bluetooth will be open");
+        builder.setPositiveButton(android.R.string.ok, null);
+        builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialog) {
+                BluetoothAdapter.getDefaultAdapter().enable();
+                checkAdvertiseSupport();
+            }
+        });
+        builder.show();
     }
 
     @TargetApi(23)
@@ -98,7 +145,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                 if (clicked){
                     if (!BluetoothAdapter.getDefaultAdapter().isEnabled()) {
-                        BluetoothAdapter.getDefaultAdapter().enable();
+                        startActivity(new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE));
+                        //BluetoothAdapter.getDefaultAdapter().enable();
                         clicked = !clicked;
                     }
                     else{
@@ -111,6 +159,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             Toast.LENGTH_LONG).show();
                     killService();
                 }
+                break;
+
+            case(R.id.button2):
+                if(clicked)
+                    startManualSync();
+                else
+                    Toast.makeText(getApplicationContext(),"Service need to be started",
+                        Toast.LENGTH_LONG).show();
                 break;
         }
     }
@@ -139,7 +195,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     // When incoming message received
                     case MESSAGE_RECEIVED:
                         String relayMessage = intent.getStringExtra("relayMessage");
-                        mArrayAdapter.add(relayMessage);
+                        mArrayAdapter.add(MainActivity.this.setResult(relayMessage));
                         mDevicesList.setSelection(mArrayAdapter.getCount()-1);
                         notifyMessageArrived();
                 }
@@ -149,10 +205,36 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         registerReceiver(mBroadcastReceiver, mFilter);
     }
 
+    private String setResult(String relayMessage) {
+        if (!mHashMapRelayDevice.containsKey(relayMessage)) {
+            mRelayDevice = new RelayDevice(relayMessage);
+        }
+        else
+            mRelayDevice = mHashMapRelayDevice.get(relayMessage);
+        mRelayDevice.add();
+        mHashMapRelayDevice.put(relayMessage,mRelayDevice);
+
+        String result= "";
+
+        result =result +  mRelayDevice.address+": " + mRelayDevice.count+" times\n";
+
+        DateFormat df = new SimpleDateFormat("EEE, d MMM yyyy, HH:mm");
+        String date = df.format(Calendar.getInstance().getTime());
+
+        result = result +"time : "+date;
+        return result;
+    }
+
 
     public void killService() {
         //  BroadCast to service
         Intent updateActivity = new Intent(ConnectivityManager.KILL_SERVICE);
+        sendBroadcast(updateActivity);
+    }
+
+    public void startManualSync(){
+        //  BroadCast to service
+        Intent updateActivity = new Intent(ConnectivityManager.MANUAL_SYNC);
         sendBroadcast(updateActivity);
     }
 
@@ -182,7 +264,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
 
-
     /**
      *  Notify when new message arrived
      */
@@ -203,4 +284,50 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             notificationManager.notify(0, mBuilder.build());
         }
     }
+
+    /**
+     *  Create  Exit alert dialog
+     */
+    private void createAlertDialog(String title,String msg,boolean toExit) {
+
+        AlertDialog alertDialog = new AlertDialog.Builder(this).create();
+        alertDialog.setTitle(title);
+        alertDialog.setMessage(msg);
+        if (toExit){
+            alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, "EXIT",
+                    new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                            finish();
+                            System.exit(0);
+                        }
+                    });
+        }
+        else{
+            alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, "OK",
+                    new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    });
+        }
+        alertDialog.show();
+    }
+
+
+    private class RelayDevice{
+
+        String address;
+        int count;
+
+        RelayDevice(String address){
+            count = 0;
+            this.address= address;
+        }
+
+        public void add(){
+            count++;
+        }
+    }
+
 }
