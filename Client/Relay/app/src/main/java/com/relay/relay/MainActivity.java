@@ -21,7 +21,9 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.text.DateFormat;
@@ -41,7 +43,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ListView mDevicesList;
     private Button mStartButton;
     private Button mManualSyncButton;
+    private Button mSendButton;
+    private EditText mContent;
+    private TextView mTextViewSender;
+    private TextView mTextViewReceiver;
     private boolean clicked = false;
+    private String[] mId;
+    public static Map<String,String> db = new HashMap<>();
 
     //for testing
     RelayDevice mRelayDevice;
@@ -52,6 +60,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public static final String MESSAGE_RECEIVED = "relay.BroadcastReceiver.MESSAGE";
     private BroadcastReceiver mBroadcastReceiver;
     private IntentFilter mFilter;
+
+    private String mSender;
+    private String mReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,14 +77,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mStartButton = (Button) findViewById(R.id.button);
         mDevicesList = (ListView)findViewById(R.id.listview);
         mManualSyncButton = (Button) findViewById(R.id.button2);
+        mSendButton = (Button) findViewById(R.id.send_button);
+        mContent = (EditText) findViewById(R.id.content);
+        mTextViewSender = (TextView) findViewById(R.id.sender);
+        mTextViewReceiver = (TextView) findViewById(R.id.receiver);
 
         // Set on click listener
         mStartButton.setOnClickListener(this);
         mManualSyncButton.setOnClickListener(this);
+        mSendButton.setOnClickListener(this);
+        mTextViewSender.setOnClickListener(this);
+        mTextViewReceiver.setOnClickListener(this);
 
         // bind device list
         mArrayAdapter = new ArrayAdapter<>(this,R.layout.item_device);
         mDevicesList.setAdapter(mArrayAdapter);
+
+        // Set id options
+        mId = new String[] {"A","B","C","D"};
 
         checkPermissions();
     }
@@ -107,8 +128,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
             @Override
             public void onDismiss(DialogInterface dialog) {
-                BluetoothAdapter.getDefaultAdapter().enable();
-                checkAdvertiseSupport();
+                startActivity(new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE));
             }
         });
         builder.show();
@@ -168,6 +188,71 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     Toast.makeText(getApplicationContext(),"Service need to be started",
                         Toast.LENGTH_LONG).show();
                 break;
+            case (R.id.sender):
+
+                AlertDialog.Builder builderType = new AlertDialog.Builder(this);
+                builderType.setTitle("Select ID");
+                builderType.setItems(mId, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        switch(which){
+                            case 0:
+                                mTextViewSender.setText(mId[0]);
+                                mSender = mId[0];
+                                break;
+                            case 1:
+                                mTextViewSender.setText(mId[1]);
+                                mSender = mId[1];
+                                break;
+                            case 2:
+                                mTextViewSender.setText(mId[2]);
+                                mSender = mId[2];
+                                break;
+                            case 3:
+                                mTextViewSender.setText(mId[3]);
+                                mSender = mId[3];
+                                break;
+                        }
+                    }
+                });
+                builderType.show();
+                break;
+            case (R.id.receiver):
+
+                AlertDialog.Builder builderType2 = new AlertDialog.Builder(this);
+                builderType2.setTitle("Select ID");
+                builderType2.setItems(mId, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        switch(which){
+                            case 0:
+                                mTextViewReceiver.setText(mId[0]);
+                                mReceiver = mId[0];
+                                break;
+                            case 1:
+                                mTextViewReceiver.setText(mId[1]);
+                                mReceiver = mId[1];
+                                break;
+                            case 2:
+                                mTextViewReceiver.setText(mId[2]);
+                                mReceiver = mId[2];
+                                break;
+                            case 3:
+                                mTextViewReceiver.setText(mId[3]);
+                                mReceiver = mId[3];
+                                break;
+                        }
+                    }
+                });
+                builderType2.show();
+                break;
+            case (R.id.send_button):
+                String content = mContent.getText().toString();
+                mContent.setText("");
+                if (!content.isEmpty()){
+
+                }
+                break;
         }
     }
 
@@ -182,6 +267,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         mFilter = new IntentFilter();
         mFilter.addAction(MESSAGE_RECEIVED);
+        mFilter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
 
         mBroadcastReceiver = new BroadcastReceiver() {
 
@@ -198,6 +284,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         mArrayAdapter.add(MainActivity.this.setResult(relayMessage));
                         mDevicesList.setSelection(mArrayAdapter.getCount()-1);
                         notifyMessageArrived();
+
+                        // When bluetooth state changed
+                    case BluetoothAdapter.ACTION_STATE_CHANGED:
+                        final int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
+                        switch(state) {
+                            case BluetoothAdapter.STATE_OFF:
+                                break;
+                            case BluetoothAdapter.STATE_TURNING_OFF:
+                                break;
+                            case BluetoothAdapter.STATE_ON:
+                                checkAdvertiseSupport();
+                                break;
+                            case BluetoothAdapter.STATE_TURNING_ON:
+                                break;
+                        }
+                        break;
                 }
 
             }
@@ -222,6 +324,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         String date = df.format(Calendar.getInstance().getTime());
 
         result = result +"time : "+date;
+
+        Log.e(TAG, "TIME : "+date);
         return result;
     }
 

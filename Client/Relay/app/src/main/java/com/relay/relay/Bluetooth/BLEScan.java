@@ -107,8 +107,7 @@ public class BLEScan implements BLConstants {
         @Override
         public void onScanFailed(int errorCode) {
             super.onScanFailed(errorCode);
-            // TODO
-            //sendResultToBLECentral(BLE_SCAN_ERROR,null);
+            sendResultToBLECentral(BLE_SCAN_ERROR,null);
             Log.e(TAG, "Error - Scan failed with error: "+ errorCode);
         }
     }

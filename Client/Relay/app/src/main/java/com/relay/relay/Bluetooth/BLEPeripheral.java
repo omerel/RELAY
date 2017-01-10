@@ -99,7 +99,7 @@ public class BLEPeripheral implements BLConstants {
     public void close(){
 
         if (mGattServer != null) {
-           disconnectFromDevices();
+         //  disconnectFromDevices();
             mGattServer.close();
         }
         mBleAdvertising.stopAdvertising();
@@ -111,7 +111,7 @@ public class BLEPeripheral implements BLConstants {
     public void stopPeripheral(){
 
         if (mGattServer != null) {
-           disconnectFromDevices(); //TODO do i need it? is there any limit fot it?
+          // disconnectFromDevices(); //TODO do i need it? is there any limit fot it?
             mGattServer.close();
         }
         mBleAdvertising.stopAdvertising();

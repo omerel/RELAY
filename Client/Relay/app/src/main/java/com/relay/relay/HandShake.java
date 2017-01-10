@@ -44,6 +44,7 @@ public class HandShake implements BLConstants {
         this.mBluetoothConnected = new BluetoothConnected(mBluetoothSocket,messenger);
         this.mBluetoothConnected.start();
 
+
         startHandshake();
     }
 

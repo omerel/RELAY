@@ -251,7 +251,8 @@ public class BLManager extends Thread implements BLConstants {
      *  Reset interval search time and counter
      */
     private void resetSearch()  {
-        mIntervalSearchTime = TIME_RELAY_SEARCH_INTERVAL;
+        // TODO need to check if it in power or not
+        mIntervalSearchTime = TIME_RELAY_SEARCH_INTERVAL_POWER_MODE;
         mSearchWithoutChangeCounter = 0;
 
         Log.d(TAG, "Reset mIntervalSearchTime and mSearchWithoutChangeCounter ");
@@ -378,21 +379,26 @@ public class BLManager extends Thread implements BLConstants {
                     mBluetoothServer.cancel();
                     mBluetoothServer = new BluetoothServer(mBluetoothAdapter,mMessenger);
                     //
-
-                    if (mInitiator)
-                        new Handler().postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                // TODO sometimes thread  is alive. prevent error
-                                if (!mBluetoothServer.isAlive())
-                                    mBluetoothServer.start();
-                                startSearchImmediately();
-                            }
-                        }, DELAY_AFTER_HANDSHAKE);
-                    else{
+                    if (!mBluetoothServer.isAlive())
                         mBluetoothServer.start();
-                        startSearchImmediately();
-                    }
+
+                    intervalSearch();
+
+
+//                    if (mInitiator)
+//                        new Handler().postDelayed(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                // TODO sometimes thread  is alive. prevent error
+//                                if (!mBluetoothServer.isAlive())
+//                                    mBluetoothServer.start();
+//                                startSearchImmediately();
+//                            }
+//                        }, DELAY_AFTER_HANDSHAKE);
+//                    else{
+//                        mBluetoothServer.start();
+//                        startSearchImmediately();
+//                    }
                     break;
 
                 case READ_PACKET:

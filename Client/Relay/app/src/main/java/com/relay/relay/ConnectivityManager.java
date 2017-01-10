@@ -4,6 +4,7 @@ import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.BatteryManager;
@@ -12,6 +13,7 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.PowerManager;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.widget.Toast;
 import com.relay.relay.Bluetooth.BLConstants;
@@ -155,6 +157,23 @@ public class ConnectivityManager extends Service implements BLConstants {
         mBluetoothManager.cancel();
     }
 
+
+    private void enableBluetooth(){
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Bluetooth");
+        builder.setMessage("to ensure RELAY working, please open the bluetooth");
+        builder.setPositiveButton(android.R.string.ok, null);
+        builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialog) {
+                Intent blEnable = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                blEnable.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(blEnable);
+            }
+        });
+        builder.show();
+    }
+
     /**
      * BroadcastReceiver of incoming messages from all activities
      */
@@ -190,15 +209,19 @@ public class ConnectivityManager extends Service implements BLConstants {
                         switch(state) {
                             case BluetoothAdapter.STATE_OFF:
                                 if (mRestart){
-                                    BluetoothAdapter.getDefaultAdapter().enable();
-                                    initialBluetoothMode();
-                                    startBluetoothMode();
+                                    Intent blEnable = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                                    blEnable.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                    startActivity(blEnable);
                                 }
                                 break;
                             case BluetoothAdapter.STATE_TURNING_OFF:
-                                stopBluetoothMode();
                                 break;
                             case BluetoothAdapter.STATE_ON:
+                                if(mRestart){
+                                    initialBluetoothMode();
+                                    startBluetoothMode();
+                                    mRestart = false;
+                                }
                                 break;
                             case BluetoothAdapter.STATE_TURNING_ON:
                                 break;
@@ -246,7 +269,6 @@ public class ConnectivityManager extends Service implements BLConstants {
 
                 case BLE_ERROR:
                     mBluetoothManager.cancel();
-                    // make sure bluetooth enable
                     BluetoothAdapter.getDefaultAdapter().disable();
                     mRestart = true;
                     break;

@@ -41,12 +41,11 @@ public interface BLConstants {
 
     // Constants used in BLManager
     int TIME_RELAY_SEARCH_INTERVAL = 20*SECOND;  // working with out bugs -10
-    int TIME_RELAY_SEARCH_INTERVAL_POWER_MODE = 5*SECOND; //5
+    int TIME_RELAY_SEARCH_INTERVAL_POWER_MODE =10*SECOND; //5
     int MAX_TIME_RELAY_SEARCH_INTERVAL = 16*MINUTE;
     int TIME_RELAY_SCAN = 20*SECOND; // working with out bugs -20
     int TIME_RELAY_KEEPS_FOUND_DEVICE_IN_LIST = 20*SECOND; // working with out bugs - 20
     int TIME_RELAY_KEEPS_FOUND_DEVICE_IN_LIST_POWER_MODE =10*SECOND;//10
-    int DELAY_AFTER_HANDSHAKE = 10*SECOND;
     int MAX_SEARCH_WITHOUT_CHANGE_COUNTER = 100; // TODO need to determine
     int SCAN_FINISHED_WITHOUT_CHANGES = 50;
     int RESET_SEARCH_COUNTER = 51;

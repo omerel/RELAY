@@ -102,6 +102,7 @@ public class BluetoothServer extends Thread implements BLConstants {
         }
     }
 
+
     /**
      * BluetoothSocket getter
      * @return BluetoothSocket
