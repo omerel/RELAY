@@ -32,6 +32,7 @@ public class ConnectivityManager extends Service implements BLConstants {
 
     public static final String KILL_SERVICE = "relay.BroadcastReceiver.KILL_SERVICE";
     public static final String MANUAL_SYNC = "relay.BroadcastReceiver.MANUAL_SYNC";
+
     private BroadcastReceiver mBroadcastReceiver;
     // Power manager to keep service wake when phone locked
     private PowerManager mPowerManager;
@@ -47,17 +48,24 @@ public class ConnectivityManager extends Service implements BLConstants {
     private final Messenger mMessenger = new Messenger(new IncomingHandler());
     private BLManager mBluetoothManager;
     // TODO change device uuid TEMP
-    private  final String mDeviceUUID = "0002280F-0000-1000-8000-00805f9234f1";
+    private  String mDeviceUUID;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "Service started");
+
+        mDeviceUUID = intent.getStringExtra("device_id");
+        Log.e(TAG, "id is: "+mDeviceUUID);
+
         // set off data mobile uses
         mMobileDataUses = false;
         mWifiConnection = false;
         startConnectivityByPriority();
         setWakeLock();
         mRestart = false;
+
+
+
         return  START_NOT_STICKY;
     }
 
@@ -202,6 +210,7 @@ public class ConnectivityManager extends Service implements BLConstants {
                     case MANUAL_SYNC:
                         mBluetoothManager.startManualSync();
                         break;
+
 
                     // When bluetooth state changed
                     case BluetoothAdapter.ACTION_STATE_CHANGED:

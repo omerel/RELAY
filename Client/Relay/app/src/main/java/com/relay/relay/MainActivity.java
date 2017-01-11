@@ -49,7 +49,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView mTextViewReceiver;
     private boolean clicked = false;
     private String[] mId;
-    public static Map<String,String> db = new HashMap<>();
+    public static Map<String,Object[]> db = new HashMap<>();
 
     //for testing
     RelayDevice mRelayDevice;
@@ -95,6 +95,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         // Set id options
         mId = new String[] {"A","B","C","D"};
+
+        DateFormat df = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss aa");
+        String date = df.format(Calendar.getInstance().getTime());
+
+        Object[] obj = new Object[2];
+        obj[0] = date;
+        obj[1] = "test";
+        db.put("A",obj);
+        db.put("D",obj);
+        db.put("C",obj);
+        db.put("B",obj);
 
         checkPermissions();
     }
@@ -166,13 +177,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 if (clicked){
                     if (!BluetoothAdapter.getDefaultAdapter().isEnabled()) {
                         startActivity(new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE));
-                        //BluetoothAdapter.getDefaultAdapter().enable();
                         clicked = !clicked;
                     }
                     else{
-                        Toast.makeText(getApplicationContext(),"Start service",
-                                Toast.LENGTH_LONG).show();
-                        startService(new Intent(MainActivity.this,ConnectivityManager.class));
+
+                        if(mSender == null){
+                            clicked = !clicked;
+                            Toast.makeText(getApplicationContext(),"Please choose your id first",
+                                    Toast.LENGTH_LONG).show();
+                        }
+                        else{
+                            Toast.makeText(getApplicationContext(),"Start service",
+                                    Toast.LENGTH_LONG).show();
+                            Intent service = new Intent(MainActivity.this,ConnectivityManager.class);
+                            service.putExtra("device_id",mSender);
+                            startService(service);
+                        }
                     }
                 }else{
                     Toast.makeText(getApplicationContext(),"Stop service",
@@ -216,6 +236,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
                 });
                 builderType.show();
+                mTextViewSender.setClickable(false);
                 break;
             case (R.id.receiver):
 
@@ -249,8 +270,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case (R.id.send_button):
                 String content = mContent.getText().toString();
                 mContent.setText("");
+                DateFormat df = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss aa");
+
                 if (!content.isEmpty()){
 
+                    Object[] obj = new Object[2];
+                    obj[0] = df.format(Calendar.getInstance().getTime());
+                    obj[1] = "From: "+mSender+". "+content;
+
+                    db.put(mReceiver,obj);
                 }
                 break;
         }
@@ -281,7 +309,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     // When incoming message received
                     case MESSAGE_RECEIVED:
                         String relayMessage = intent.getStringExtra("relayMessage");
-                        mArrayAdapter.add(MainActivity.this.setResult(relayMessage));
+                        mArrayAdapter.add(relayMessage);
                         mDevicesList.setSelection(mArrayAdapter.getCount()-1);
                         notifyMessageArrived();
 
@@ -306,29 +334,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         };
         registerReceiver(mBroadcastReceiver, mFilter);
     }
-
-    private String setResult(String relayMessage) {
-        if (!mHashMapRelayDevice.containsKey(relayMessage)) {
-            mRelayDevice = new RelayDevice(relayMessage);
-        }
-        else
-            mRelayDevice = mHashMapRelayDevice.get(relayMessage);
-        mRelayDevice.add();
-        mHashMapRelayDevice.put(relayMessage,mRelayDevice);
-
-        String result= "";
-
-        result =result +  mRelayDevice.address+": " + mRelayDevice.count+" times\n";
-
-        DateFormat df = new SimpleDateFormat("EEE, d MMM yyyy, HH:mm");
-        String date = df.format(Calendar.getInstance().getTime());
-
-        result = result +"time : "+date;
-
-        Log.e(TAG, "TIME : "+date);
-        return result;
-    }
-
 
     public void killService() {
         //  BroadCast to service
@@ -374,7 +379,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public void notifyMessageArrived(){
 
-        Toast.makeText(getApplicationContext(), "Finish handshake",
+        Toast.makeText(getApplicationContext(), "Message arrived",
                 Toast.LENGTH_SHORT).show();
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {

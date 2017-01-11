@@ -48,7 +48,9 @@ public class BLManager extends Thread implements BLConstants {
     private Messenger mConnectivityMessenger;
     private Handler mHandler;
     private HandShake mHandShake;
-    private final String mDeviceUUID;
+
+
+    private String mDeviceUUID;
     private int mStatus;
     private ConnectivityManager mConnectivityManager;
     private boolean mInitiator;
@@ -81,6 +83,8 @@ public class BLManager extends Thread implements BLConstants {
 
     }
 
+
+    //
     // Start thread
     @Override
     public void run() {
@@ -396,7 +400,8 @@ public class BLManager extends Thread implements BLConstants {
 //                            }
 //                        }, DELAY_AFTER_HANDSHAKE);
 //                    else{
-//                        mBluetoothServer.start();
+//                        if (!mBluetoothServer.isAlive())
+//                            mBluetoothServer.start();
 //                        startSearchImmediately();
 //                    }
                     break;
