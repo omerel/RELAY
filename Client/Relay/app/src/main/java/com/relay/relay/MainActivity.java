@@ -42,6 +42,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -118,8 +119,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         // Set id options
         mId = new String[] {A,B,C,D};
 
+        // initial default db
+        initialDB();
+
+        checkPermissions();
+    }
+
+    private void initialDB() {
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.MILLISECOND, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.HOUR, 0);
+
         DateFormat df = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss aa");
-        String date = df.format(Calendar.getInstance().getTime());
+        String date = df.format(calendar.getTime());
 
         Object[] obj = new Object[2];
         obj[0] = date;
@@ -128,8 +143,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         db.put(B,obj);
         db.put(C,obj);
         db.put(D,obj);
-
-        checkPermissions();
     }
 
 
@@ -186,21 +199,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 mTextViewSender.setText("["+mId[0]+"] ");
                                 mSender = mId[0];
                                 mSendButton.setClickable(true);
+                                getSupportActionBar().setTitle("Hi "+ mId[0]);
                                 break;
                             case 1:
                                 mTextViewSender.setText("["+mId[1]+"] ");
                                 mSender = mId[1];
                                 mSendButton.setClickable(true);
+                                getSupportActionBar().setTitle("Hi "+ mId[1]);
                                 break;
                             case 2:
                                 mTextViewSender.setText("["+mId[2]+"] ");
                                 mSender = mId[2];
                                 mSendButton.setClickable(true);
+                                getSupportActionBar().setTitle("Hi "+ mId[2]);
                                 break;
                             case 3:
                                 mTextViewSender.setText("["+mId[3]+"] ");
                                 mSender = mId[3];
                                 mSendButton.setClickable(true);
+                                getSupportActionBar().setTitle("Hi "+ mId[3]);
                                 break;
                         }
                     }
