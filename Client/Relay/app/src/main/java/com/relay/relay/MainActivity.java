@@ -10,6 +10,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
@@ -17,17 +19,28 @@ import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.app.NotificationCompat;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
@@ -35,14 +48,18 @@ import java.util.Map;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
+    public static String A = "Omer";
+    public static String B = "Barr";
+    public static String C = "Boris";
+    public static String D = "Ariel";
+    public static String DELIMITER = "<!-@-!>";
+
     private final String TAG = "RELAY_DEBUG: "+ MainActivity.class.getSimpleName();
 
     private static final int PERMISSION_REQUEST_COARSE_LOCATION = 1;
 
     // Views
     private ListView mDevicesList;
-    private Button mStartButton;
-    private Button mManualSyncButton;
     private Button mSendButton;
     private EditText mContent;
     private TextView mTextViewSender;
@@ -51,11 +68,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private String[] mId;
     public static Map<String,Object[]> db = new HashMap<>();
 
-    //for testing
-    RelayDevice mRelayDevice;
-    Map<String,RelayDevice> mHashMapRelayDevice = new HashMap<>();
 
-    private ArrayAdapter<String> mArrayAdapter;
+    //private ArrayAdapter<String> mArrayAdapter;
+    private ChatAdapter mChatAdapter;
+    private ArrayList<RelayMesage> mArrayMessages;
 
     public static final String MESSAGE_RECEIVED = "relay.BroadcastReceiver.MESSAGE";
     private BroadcastReceiver mBroadcastReceiver;
@@ -73,41 +89,142 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         createBroadcastReceiver();
 
+
+        // setup toolbar
+        Toolbar mMyToolbar = (Toolbar) findViewById(R.id.my_toolbar);
+        setSupportActionBar(mMyToolbar);
+        getSupportActionBar().setTitle(" RELAY DEMO ");
+
         // Bind layout's view to class
-        mStartButton = (Button) findViewById(R.id.button);
         mDevicesList = (ListView)findViewById(R.id.listview);
-        mManualSyncButton = (Button) findViewById(R.id.button2);
         mSendButton = (Button) findViewById(R.id.send_button);
         mContent = (EditText) findViewById(R.id.content);
         mTextViewSender = (TextView) findViewById(R.id.sender);
         mTextViewReceiver = (TextView) findViewById(R.id.receiver);
 
         // Set on click listener
-        mStartButton.setOnClickListener(this);
-        mManualSyncButton.setOnClickListener(this);
         mSendButton.setOnClickListener(this);
         mTextViewSender.setOnClickListener(this);
         mTextViewReceiver.setOnClickListener(this);
 
-        // bind device list
-        mArrayAdapter = new ArrayAdapter<>(this,R.layout.item_device);
-        mDevicesList.setAdapter(mArrayAdapter);
+        mSendButton.setClickable(false);
+
+        // Init ChatDialog list
+        mArrayMessages = new ArrayList<>();
+        mChatAdapter = new ChatAdapter();
+        mDevicesList.setAdapter(mChatAdapter);
+
 
         // Set id options
-        mId = new String[] {"A","B","C","D"};
+        mId = new String[] {A,B,C,D};
 
         DateFormat df = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss aa");
         String date = df.format(Calendar.getInstance().getTime());
 
         Object[] obj = new Object[2];
         obj[0] = date;
-        obj[1] = "test";
-        db.put("A",obj);
-        db.put("D",obj);
-        db.put("C",obj);
-        db.put("B",obj);
+        obj[1] = "test"+DELIMITER+"this is a test";
+        db.put(A,obj);
+        db.put(B,obj);
+        db.put(C,obj);
+        db.put(D,obj);
 
         checkPermissions();
+    }
+
+
+    /** Listener to the menu **/
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+
+
+            case R.id.menu_start_service:
+                clicked = !clicked;
+
+                if (clicked) {
+                    if (!BluetoothAdapter.getDefaultAdapter().isEnabled()) {
+                        startActivity(new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE));
+                        clicked = !clicked;
+                    } else {
+
+                        if (mSender == null) {
+                            clicked = !clicked;
+                            Toast.makeText(getApplicationContext(), "Please choose your id first",
+                                    Toast.LENGTH_LONG).show();
+                        } else {
+                            Toast.makeText(getApplicationContext(), "Start service",
+                                    Toast.LENGTH_LONG).show();
+                            Intent service = new Intent(MainActivity.this, ConnectivityManager.class);
+                            service.putExtra("device_id", mSender);
+                            startService(service);
+                        }
+                    }
+                } else {
+                    Toast.makeText(getApplicationContext(), "Stop service",
+                            Toast.LENGTH_LONG).show();
+                    killService();
+                }
+                break;
+
+            case R.id.menu_sync_manual:
+                if (clicked)
+                    startManualSync();
+                else
+                    Toast.makeText(getApplicationContext(), "Service need to be started",
+                            Toast.LENGTH_LONG).show();
+                break;
+            case R.id.menu_choose_id:
+
+                AlertDialog.Builder builderType = new AlertDialog.Builder(this);
+                builderType.setTitle("Select ID");
+                builderType.setItems(mId, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        switch (which) {
+                            case 0:
+                                mTextViewSender.setText("["+mId[0]+"] ");
+                                mSender = mId[0];
+                                mSendButton.setClickable(true);
+                                break;
+                            case 1:
+                                mTextViewSender.setText("["+mId[1]+"] ");
+                                mSender = mId[1];
+                                mSendButton.setClickable(true);
+                                break;
+                            case 2:
+                                mTextViewSender.setText("["+mId[2]+"] ");
+                                mSender = mId[2];
+                                mSendButton.setClickable(true);
+                                break;
+                            case 3:
+                                mTextViewSender.setText("["+mId[3]+"] ");
+                                mSender = mId[3];
+                                mSendButton.setClickable(true);
+                                break;
+                        }
+                    }
+                });
+                builderType.show();
+                mTextViewSender.setClickable(false);
+                break;
+
+            default:
+                // If we got here, the user's action was not recognized.
+                // Invoke the superclass to handle it.
+                return super.onOptionsItemSelected(item);
+        }
+        return true;
+    }
+
+    /** Make the action button appear in old devices **/
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu, menu);
+        // Update menu titles and icons
+        return super.onCreateOptionsMenu(menu);
     }
 
     private void checkBluetoothAndBleSupport() {
@@ -170,74 +287,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
-            case (R.id.button):
-
-                clicked = !clicked;
-
-                if (clicked){
-                    if (!BluetoothAdapter.getDefaultAdapter().isEnabled()) {
-                        startActivity(new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE));
-                        clicked = !clicked;
-                    }
-                    else{
-
-                        if(mSender == null){
-                            clicked = !clicked;
-                            Toast.makeText(getApplicationContext(),"Please choose your id first",
-                                    Toast.LENGTH_LONG).show();
-                        }
-                        else{
-                            Toast.makeText(getApplicationContext(),"Start service",
-                                    Toast.LENGTH_LONG).show();
-                            Intent service = new Intent(MainActivity.this,ConnectivityManager.class);
-                            service.putExtra("device_id",mSender);
-                            startService(service);
-                        }
-                    }
-                }else{
-                    Toast.makeText(getApplicationContext(),"Stop service",
-                            Toast.LENGTH_LONG).show();
-                    killService();
-                }
-                break;
-
-            case(R.id.button2):
-                if(clicked)
-                    startManualSync();
-                else
-                    Toast.makeText(getApplicationContext(),"Service need to be started",
-                        Toast.LENGTH_LONG).show();
-                break;
-            case (R.id.sender):
-
-                AlertDialog.Builder builderType = new AlertDialog.Builder(this);
-                builderType.setTitle("Select ID");
-                builderType.setItems(mId, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        switch(which){
-                            case 0:
-                                mTextViewSender.setText(mId[0]);
-                                mSender = mId[0];
-                                break;
-                            case 1:
-                                mTextViewSender.setText(mId[1]);
-                                mSender = mId[1];
-                                break;
-                            case 2:
-                                mTextViewSender.setText(mId[2]);
-                                mSender = mId[2];
-                                break;
-                            case 3:
-                                mTextViewSender.setText(mId[3]);
-                                mSender = mId[3];
-                                break;
-                        }
-                    }
-                });
-                builderType.show();
-                mTextViewSender.setClickable(false);
-                break;
             case (R.id.receiver):
 
                 AlertDialog.Builder builderType2 = new AlertDialog.Builder(this);
@@ -247,19 +296,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     public void onClick(DialogInterface dialog, int which) {
                         switch(which){
                             case 0:
-                                mTextViewReceiver.setText(mId[0]);
+                                mTextViewReceiver.setText("["+mId[0]+"]");
                                 mReceiver = mId[0];
                                 break;
                             case 1:
-                                mTextViewReceiver.setText(mId[1]);
+                                mTextViewReceiver.setText("["+mId[1]+"]");
                                 mReceiver = mId[1];
                                 break;
                             case 2:
-                                mTextViewReceiver.setText(mId[2]);
+                                mTextViewReceiver.setText("["+mId[2]+"]");
                                 mReceiver = mId[2];
                                 break;
                             case 3:
-                                mTextViewReceiver.setText(mId[3]);
+                                mTextViewReceiver.setText("["+mId[3]+"]");
                                 mReceiver = mId[3];
                                 break;
                         }
@@ -271,13 +320,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 String content = mContent.getText().toString();
                 mContent.setText("");
                 DateFormat df = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss aa");
-
                 if (!content.isEmpty()){
+//                    mArrayAdapter.add("Me To ["+mReceiver+"] : "+content+
+//                            "\nOn: "+  df.format(Calendar.getInstance().getTime()));
+                    // update dialog
+                    RelayMesage newMessage;
+                    String time = df.format(Calendar.getInstance().getTime());
+                    newMessage = new RelayMesage(mSender,mReceiver,content,null,time);
 
+                    mArrayMessages.add(newMessage);
+                    //  mArrayAdapter.add(relayMessage);
+                    mDevicesList.setSelection(mChatAdapter.getCount()-1);
+
+                    // update db for the next sync
                     Object[] obj = new Object[2];
                     obj[0] = df.format(Calendar.getInstance().getTime());
-                    obj[1] = "From: "+mSender+". "+content;
-
+                    obj[1] = mSender+DELIMITER+content;
                     db.put(mReceiver,obj);
                 }
                 break;
@@ -308,9 +366,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                     // When incoming message received
                     case MESSAGE_RECEIVED:
-                        String relayMessage = intent.getStringExtra("relayMessage");
-                        mArrayAdapter.add(relayMessage);
-                        mDevicesList.setSelection(mArrayAdapter.getCount()-1);
+                        //String relayMessage = intent.getStringExtra("relayMessage");
+                        RelayMesage newMessage;
+                        String time = (String)(db.get(mSender)[0]);
+                        String content = (String)(db.get(mSender)[1]);
+                        String[] data = content.split(DELIMITER);
+
+                        newMessage = new RelayMesage(data[0],mSender,data[1],null,time);
+
+                        mArrayMessages.add(newMessage);
+                      //  mArrayAdapter.add(relayMessage);
+                        mDevicesList.setSelection(mChatAdapter.getCount()-1);
                         notifyMessageArrived();
 
                         // When bluetooth state changed
@@ -424,18 +490,117 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
 
-    private class RelayDevice{
+    private class RelayMesage{
 
-        String address;
-        int count;
+        String sender;
+        String receive;
+        String textMsg;
+        String image;
+        String time;
 
-        RelayDevice(String address){
-            count = 0;
-            this.address= address;
+        public RelayMesage(String sender, String receive, String textMsg,String image,String time) {
+            this.sender = sender;
+            this.receive = receive;
+            this.textMsg = textMsg;
+            this.image = image;
+            this.time = time;
         }
 
-        public void add(){
-            count++;
+    }
+
+    class ChatAdapter extends BaseAdapter{
+
+        @Override
+        public int getCount() {
+            if ( mArrayMessages !=  null) {
+                return mArrayMessages.size();
+            } else {
+                return 0;
+            }
+        }
+
+        @Override
+        public Object getItem(int position) {
+            if (mArrayMessages != null) {
+                return mArrayMessages.get(position);
+            } else {
+                return null;
+            }
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            ViewHolder holder;
+            final RelayMesage relayMesage = (RelayMesage) getItem(position);
+            LayoutInflater vi = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
+            if (convertView == null) {
+                convertView = vi.inflate(R.layout.chat_item, null);
+                holder = createViewHolder(convertView);
+                convertView.setTag(holder);
+            } else {
+                holder = (ViewHolder) convertView.getTag();
+            }
+
+            boolean myMsg = mSender.equals(relayMesage.sender);
+
+            if (relayMesage.textMsg != null )
+                holder.txtMessage.setText(relayMesage.textMsg);
+            if (relayMesage.image != null )
+                holder.image.setImageBitmap(getBitmapFromBytes(relayMesage.image.getBytes()));
+            holder.txtTime.setText( relayMesage.time );
+
+            if (myMsg){
+                holder.userName.setText("Me");
+            }
+            else{
+                holder.userName.setText(relayMesage.sender);
+            }
+
+            switch (relayMesage.sender){
+                case "Ariel":
+                    holder.profile.setImageDrawable(getDrawable(R.drawable.ariel));
+                    break;
+                case "Omer":
+                    holder.profile.setImageDrawable(getDrawable(R.drawable.omer));
+                    break;
+                case "Barr":
+                    holder.profile.setImageDrawable(getDrawable(R.drawable.barr));
+                    break;
+                case "Boris":
+                    holder.profile.setImageDrawable(getDrawable(R.drawable.boris));
+                    break;
+            }
+
+            return convertView;
+        }
+
+        private ViewHolder createViewHolder(View v) {
+            ViewHolder holder = new ViewHolder();
+            holder.txtMessage = (TextView) v.findViewById(R.id.message);
+            holder.txtTime = (TextView) v.findViewById(R.id.createdAtTime);
+            holder.profile = (ImageView)v.findViewById(R.id.contactImage);
+            holder.image = (ImageView)v.findViewById(R.id.image_message);
+            holder.userName = (TextView)v.findViewById(R.id.smReceivers);
+            return holder;
+        }
+
+        private class ViewHolder {
+            public TextView txtMessage;
+            public TextView txtTime;
+            public TextView userName;
+            public ImageView image;
+            public ImageView profile;
+        }
+
+        public Bitmap getBitmapFromBytes(byte[] byteArray){
+            Bitmap bitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
+            return bitmap;
         }
     }
 

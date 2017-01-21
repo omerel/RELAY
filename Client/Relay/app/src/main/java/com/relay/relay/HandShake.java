@@ -19,6 +19,11 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
 
+import static com.relay.relay.MainActivity.A;
+import static com.relay.relay.MainActivity.B;
+import static com.relay.relay.MainActivity.C;
+import static com.relay.relay.MainActivity.D;
+
 /**
  * Created by omer on 12/12/2016.
  *
@@ -138,19 +143,19 @@ public class HandShake implements BLConstants {
         Object[] obj;
         Date d1;
         Date d2;
-        String id = "A";
+        String id = A;
 
         // for each Id check if there is new content and if its for me
         for (int i = 0 ; i < 4; i++) {
 
             if (i == 0)
-                id = "A";
+                id = A;
             if (i == 1)
-                id = "B";
+                id = B;
             if (i == 2)
-                id = "C";
+                id = C;
             if (i == 3)
-                id = "D";
+                id = D;
 
             obj = tempMap.get(id);
             d1 = convertStringToDate( (String) obj[0] );
@@ -168,9 +173,10 @@ public class HandShake implements BLConstants {
         }
 
         if (newMsg){
-            msg = (String) MainActivity.db.get(mDeviceUUID)[1];
-            msg = msg +"\nSent: "+ (String) MainActivity.db.get(mDeviceUUID)[0];
-            sendRelayMessageToManager(NEW_RELAY_MESSAGE,msg);
+//            msg = (String) MainActivity.db.get(mDeviceUUID)[1];
+//            msg = msg +"\nOn: "+ (String) MainActivity.db.get(mDeviceUUID)[0];
+//            sendRelayMessageToManager(NEW_RELAY_MESSAGE,msg);
+            sendRelayMessageToManager(NEW_RELAY_MESSAGE,null);
             Log.e(TAG, "Sending new relay message to manager");
         }else{
             new Handler().postDelayed(new Runnable() {
