@@ -47,7 +47,7 @@
             android:layout_weight="0"
             android:ellipsize="end"
             android:paddingTop="8dp"
-            android:text="22 Apr 08:10 AM"
+            android:text=""
             android:textColor="@color/colorPrimaryDark"
             android:textSize="10dp" />
     </LinearLayout>
@@ -71,7 +71,7 @@
             android:maxLines="1"
             android:paddingTop="3dp"
             android:paddingBottom="3dp"
-            android:text="message"
+            android:text=""
             android:textColor="#999"
             android:textSize="14sp" />
     </LinearLayout>

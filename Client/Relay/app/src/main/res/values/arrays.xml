@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <array name="images">
+        <item>@drawable/omer</item>
+        <item>@drawable/barr</item>
+        <item>@drawable/boris</item>
+        <item>@drawable/ariel</item>
+    </array>
+
+    <string-array name="names">
+        <item>Omer</item>
+        <item>Barr</item>
+        <item>Boris</item>
+        <item>Ariel</item>
+    </string-array>
+
+</resources>

@@ -10,8 +10,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
@@ -21,33 +19,21 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.app.NotificationCompat;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
-import android.widget.BaseAdapter;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.ListView;
-import android.widget.Switch;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener ,  ContactListFragment.OnContactSelected {
 
     public static String A = "Omer";
     public static String B = "Barr";
@@ -59,20 +45,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private static final int PERMISSION_REQUEST_COARSE_LOCATION = 1;
 
-    // Views
-    private ListView mDevicesList;
-    private Button mSendButton;
-    private EditText mContent;
-    private TextView mTextViewSender;
-    private TextView mTextViewReceiver;
     private boolean clicked = false;
-    private String[] mId;
+    public static String[] mId;
     public static Map<String,Object[]> db = new HashMap<>();
+    public static Map<String,ArrayList<RelayMesage>> mMapMessages = new HashMap<>();
 
-
-    //private ArrayAdapter<String> mArrayAdapter;
-    private ChatAdapter mChatAdapter;
-    private ArrayList<RelayMesage> mArrayMessages;
 
     public static final String MESSAGE_RECEIVED = "relay.BroadcastReceiver.MESSAGE";
     private BroadcastReceiver mBroadcastReceiver;
@@ -96,36 +73,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setSupportActionBar(mMyToolbar);
         getSupportActionBar().setTitle(" RELAY DEMO ");
 
-        // Bind layout's view to class
-        mDevicesList = (ListView)findViewById(R.id.listview);
-        mSendButton = (Button) findViewById(R.id.send_button);
-        mContent = (EditText) findViewById(R.id.content);
-        mTextViewSender = (TextView) findViewById(R.id.sender);
-        mTextViewReceiver = (TextView) findViewById(R.id.receiver);
-
-        // Set on click listener
-        mSendButton.setOnClickListener(this);
-        mTextViewSender.setOnClickListener(this);
-        mTextViewReceiver.setOnClickListener(this);
-
-        mSendButton.setClickable(false);
-
-        // Init ChatDialog list
-        mArrayMessages = new ArrayList<>();
-        mChatAdapter = new ChatAdapter();
-        mDevicesList.setAdapter(mChatAdapter);
-
 
         // Set id options
         mId = new String[] {A,B,C,D};
 
         // initial default db
-        initialDB();
+        initialDbAndArray();
 
         checkPermissions();
     }
 
-    private void initialDB() {
+    private void initialDbAndArray() {
 
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.MILLISECOND, 0);
@@ -143,7 +101,32 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         db.put(B,obj);
         db.put(C,obj);
         db.put(D,obj);
+
+        // initial mapMessages
+        ArrayList<RelayMesage> array;
+
+        // init A
+        array = mMapMessages.get(A);
+        array = new ArrayList<>();
+        mMapMessages.put(A,array);
+
+        // init B
+        array = mMapMessages.get(B);
+        array = new ArrayList<>();
+        mMapMessages.put(B,array);
+
+        // init C
+        array = mMapMessages.get(C);
+        array = new ArrayList<>();
+        mMapMessages.put(C,array);
+
+        // init D
+        array = mMapMessages.get(D);
+        array = new ArrayList<>();
+        mMapMessages.put(D,array);
+
     }
+
 
 
     /** Listener to the menu **/
@@ -187,6 +170,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     Toast.makeText(getApplicationContext(), "Service need to be started",
                             Toast.LENGTH_LONG).show();
                 break;
+
             case R.id.menu_choose_id:
 
                 AlertDialog.Builder builderType = new AlertDialog.Builder(this);
@@ -196,35 +180,45 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     public void onClick(DialogInterface dialog, int which) {
                         switch (which) {
                             case 0:
-                                mTextViewSender.setText("["+mId[0]+"] ");
+                                //mTextViewSender.setText("["+mId[0]+"] ");
                                 mSender = mId[0];
-                                mSendButton.setClickable(true);
+                                //mSendButton.setClickable(true);
                                 getSupportActionBar().setTitle("Hi "+ mId[0]);
+                                startContactFragment();
                                 break;
                             case 1:
-                                mTextViewSender.setText("["+mId[1]+"] ");
+                              //  mTextViewSender.setText("["+mId[1]+"] ");
                                 mSender = mId[1];
-                                mSendButton.setClickable(true);
+                                //mSendButton.setClickable(true);
                                 getSupportActionBar().setTitle("Hi "+ mId[1]);
+                                startContactFragment();
                                 break;
                             case 2:
-                                mTextViewSender.setText("["+mId[2]+"] ");
+                              //  mTextViewSender.setText("["+mId[2]+"] ");
                                 mSender = mId[2];
-                                mSendButton.setClickable(true);
+                                //mSendButton.setClickable(true);
                                 getSupportActionBar().setTitle("Hi "+ mId[2]);
+                                startContactFragment();
                                 break;
                             case 3:
-                                mTextViewSender.setText("["+mId[3]+"] ");
+                              //  mTextViewSender.setText("["+mId[3]+"] ");
                                 mSender = mId[3];
-                                mSendButton.setClickable(true);
+                                //mSendButton.setClickable(true);
                                 getSupportActionBar().setTitle("Hi "+ mId[3]);
+                                startContactFragment();
                                 break;
                         }
                     }
                 });
                 builderType.show();
-                mTextViewSender.setClickable(false);
                 break;
+                case android.R.id.home:
+                    onBackPressed();
+                    getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+                    getSupportActionBar().setDisplayShowHomeEnabled(false);
+                    getSupportActionBar().setTitle("Hi "+mSender+", Select Contact List");
+                    updateFragments();
+                    break;
 
             default:
                 // If we got here, the user's action was not recognized.
@@ -304,58 +298,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
-            case (R.id.receiver):
-
-                AlertDialog.Builder builderType2 = new AlertDialog.Builder(this);
-                builderType2.setTitle("Select ID");
-                builderType2.setItems(mId, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        switch(which){
-                            case 0:
-                                mTextViewReceiver.setText("["+mId[0]+"]");
-                                mReceiver = mId[0];
-                                break;
-                            case 1:
-                                mTextViewReceiver.setText("["+mId[1]+"]");
-                                mReceiver = mId[1];
-                                break;
-                            case 2:
-                                mTextViewReceiver.setText("["+mId[2]+"]");
-                                mReceiver = mId[2];
-                                break;
-                            case 3:
-                                mTextViewReceiver.setText("["+mId[3]+"]");
-                                mReceiver = mId[3];
-                                break;
-                        }
-                    }
-                });
-                builderType2.show();
-                break;
-            case (R.id.send_button):
-                String content = mContent.getText().toString();
-                mContent.setText("");
-                DateFormat df = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss aa");
-                if (!content.isEmpty()){
-//                    mArrayAdapter.add("Me To ["+mReceiver+"] : "+content+
-//                            "\nOn: "+  df.format(Calendar.getInstance().getTime()));
-                    // update dialog
-                    RelayMesage newMessage;
-                    String time = df.format(Calendar.getInstance().getTime());
-                    newMessage = new RelayMesage(mSender,mReceiver,content,null,time);
-
-                    mArrayMessages.add(newMessage);
-                    //  mArrayAdapter.add(relayMessage);
-                    mDevicesList.setSelection(mChatAdapter.getCount()-1);
-
-                    // update db for the next sync
-                    Object[] obj = new Object[2];
-                    obj[0] = df.format(Calendar.getInstance().getTime());
-                    obj[1] = mSender+DELIMITER+content;
-                    db.put(mReceiver,obj);
-                }
-                break;
         }
     }
 
@@ -391,9 +333,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                         newMessage = new RelayMesage(data[0],mSender,data[1],null,time);
 
-                        mArrayMessages.add(newMessage);
-                      //  mArrayAdapter.add(relayMessage);
-                        mDevicesList.setSelection(mChatAdapter.getCount()-1);
+                        //mArrayMessages.add(newMessage);
+                        mMapMessages.get(data[0]).add(newMessage);
+
+                        updateFragments();
+
                         notifyMessageArrived();
 
                         // When bluetooth state changed
@@ -417,6 +361,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         };
         registerReceiver(mBroadcastReceiver, mFilter);
     }
+
+
+    public void updateFragments(){
+        ChatFragment chatFragment = (ChatFragment) getSupportFragmentManager().findFragmentByTag("chatFragment");
+        if (chatFragment != null)
+            chatFragment.notifyDataSetChanged();
+
+        ContactListFragment contactListFragment = (ContactListFragment) getSupportFragmentManager().findFragmentByTag("contactListFragment");
+        if (contactListFragment != null)
+            contactListFragment.notifyDataSetChanged();
+    }
+
 
     public void killService() {
         //  BroadCast to service
@@ -506,8 +462,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         alertDialog.show();
     }
 
+    @Override
+    public void OnContactSelected(String name) {
+        final ChatFragment chatFragment =
+                ChatFragment.newInstance(mSender, name);
 
-    private class RelayMesage{
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.root_layout, chatFragment, "chatFragment")
+                .addToBackStack(null)
+                .commit();
+
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        getSupportActionBar().setTitle("Chat with "+name);
+
+    }
+
+
+    public static class RelayMesage{
 
         String sender;
         String receive;
@@ -525,100 +498,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
-    class ChatAdapter extends BaseAdapter{
+    public void startContactFragment(){
+        final ContactListFragment contactListFragment =
+                ContactListFragment.newInstance(mSender);
 
-        @Override
-        public int getCount() {
-            if ( mArrayMessages !=  null) {
-                return mArrayMessages.size();
-            } else {
-                return 0;
-            }
-        }
+        getSupportFragmentManager()
+                .beginTransaction()
+                .add(R.id.root_layout, contactListFragment, "contactListFragment")
+                .commit();
 
-        @Override
-        public Object getItem(int position) {
-            if (mArrayMessages != null) {
-                return mArrayMessages.get(position);
-            } else {
-                return null;
-            }
-        }
-
-        @Override
-        public long getItemId(int position) {
-            return position;
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            ViewHolder holder;
-            final RelayMesage relayMesage = (RelayMesage) getItem(position);
-            LayoutInflater vi = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-
-            if (convertView == null) {
-                convertView = vi.inflate(R.layout.chat_item, null);
-                holder = createViewHolder(convertView);
-                convertView.setTag(holder);
-            } else {
-                holder = (ViewHolder) convertView.getTag();
-            }
-
-            boolean myMsg = mSender.equals(relayMesage.sender);
-
-            if (relayMesage.textMsg != null )
-                holder.txtMessage.setText(relayMesage.textMsg);
-            if (relayMesage.image != null )
-                holder.image.setImageBitmap(getBitmapFromBytes(relayMesage.image.getBytes()));
-            holder.txtTime.setText( relayMesage.time );
-
-            if (myMsg){
-                holder.userName.setText("Me");
-            }
-            else{
-                holder.userName.setText(relayMesage.sender);
-            }
-
-            switch (relayMesage.sender){
-                case "Ariel":
-                    holder.profile.setImageDrawable(getDrawable(R.drawable.ariel));
-                    break;
-                case "Omer":
-                    holder.profile.setImageDrawable(getDrawable(R.drawable.omer));
-                    break;
-                case "Barr":
-                    holder.profile.setImageDrawable(getDrawable(R.drawable.barr));
-                    break;
-                case "Boris":
-                    holder.profile.setImageDrawable(getDrawable(R.drawable.boris));
-                    break;
-            }
-
-            return convertView;
-        }
-
-        private ViewHolder createViewHolder(View v) {
-            ViewHolder holder = new ViewHolder();
-            holder.txtMessage = (TextView) v.findViewById(R.id.message);
-            holder.txtTime = (TextView) v.findViewById(R.id.createdAtTime);
-            holder.profile = (ImageView)v.findViewById(R.id.contactImage);
-            holder.image = (ImageView)v.findViewById(R.id.image_message);
-            holder.userName = (TextView)v.findViewById(R.id.smReceivers);
-            return holder;
-        }
-
-        private class ViewHolder {
-            public TextView txtMessage;
-            public TextView txtTime;
-            public TextView userName;
-            public ImageView image;
-            public ImageView profile;
-        }
-
-        public Bitmap getBitmapFromBytes(byte[] byteArray){
-            Bitmap bitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
-            return bitmap;
-        }
+        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        getSupportActionBar().setDisplayShowHomeEnabled(false);
+        getSupportActionBar().setTitle("Hi "+mSender+", Select Contact List");
     }
-
 }
+
+
