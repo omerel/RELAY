@@ -6,17 +6,17 @@ import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.ParcelUuid;
 import android.os.RemoteException;
 import android.util.Log;
-
+import com.relay.relay.ConnectivityManager;
 import java.util.ArrayList;
 import java.util.List;
-
-import static java.lang.System.exit;
+import static android.bluetooth.le.ScanSettings.MATCH_NUM_ONE_ADVERTISEMENT;
 
 /**
  * Created by omer on 10/12/2016.
@@ -33,11 +33,13 @@ public class BLEScan implements BLConstants {
     private BluetoothLeScanner mBluetoothLeScanner;
     private ScanCallback mScanCallback;
     private Messenger mMessenger;
+    private ConnectivityManager mConnectivityManager;
 
-    public BLEScan(BluetoothAdapter bluetoothAdapter,Messenger messenger) {
+    public BLEScan(BluetoothAdapter bluetoothAdapter,Messenger messenger,ConnectivityManager connectivityManager) {
         this.mBluetoothAdapter = bluetoothAdapter;
         this.mScanCallback = null;
         this.mMessenger = messenger;
+        this.mConnectivityManager = connectivityManager;
         mBluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
         Log.d(TAG, "Class created");
     }
@@ -47,10 +49,10 @@ public class BLEScan implements BLConstants {
      */
     public void startScanning() {
         mScanCallback = new CustomScanCallback();
-        if (mBluetoothAdapter.isEnabled())
+        if (mBluetoothAdapter.isEnabled()) {
             mBluetoothLeScanner.startScan(buildScanFilters(), buildScanSettings(), mScanCallback);
-        Log.d(TAG, "Start Scanning for BLE Advertisements");
-
+            Log.d(TAG, "Start Scanning for BLE Advertisements");
+        }
     }
 
     /**
@@ -83,6 +85,9 @@ public class BLEScan implements BLConstants {
     private ScanSettings buildScanSettings() {
         ScanSettings.Builder builder = new ScanSettings.Builder();
         builder.setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            builder.setNumOfMatches(MATCH_NUM_ONE_ADVERTISEMENT);
+        }
         return builder.build();
     }
 
@@ -103,11 +108,13 @@ public class BLEScan implements BLConstants {
             sendResultToBLECentral(FOUND_NEW_DEVICE,result);
             Log.d(TAG, "Found new result - "+"Name :  "+result.getDevice().getName() +
                     " ,Mac device : "+result.getDevice().getAddress());
+
         }
         @Override
         public void onScanFailed(int errorCode) {
             super.onScanFailed(errorCode);
             // TODO
+            stopScanning();
             //sendResultToBLECentral(BLE_SCAN_ERROR,null);
             Log.e(TAG, "Error - Scan failed with error: "+ errorCode);
         }
@@ -130,6 +137,5 @@ public class BLEScan implements BLConstants {
             Log.e(TAG, "Error with sendResultToBLECentral ");
         }
     }
-
 
 }

@@ -76,7 +76,6 @@ public class BluetoothServer extends Thread implements BLConstants {
             }
             // If a connection was accepted
             if (socket != null) {
-
                 // update socket
                 mBluetoothSocket = socket;
                 // get connceted device

@@ -62,18 +62,17 @@ public class BluetoothScan implements BLConstants{
             @Override
             public void run() {
                 stopScan();
+                if(!isDeviceFound)
+                    sendResultToBluetoothManager(NOT_FOUND_ADDRESS_FROM_BLSCAN,null);
             }
         }, SCAN_TIME);
-        if(isDeviceFound)
-            sendResultToBluetoothManager(NOT_FOUND_ADDRESS_FROM_BLSCAN,null);
-        isDeviceFound = false;
     }
 
     private void stopScan(){
         if (mBluetoothAdapter != null)
             mBluetoothAdapter.cancelDiscovery();
         mBluetoothAdapter.setName(mBluetoothName);
-        mConnectivityManager.unregisterReceiver(mBroadcastReceiver);
+//        mConnectivityManager.unregisterReceiver(mBroadcastReceiver);
         Log.e(TAG, "cancel Discovery ");
     }
 
@@ -106,9 +105,9 @@ public class BluetoothScan implements BLConstants{
                             split = device.getName().split("_");
                         if (split!= null && split.length>0)
                             if (split[0].equals("relay")) {
+                                isDeviceFound = true;
                                 stopScan();
                                 sendResultToBluetoothManager(FOUND_MAC_ADDRESS_FROM_BLSCAN, device.getAddress());
-                                isDeviceFound = true;
                             }
 
 

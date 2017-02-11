@@ -47,10 +47,12 @@ public class BLManager extends Thread implements BLConstants {
     // Messenger from ConnectivityManager
     private Messenger mConnectivityMessenger;
     private Handler mHandler;
+    private Handler mAdvertiserHandler;
     private HandShake mHandShake;
     private final String mDeviceUUID;
     private int mStatus;
     private ConnectivityManager mConnectivityManager;
+    // who connect(initiate) to who
     private boolean mInitiator;
 
 
@@ -74,6 +76,7 @@ public class BLManager extends Thread implements BLConstants {
          this.mSearchWithoutChangeCounter = 0;
          this.mConnectivityMessenger = connectivityMessenger;
          this.mHandler = new Handler();
+         this.mAdvertiserHandler = new Handler();
          this.mHandShake = null;
          this.mStatus = DISCONNECTED;
          Log.d(TAG, "Class created");
@@ -88,6 +91,11 @@ public class BLManager extends Thread implements BLConstants {
         // Open server socket
         mBluetoothServer.start();
         checkSupport();
+
+        // Start advertising
+        mBlePeripheral.startPeripheral();
+        checkAdvertiser(60000);
+
         startSearchImmediately();
         Log.d(TAG, "Start thread");
     }
@@ -100,6 +108,18 @@ public class BLManager extends Thread implements BLConstants {
 
     }
 
+    private void checkAdvertiser(int time){
+        final int newTime = time;
+        mAdvertiserHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                mBlePeripheral.startPeripheral();
+                checkAdvertiser(newTime);
+                Log.d(TAG, "Restart Advertisement if needed");
+            }
+        }, time);
+
+    }
 
     // Close thread
     public void cancel() {
@@ -110,6 +130,7 @@ public class BLManager extends Thread implements BLConstants {
             mBluetoothServer.cancel();
         mBLECentral.close();
         mBlePeripheral.close();
+        mAdvertiserHandler.removeCallbacksAndMessages(null);
         Log.d(TAG, "Cancel thread");
     }
 
@@ -120,28 +141,12 @@ public class BLManager extends Thread implements BLConstants {
     public void powerConnectionDetected(boolean isConnected){
         if (isConnected){
             mIntervalSearchTime = TIME_RELAY_SEARCH_INTERVAL_POWER_MODE;
-            mSearchWithoutChangeCounter = -1000;
             mWaitingList = TIME_RELAY_KEEPS_FOUND_DEVICE_IN_LIST_POWER_MODE;
-            // clear connect devices list
-//            mLastConnectedDevices.clear();
-//            if (mStatus == DISCONNECTED) {
-//                stopSearch(RESET_SEARCH_COUNTER);
-//                resetSearch();
-//                intervalSearch();
-//            }
             Log.d(TAG, "changed interval setting to connected to power mode");
         }
         else{
             mIntervalSearchTime = TIME_RELAY_SEARCH_INTERVAL;
-            mSearchWithoutChangeCounter = 0;
             mWaitingList = TIME_RELAY_KEEPS_FOUND_DEVICE_IN_LIST;
-            // clear connect devices list
-//            mLastConnectedDevices.clear();
-//            if (mStatus == DISCONNECTED) {
-//                stopSearch(RESET_SEARCH_COUNTER);
-//                resetSearch();
-//                intervalSearch();
-//            }
             Log.d(TAG, "changed interval setting to connected to default");
         }
     }
@@ -150,9 +155,6 @@ public class BLManager extends Thread implements BLConstants {
      * Start search with timer
      */
     private void startSearchImmediately(){
-
-        // Start advertising
-        mBlePeripheral.startPeripheral();
 
         mBLECentral.getBleScan().startScanning();
 
@@ -182,8 +184,6 @@ public class BLManager extends Thread implements BLConstants {
         Log.d(TAG, "COUNTER SEARCH WITHOUT CHANGES: "+mSearchWithoutChangeCounter );
         // stop scan
         mBLECentral.getBleScan().stopScanning();
-        // stop advertising
-        mBlePeripheral.stopPeripheral();
         Log.d(TAG, "StopSearch()");
 
     }
@@ -192,17 +192,6 @@ public class BLManager extends Thread implements BLConstants {
      * Start new search with the interval time delayed
      */
     private void intervalSearch(){
-
-        // check search without changes in results counter
-        if (mSearchWithoutChangeCounter > MAX_SEARCH_WITHOUT_CHANGE_COUNTER)
-            // set limit to interval search time
-            if (mIntervalSearchTime < MAX_TIME_RELAY_SEARCH_INTERVAL) {
-                // increase interval search time
-                mIntervalSearchTime = mIntervalSearchTime * 2;
-                // reset the counter
-                mSearchWithoutChangeCounter = 0;
-                Log.d(TAG, "mSearchWithoutChangeCounter reach to maximum , interval time changes");
-            }
 
         mHandler.postDelayed(new Runnable() {
             @Override
@@ -251,9 +240,7 @@ public class BLManager extends Thread implements BLConstants {
      *  Reset interval search time and counter
      */
     private void resetSearch()  {
-        mIntervalSearchTime = TIME_RELAY_SEARCH_INTERVAL;
         mSearchWithoutChangeCounter = 0;
-
         Log.d(TAG, "Reset mIntervalSearchTime and mSearchWithoutChangeCounter ");
 
     }
@@ -309,6 +296,7 @@ public class BLManager extends Thread implements BLConstants {
                     mBluetoothServer.cancel();
                     bluetoothSocket = mBluetoothServer.getBluetoothSocket();
                     stopSearch(FOUND_NEW_DEVICE);
+
                     // reset interval search time and counter
                     resetSearch();
                     // Start handshake
@@ -386,18 +374,17 @@ public class BLManager extends Thread implements BLConstants {
                                 // TODO sometimes thread  is alive. prevent error
                                 if (!mBluetoothServer.isAlive())
                                     mBluetoothServer.start();
-                                startSearchImmediately();
+                                intervalSearch();
                             }
                         }, DELAY_AFTER_HANDSHAKE);
                     else{
                         mBluetoothServer.start();
-                        startSearchImmediately();
+                        intervalSearch();
                     }
                     break;
 
                 case READ_PACKET:
                     Log.e(TAG, "READ_PACKET");
-
                     // test
                     Log.d(TAG, "Read Packet in BLManager");
                     String packet = msg.getData().getString("packet");
@@ -407,7 +394,7 @@ public class BLManager extends Thread implements BLConstants {
 
                case NEW_RELAY_MESSAGE:
                    Log.e(TAG, "NEW_RELAY_MESSAGE");
-                   // When the message is for this device
+                    // When the message is for this device
                     Log.d(TAG, "Received  new relay message from Handshake");
                     String relayMessage = msg.getData().getString("relayMessage");
                     sendRelayMessageToConnectivityManager(NEW_RELAY_MESSAGE,relayMessage);

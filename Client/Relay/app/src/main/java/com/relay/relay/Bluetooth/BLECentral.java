@@ -122,7 +122,7 @@ public class BLECentral implements BLConstants {
         this.mBluetoothAdapter = bluetoothAdapter;
         this.mManagerMessenger = messenger;
         this.mLastConnectedDevices = lastConnectedDevices;
-        this.mBleScan = new BLEScan(mBluetoothAdapter,mMessenger);
+        this.mBleScan = new BLEScan(mBluetoothAdapter,mMessenger,connectivityManager);
         Log.d(TAG, "Class created");
     }
 
