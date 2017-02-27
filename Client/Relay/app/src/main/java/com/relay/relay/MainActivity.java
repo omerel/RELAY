@@ -24,6 +24,8 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.relay.relay.DB.Test;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -76,6 +78,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mDevicesList.setAdapter(mArrayAdapter);
 
         checkPermissions();
+
+        Test t = new Test();
+        t.startTest();
+
     }
 
     private void checkBluetoothAndBleSupport() {

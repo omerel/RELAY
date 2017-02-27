@@ -385,7 +385,7 @@ public class BLManager extends Thread implements BLConstants {
 
                 case READ_PACKET:
                     Log.e(TAG, "READ_PACKET");
-                    // test
+                    // Test
                     Log.d(TAG, "Read Packet in BLManager");
                     String packet = msg.getData().getString("packet");
                     // update handshake with the new packet
