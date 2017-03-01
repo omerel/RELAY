@@ -1,5 +1,6 @@
 package com.relay.relay.DB;
 
+import android.content.Context;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -12,12 +13,14 @@ import java.util.UUID;
 
 public class Test {
 
-    public Test(){
+    private Context context;
 
+    public Test(Context context){
+        this.context = context;
     }
     public void startTest(){
         final String TAG = "RELAY_DEBUG: "+ Test.class.getSimpleName();
-        Graph graph = new Graph();
+        Graph graph = new Graph(context);
         UUID[] uuids = new UUID[15];
 
         for (int i = 0; i < 15; i++){
@@ -33,6 +36,8 @@ public class Test {
         graph.addEdge(uuids[0],uuids[3]);
         Log.e(TAG, "graph.addEdge(uuids[0],uuids[3])---> OK");
         graph.addEdge(uuids[0],uuids[1]);
+        Log.e(TAG, "graph.hasEdge(uuids[0],uuids[3])---> "+graph.hasEdge(uuids[0],uuids[3]));
+        Log.e(TAG, "graph.hasEdge(uuids[0],uuids[3])---> "+graph.hasEdge(uuids[0],uuids[1]));
         Log.e(TAG, "graph.addEdge(uuids[0],uuids[1])---> OK");
         Log.e(TAG, "graph.getMyNumEdges()--->"+graph.getMyNumEdges());
         Log.e(TAG, "graph.getMyNumNodes()--->"+graph.getMyNumNodes());
@@ -53,6 +58,7 @@ public class Test {
         for (int i = 13; i < 14; i++){
             graph.addEdge(uuids[4],uuids[i]);
         }
+
         for (int i = 13; i < 14; i++){
             graph.addEdge(uuids[7],uuids[i]);
         }
@@ -68,9 +74,14 @@ public class Test {
         Log.e(TAG, "graph.getMyNumEdges()--->"+graph.getMyNumEdges());
         Log.e(TAG, "graph.getMyNumNodes()--->"+graph.getMyNumNodes());
 
+        ArrayList<UUID> t;
+        for (int i =0 ;i<15;i++){
+           t =  (ArrayList<UUID>) graph.adjacentTo(uuids[i]);
+            Log.e(TAG, "num of adj for node "+i+": "+ (t.size()));
+        }
 
         Log.e(TAG, "Start BFS on uuid[0]");
-         HashMap< Integer, ArrayList<UUID>>  b = graph.bfs(graph, uuids[0]);
+        HashMap< Integer, ArrayList<UUID>>  b = graph.bfs(graph, uuids[0]);
 
         Log.e(TAG, "Degrees :"+b.size());
         for (int i = 0; i< b.size();i++){
@@ -80,5 +91,8 @@ public class Test {
                 Log.e(TAG, "Node :"+arr.get(j));
             }
         }
+
+        graph.deleteGraph();
     }
+
 }

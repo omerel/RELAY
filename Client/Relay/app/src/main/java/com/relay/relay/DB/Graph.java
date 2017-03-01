@@ -1,29 +1,39 @@
 package com.relay.relay.DB;
+import android.content.Context;
+
 import java.util.*;
 import java.util.Queue;
 
 public class Graph {
-    private HashMap<UUID, TreeSet<UUID>> myGraph;
-    private static final TreeSet<UUID> EMPTY_SET = new TreeSet<UUID>();
-    private int myNumNodes;
-    private int myNumEdges;
+
+    final String TAG = "RELAY_DEBUG: "+ Graph.class.getSimpleName();
+    private DBManager dbManager;
+    final String DB = "my_graph";
+    final UUID NUM_OF_NODES = UUID.fromString("3add4bd4-836f-4ee9-a728-a815c534b515");
+    final UUID NUM_OF_EDGES = UUID.fromString("3add4bd4-836f-4ee9-a728-a815c534b513");
+    private static final ArrayList<UUID> EMPTY_SET = new ArrayList<>();
 
     /**
      * Construct empty Graph
      */
-    public Graph() {
-        myGraph = new HashMap<UUID, TreeSet<UUID>>();
-        myNumNodes = myNumEdges = 0;
+    public Graph(Context context) {
+        dbManager = new DBManager(DB,context);
+        dbManager.openDB();
     }
+
+    public boolean deleteGraph(){
+        return dbManager.deleteDB();
+    }
+
 
     /**
      * Add a new node with no neighbors
      */
     public boolean addNode(UUID uuid) {
         final UUID node = uuid;
-        if (!myGraph.keySet().contains(node)) {
-            myGraph.put(node, new TreeSet<UUID>());
-            myNumNodes += 1;
+        if (!hasNode(node)) {
+            dbManager.putObject(uuid, new ArrayList<UUID>());
+            addNumNodes();
             return true;
         }
         return false;
@@ -33,7 +43,7 @@ public class Graph {
      * Returns true iff v is in this Graph, false otherwise
      */
     public boolean hasNode(UUID uuid) {
-        return myGraph.keySet().contains(uuid);
+        return dbManager.isKeyExist(uuid) ;
     }
 
     /**
@@ -43,9 +53,11 @@ public class Graph {
      */
     public boolean hasEdge(UUID from, UUID to) {
 
+        ArrayList<UUID> temp = null;
         if (!hasNode(from) || !hasNode(to))
             return false;
-        return myGraph.get(from).contains(to);
+        temp = (ArrayList<UUID>)dbManager.getObject(from);
+        return temp.contains(to);
     }
 
     /**
@@ -53,16 +65,26 @@ public class Graph {
      * set of neighbors. Does not add an edge if another edge
      * already exists
      */
+
     public void addEdge(UUID from, UUID to) {
+
+        ArrayList<UUID> temp = null;
+
         if (hasEdge(from, to))
             return;
         if (from == to)
             return;
-        myNumEdges += 1;
-        addNode(from); // TODO noo need because hasEdge already check it
+        addNode(from);
         addNode(to);
-        myGraph.get(from).add(to);
-        myGraph.get(to).add(from);
+        addNumEdges();
+
+        temp = (ArrayList<UUID>) dbManager.getObject(from);
+        temp.add(to);
+        dbManager.putObject(from,temp);
+
+        temp = (ArrayList<UUID>) dbManager.getObject(to);
+        temp.add(from);
+        dbManager.putObject(to,temp);
     }
 
 
@@ -70,18 +92,52 @@ public class Graph {
      * Return an iterator over the neighbors of UUID
      */
     public Iterable<UUID> adjacentTo(UUID uuid) {
-        if (!myGraph.containsKey(uuid))
+        //if (!myGraph.containsKey(uuid))
+        if (!hasNode(uuid))
             return EMPTY_SET;
-        return myGraph.get(uuid);
+        return (ArrayList<UUID>) dbManager.getObject(uuid);
     }
 
 
+    public void addNumNodes(){
+
+        if (!dbManager.isKeyExist(NUM_OF_NODES)){
+            dbManager.putObject(NUM_OF_NODES,1);
+        }
+        else{
+            int num = (int) dbManager.getObject(NUM_OF_NODES);
+            num++;
+            dbManager.putObject(NUM_OF_NODES,num);
+        }
+    }
+
+    public void addNumEdges(){
+        if (!dbManager.isKeyExist(NUM_OF_EDGES)){
+            dbManager.putObject(NUM_OF_EDGES,1);
+        }
+        else{
+            int num = (int) dbManager.getObject(NUM_OF_EDGES);
+            num++;
+            dbManager.putObject(NUM_OF_EDGES,num);
+        }
+    }
+
     public int getMyNumNodes() {
-        return myNumNodes;
+
+        if (!dbManager.isKeyExist(NUM_OF_NODES)){
+            return  0;
+        }
+        else{
+            return(int) dbManager.getObject(NUM_OF_NODES);
+        }
     }
 
     public int getMyNumEdges() {
-        return myNumEdges;
+        if (!dbManager.isKeyExist(NUM_OF_EDGES)) {
+            return 0;
+        } else {
+            return (int) dbManager.getObject(NUM_OF_EDGES);
+        }
     }
 
 
@@ -101,7 +157,11 @@ public class Graph {
         marked = new boolean[graph.getMyNumNodes()];
         distTo = new int[graph.getMyNumNodes()];
         edgeTo = new int[graph.getMyNumNodes()];
-        ArrayList<UUID> nodesArrayList  = new ArrayList<UUID>(graph.myGraph.keySet());
+
+        ArrayList<UUID> nodesArrayList = dbManager.getKyes();
+        nodesArrayList.remove(NUM_OF_EDGES);
+        nodesArrayList.remove(NUM_OF_NODES);
+
         HashMap< Integer, ArrayList<UUID>> graphOrderedByDegree = new HashMap<>();
 
         if (graph.hasNode(s))
@@ -135,18 +195,6 @@ public class Graph {
                         distTo[nodesArrayList.indexOf(w)]= distTo[nodesArrayList.indexOf(v)] + 1;
                         marked[nodesArrayList.indexOf(w)] = true;
                         q.add(w);
-//                        // if degree exist? add it to the graphOrderedByDegree
-//                        if (graphOrderedByDegree.containsKey(distTo[nodesArrayList.indexOf(w)]))
-//                        {
-//                            ArrayList<UUID> tempList = graphOrderedByDegree.get(distTo[nodesArrayList.indexOf(w)]);
-//                            tempList.add(w);
-//                            graphOrderedByDegree.put(distTo[nodesArrayList.indexOf(w)],tempList);
-//                        }
-//                        else{
-//                            ArrayList<UUID> tempList = new ArrayList<>();
-//                            tempList.add(w);
-//                            graphOrderedByDegree.put(distTo[nodesArrayList.indexOf(w)],tempList);
-//                        }
                     }
                 }
             }
