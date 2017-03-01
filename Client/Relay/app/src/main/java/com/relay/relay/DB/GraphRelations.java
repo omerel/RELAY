@@ -4,19 +4,19 @@ import android.content.Context;
 import java.util.*;
 import java.util.Queue;
 
-public class Graph {
+public class GraphRelations {
 
-    final String TAG = "RELAY_DEBUG: "+ Graph.class.getSimpleName();
+    final String TAG = "RELAY_DEBUG: "+ GraphRelations.class.getSimpleName();
     private DBManager dbManager;
-    final String DB = "my_graph";
+    final String DB = "graph_relations";
     final UUID NUM_OF_NODES = UUID.fromString("3add4bd4-836f-4ee9-a728-a815c534b515");
     final UUID NUM_OF_EDGES = UUID.fromString("3add4bd4-836f-4ee9-a728-a815c534b513");
     private static final ArrayList<UUID> EMPTY_SET = new ArrayList<>();
 
     /**
-     * Construct empty Graph
+     * Construct empty GraphRelations
      */
-    public Graph(Context context) {
+    public GraphRelations(Context context) {
         dbManager = new DBManager(DB,context);
         dbManager.openDB();
     }
@@ -40,14 +40,14 @@ public class Graph {
     }
 
     /**
-     * Returns true iff v is in this Graph, false otherwise
+     * Returns true iff v is in this GraphRelations, false otherwise
      */
     public boolean hasNode(UUID uuid) {
         return dbManager.isKeyExist(uuid) ;
     }
 
     /**
-     * Is from-to, an edge in this Graph. The graph is
+     * Is from-to, an edge in this GraphRelations. The graph is
      * undirected so the order of from and to does not
      * matter.
      */
@@ -63,19 +63,21 @@ public class Graph {
     /**
      * Add to to from's set of neighbors, and add from to to's
      * set of neighbors. Does not add an edge if another edge
-     * already exists
+     * already exists or both node are not exist;
      */
 
-    public void addEdge(UUID from, UUID to) {
+    public boolean addEdge(UUID from, UUID to) {
 
         ArrayList<UUID> temp = null;
 
+        if (!hasNode(from) || !hasNode(to))
+            return false;
         if (hasEdge(from, to))
-            return;
+            return false;
         if (from == to)
-            return;
-        addNode(from);
-        addNode(to);
+            return false;
+//        addNode(from);
+//        addNode(to);
         addNumEdges();
 
         temp = (ArrayList<UUID>) dbManager.getObject(from);
@@ -85,13 +87,15 @@ public class Graph {
         temp = (ArrayList<UUID>) dbManager.getObject(to);
         temp.add(from);
         dbManager.putObject(to,temp);
+
+        return true;
     }
 
 
     /**
      * Return an iterator over the neighbors of UUID
      */
-    public Iterable<UUID> adjacentTo(UUID uuid) {
+    public ArrayList<UUID> adjacentTo(UUID uuid) {
         //if (!myGraph.containsKey(uuid))
         if (!hasNode(uuid))
             return EMPTY_SET;
@@ -122,6 +126,30 @@ public class Graph {
         }
     }
 
+    public void reduceNumEdges(){
+        if (!dbManager.isKeyExist(NUM_OF_EDGES)){
+           return;
+        }
+        else{
+            int num = (int) dbManager.getObject(NUM_OF_EDGES);
+            num--;
+            if (num>=0)
+                dbManager.putObject(NUM_OF_EDGES,num);
+        }
+    }
+
+    public void reduceNumNodes(){
+        if (!dbManager.isKeyExist(NUM_OF_NODES)){
+            return;
+        }
+        else{
+            int num = (int) dbManager.getObject(NUM_OF_NODES);
+            num--;
+            if (num>=0)
+                dbManager.putObject(NUM_OF_NODES,num);
+        }
+    }
+
     public int getMyNumNodes() {
 
         if (!dbManager.isKeyExist(NUM_OF_NODES)){
@@ -140,12 +168,45 @@ public class Graph {
         }
     }
 
+    public boolean deleteNode(UUID uuid){
+        if (!dbManager.isKeyExist(uuid)) {
+            return false;
+        } else {
+            ArrayList<UUID> arrayList = (ArrayList<UUID>)adjacentTo(uuid);
+            while(arrayList.size()>0){
+                deleteRelation(arrayList.get(0),uuid);
+            }
+            dbManager.deleteObject(uuid);
+            reduceNumNodes();
+            return true;
+        }
+    }
+
+    public boolean deleteRelation(UUID from,UUID to){
+
+        ArrayList<UUID> temp = null;
+
+        if (!hasEdge(from, to))
+            return false;
+        if (from == to)
+            return false;
+        reduceNumEdges();
+
+        temp = (ArrayList<UUID>) dbManager.getObject(from);
+        temp.remove(to);
+        dbManager.putObject(from,temp);
+
+        temp = (ArrayList<UUID>) dbManager.getObject(to);
+        temp.remove(from);
+        dbManager.putObject(to,temp);
+        return true;
+    }
 
     /**
      * breadth-first search from a single source
-     * returns hashMap of graph Ordered By Degree
+     * returns hashMap of graphRelations Ordered By Degree
      */
-    public HashMap< Integer, ArrayList<UUID>> bfs(Graph graph, UUID s) {
+    public HashMap< Integer, ArrayList<UUID>> bfs(GraphRelations graphRelations, UUID s) {
 
         final int INFINITY = Integer.MAX_VALUE;
         boolean[] marked;  // marked[v] = is there an s-v path
@@ -154,9 +215,9 @@ public class Graph {
         UUID[] nodesArray;  // array of nodes
 
 
-        marked = new boolean[graph.getMyNumNodes()];
-        distTo = new int[graph.getMyNumNodes()];
-        edgeTo = new int[graph.getMyNumNodes()];
+        marked = new boolean[graphRelations.getMyNumNodes()];
+        distTo = new int[graphRelations.getMyNumNodes()];
+        edgeTo = new int[graphRelations.getMyNumNodes()];
 
         ArrayList<UUID> nodesArrayList = dbManager.getKyes();
         nodesArrayList.remove(NUM_OF_EDGES);
@@ -164,10 +225,10 @@ public class Graph {
 
         HashMap< Integer, ArrayList<UUID>> graphOrderedByDegree = new HashMap<>();
 
-        if (graph.hasNode(s))
+        if (graphRelations.hasNode(s))
         {
             Queue<UUID> q = new java.util.ArrayDeque<UUID>();
-            for (int i = 0; i < graph.getMyNumNodes(); i++)
+            for (int i = 0; i < graphRelations.getMyNumNodes(); i++)
                 distTo[i] = INFINITY;
             distTo[nodesArrayList.indexOf(s)] = 0;
             marked[nodesArrayList.indexOf(s)] = true;
@@ -189,7 +250,7 @@ public class Graph {
                     graphOrderedByDegree.put(distTo[nodesArrayList.indexOf(v)],tempList);
                 }
 
-                for (UUID w : graph.adjacentTo(v)) {
+                for (UUID w : graphRelations.adjacentTo(v)) {
                     if (!marked[nodesArrayList.indexOf(w)]) {
                         edgeTo[nodesArrayList.indexOf(w)] = nodesArrayList.indexOf(v);
                         distTo[nodesArrayList.indexOf(w)]= distTo[nodesArrayList.indexOf(v)] + 1;

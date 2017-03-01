@@ -1,16 +1,65 @@
 package com.relay.relay.Util;
 
+import com.relay.relay.DB.GraphRelations;
+import com.relay.relay.DB.MessagesDB;
+import com.relay.relay.DB.NodesDB;
 import com.relay.relay.system.Node;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.UUID;
 
 /**
  * Created by omer on 19/02/2017.
  */
 
-public class Data {
+public class DataTransferred {
+
+    final int MAXDEGREE = 6;
+
+
+    public Metadata createMetaData(Node myNode, GraphRelations graphRelations,NodesDB nodesDB,
+                                   MessagesDB messagesDB){
+        return new Metadata(myNode,
+                createKnownRelationsList(myNode,graphRelations,nodesDB),
+                createknownMessagesList(messagesDB));
+    }
+
+    private ArrayList<KnownRelations> createKnownRelationsList( Node myNode,
+                                      GraphRelations graphRelations, NodesDB nodesDB){
+        int degree = MAXDEGREE;
+        ArrayList<KnownRelations> knownRelationsArrayList = new ArrayList<>();
+        ArrayList<UUID> uuidArrayList;
+        HashMap< Integer, ArrayList<UUID>> bfs = graphRelations.bfs(graphRelations, myNode.getId());
+
+        // set min(maxdegree,bfs.size
+        if ( bfs.size() < degree)
+            degree = bfs.size();
+
+        for (int i = 1; i < degree; i++){
+            uuidArrayList = bfs.get(i);
+            for(int j =0; j< uuidArrayList.size(); j++){
+                Node tempNode = nodesDB.getNode(uuidArrayList.get(j));
+                knownRelationsArrayList.add(new KnownRelations(tempNode.getId(),
+                        tempNode.getTimeStampNodeDetails(),tempNode.getTimeStampNodeRelations(),
+                        i));
+            }
+        }
+        return knownRelationsArrayList;
+    }
+
+    private ArrayList<KnownMessage> createknownMessagesList(MessagesDB messagesDB){
+        ArrayList<KnownMessage> knownMessageArrayList = new ArrayList<>();
+        ArrayList<UUID> uuidArrayList = messagesDB.getMessagesIdList();
+
+        for (int i = 0 ; i < uuidArrayList.size(); i++ ){
+            knownMessageArrayList.add(new KnownMessage(uuidArrayList.get(i),
+                    messagesDB.getMessage(uuidArrayList.get(i)).getStatus()));
+        }
+        return  knownMessageArrayList;
+    }
+
 
     public class Metadata{
         private Node myNode;
@@ -87,6 +136,25 @@ public class Data {
         }
     }
 
+    private ArrayList<Node> createNodeToUpdateList(ArrayList<UUID> uuidArrayList,NodesDB nodesDB){
+        ArrayList<Node> nodeArrayList = new ArrayList<>();
+        for (int i = 0; i<uuidArrayList.size(); i++){
+            nodeArrayList.add(nodesDB.getNode(uuidArrayList.get(i)));
+        }
+        return nodeArrayList;
+    }
+
+    private ArrayList<NodeRelations> CreateRelationsList(ArrayList<UUID> uuidArrayList,
+                                         NodesDB nodesDB,GraphRelations graphRelations){
+
+        ArrayList<NodeRelations> nodeRelationsArrayList = new ArrayList<>();
+        for (int i = 0; i<uuidArrayList.size(); i++){
+            Node temp = nodesDB.getNode(uuidArrayList.get(i));
+            nodeRelationsArrayList.add(new NodeRelations(temp.getId(),
+                    temp.getTimeStampNodeRelations(),graphRelations.adjacentTo(temp.getId())));
+        }
+        return nodeRelationsArrayList;
+    }
 
     public class NodeRelations{
         private UUID nodeId;
@@ -111,6 +179,14 @@ public class Data {
         public ArrayList<UUID> getRelations() {
             return relations;
         }
+    }
+
+    public UpdateNodeAndRelations createUpdateNodeAndRelations(ArrayList<UUID> uuidArrayList,
+                                   NodesDB nodesDB,GraphRelations graphRelations){
+
+        return new UpdateNodeAndRelations(createNodeToUpdateList(uuidArrayList,nodesDB),
+                CreateRelationsList(uuidArrayList,nodesDB,graphRelations));
+
     }
 
     public class UpdateNodeAndRelations{
