@@ -12,6 +12,8 @@ import java.util.UUID;
 
 /**
  * Created by omer on 12/02/2017.
+ *
+ * Message structure in Relay
  */
 
 
@@ -34,6 +36,13 @@ public class RelayMessage {
     private String mContent;
     private Map<UUID,Attachment> mAttachments;
 
+    /**
+     * Constructor
+     * @param mSenderId
+     * @param mDestinationId
+     * @param mType
+     * @param mContent
+     */
     public RelayMessage(UUID mSenderId, UUID mDestinationId, int mType, String mContent) {
 
         this.mId = UUID.randomUUID(); // TODO check if is it the right generator
@@ -46,46 +55,89 @@ public class RelayMessage {
         this.mAttachments = new HashMap<>();
     }
 
+    /**
+     * Get message id
+     * @return
+     */
     public UUID getId() {
         return mId;
     }
 
+    /**
+     * Get time message created
+     * @return
+     */
     public Date getTimeCreated() {
         return mTimeCreated;
     }
 
+    /**
+     * Get message status
+     * @return
+     */
     public int getStatus() {
         return mStatus;
     }
 
+    /**
+     * Get sender id
+     * @return
+     */
     public UUID getSenderId() {
         return mSenderId;
     }
 
+    /**
+     * Get destination id
+     * @return
+     */
     public UUID getDestinationId() {
         return mDestinationId;
     }
 
+    /**
+     * Get message type
+     * @return
+     */
     public int getType() {
         return mType;
     }
 
+    /**
+     * Get message content
+     * @return
+     */
     public String getContent() {
         return mContent;
     }
 
+    /**
+     * Get all attachments
+     * @return
+     */
     public Attachment[] getAttachments() {
         if ( mAttachments.size() > 0)
             return (Attachment[]) mAttachments.values().toArray();
         return null;
     }
 
+    /**
+     * Get attachment from message by id
+     * @param id
+     * @return
+     */
     public Attachment getAttachment(UUID id) {
         if (mAttachments.containsKey(id))
             return  mAttachments.get(id);
         return null;
     }
 
+    /**
+     * Add attachment, the type is constant
+     * @param content
+     * @param type
+     * @return
+     */
     public boolean addAttachment(Object content,int type){
 
         if ( content == null )
@@ -102,6 +154,10 @@ public class RelayMessage {
         return false;
     }
 
+    /**
+     * Get message status
+     * @param mStatus
+     */
     public void setStatus(int mStatus) {
         this.mStatus = mStatus;
     }

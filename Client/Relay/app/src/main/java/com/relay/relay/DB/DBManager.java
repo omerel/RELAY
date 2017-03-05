@@ -20,6 +20,7 @@ import java.util.UUID;
 
 /**
  * Created by omer on 01/03/2017.
+ * DBManager it's a manage tool for the couchbase database.
  */
 
 public class DBManager {

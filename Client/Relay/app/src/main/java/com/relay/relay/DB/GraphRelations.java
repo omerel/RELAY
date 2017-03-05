@@ -6,7 +6,12 @@ import com.relay.relay.Util.JsonConvertor;
 import java.util.*;
 import java.util.Queue;
 
+
+/**
+ * GraphRelations . saves the graph connections of the device
+ */
 public class GraphRelations {
+
 
     final String TAG = "RELAY_DEBUG: "+ GraphRelations.class.getSimpleName();
     private DBManager dbManager;
@@ -23,6 +28,10 @@ public class GraphRelations {
         dbManager.openDB();
     }
 
+    /**
+     * delete graph
+     * @return
+     */
     public boolean deleteGraph(){
         return dbManager.deleteDB();
     }
@@ -42,7 +51,7 @@ public class GraphRelations {
     }
 
     /**
-     * Returns true iff v is in this GraphRelations, false otherwise
+     * Returns true if uuid is in this GraphRelations, false otherwise
      */
     public boolean hasNode(UUID uuid) {
         return dbManager.isKeyExist(uuid) ;
@@ -78,8 +87,6 @@ public class GraphRelations {
             return false;
         if (from == to)
             return false;
-//        addNode(from);
-//        addNode(to);
         addNumEdges();
 
         temp = JsonConvertor.JsonToUUIDArrayList(dbManager.getJsonObject(from));
@@ -95,20 +102,17 @@ public class GraphRelations {
 
 
     /**
-     * Return an iterator over the neighbors of UUID
+     * Return an ArrayList over the neighbors of UUID
      */
     public ArrayList<UUID> adjacentTo(UUID uuid) {
- //       ArrayList<UUID> arrayList = new ArrayList<>();
         if (!hasNode(uuid))
             return EMPTY_SET;
-//        // the system has problem with list with UUID,therefor i put string and the conver it to uuid
-//        for(String s : (ArrayList<String>)dbManager.getJsonObject(uuid)){
-//            arrayList.add(UUID.fromString(s));
-//        }
         return JsonConvertor.JsonToUUIDArrayList(dbManager.getJsonObject(uuid));
     }
 
-
+    /**
+     * Add  1 to Nodes Counter
+     */
     public void addNumNodes(){
 
         if (!dbManager.isKeyExist(NUM_OF_NODES)){
@@ -121,6 +125,9 @@ public class GraphRelations {
         }
     }
 
+    /**
+     * Add 1 to Edges Counter
+     */
     public void addNumEdges(){
         if (!dbManager.isKeyExist(NUM_OF_EDGES)){
             dbManager.putJsonObject(NUM_OF_EDGES,JsonConvertor.ConvertToJson(1));
@@ -132,6 +139,9 @@ public class GraphRelations {
         }
     }
 
+    /**
+     * reduce 1 from Edges Counter(only if counter is bigger then 0)
+     */
     public void reduceNumEdges(){
         if (!dbManager.isKeyExist(NUM_OF_EDGES)){
            return;
@@ -143,7 +153,9 @@ public class GraphRelations {
                 dbManager.putJsonObject(NUM_OF_EDGES,JsonConvertor.ConvertToJson(num));
         }
     }
-
+    /**
+     * reduce 1 from Nodes Counter(only if counter is bigger then 0)
+     */
     public void reduceNumNodes(){
         if (!dbManager.isKeyExist(NUM_OF_NODES)){
             return;
@@ -156,6 +168,10 @@ public class GraphRelations {
         }
     }
 
+    /**
+     * Get Nodes Counter
+     * @return
+     */
     public int getMyNumNodes() {
 
         if (!dbManager.isKeyExist(NUM_OF_NODES)){
@@ -166,6 +182,10 @@ public class GraphRelations {
         }
     }
 
+    /**
+     * Get Edges Counter
+     * @return
+     */
     public int getMyNumEdges() {
         if (!dbManager.isKeyExist(NUM_OF_EDGES)) {
             return 0;
@@ -174,6 +194,11 @@ public class GraphRelations {
         }
     }
 
+    /**
+     * Delete Node from graph. will delete all the connections in graphRelations
+     * @param uuid
+     * @return
+     */
     public boolean deleteNode(UUID uuid){
         if (!dbManager.isKeyExist(uuid)) {
             return false;
@@ -188,6 +213,12 @@ public class GraphRelations {
         }
     }
 
+    /**
+     * Delete graph connection between the two nodes
+     * @param from
+     * @param to
+     * @return
+     */
     public boolean deleteRelation(UUID from,UUID to){
 
         ArrayList<UUID> temp = null;

@@ -12,6 +12,7 @@ import java.util.UUID;
 
 /**
  * Created by omer on 19/02/2017.
+ * DataTransferred is the data that are transferred in the handshake
  */
 
 public class DataTransferred {
@@ -22,7 +23,13 @@ public class DataTransferred {
     private NodesDB mNodesDB;
     private MessagesDB mMessagesDB;
 
-
+    /**
+     * Counstructor to create manager
+     * @param myNode
+     * @param graphRelations
+     * @param nodesDB
+     * @param messagesDB
+     */
     public DataTransferred(Node myNode, GraphRelations graphRelations,NodesDB nodesDB,
                            MessagesDB messagesDB){
         this.mMyNode = myNode;
@@ -30,12 +37,24 @@ public class DataTransferred {
         this.mNodesDB = nodesDB;
         this.mMessagesDB = messagesDB;
     }
+
+    /**
+     * Create Meta data to transfer
+     * @return
+     */
     public Metadata createMetaData(){
         return new Metadata(mMyNode,
                 createKnownRelationsList(mMyNode,mGraphRelations,mNodesDB),
                 createknownMessagesList(mMessagesDB));
     }
 
+    /**
+     * Create Known Relations List
+     * @param myNode
+     * @param graphRelations
+     * @param nodesDB
+     * @return
+     */
     private ArrayList<KnownRelations> createKnownRelationsList( Node myNode,
                                       GraphRelations graphRelations, NodesDB nodesDB){
         int degree = MAXDEGREE;
@@ -59,6 +78,11 @@ public class DataTransferred {
         return knownRelationsArrayList;
     }
 
+    /**
+     * Create known Messages List
+     * @param messagesDB
+     * @return
+     */
     private ArrayList<KnownMessage> createknownMessagesList(MessagesDB messagesDB){
         ArrayList<KnownMessage> knownMessageArrayList = new ArrayList<>();
         ArrayList<UUID> uuidArrayList = messagesDB.getMessagesIdList();
@@ -70,7 +94,9 @@ public class DataTransferred {
         return  knownMessageArrayList;
     }
 
-
+    /**
+     * Meta data class
+     */
     public class Metadata{
         private Node myNode;
         private ArrayList<KnownRelations> knownRelationsList;
@@ -96,6 +122,9 @@ public class DataTransferred {
         }
     }
 
+    /**
+     * KnownRelations class
+     */
     public class KnownRelations{
         private UUID nodeId;
         private Date timeStampNodeDetails;
@@ -128,6 +157,9 @@ public class DataTransferred {
         }
     }
 
+    /**
+     * KnownMessage class
+     */
     public class KnownMessage{
         private UUID messageId;
         private int status;
@@ -166,6 +198,9 @@ public class DataTransferred {
         return nodeRelationsArrayList;
     }
 
+    /**
+     * NodeRelations class
+     */
     public class NodeRelations{
         private UUID nodeId;
         private Date timeStampNodeRelations;
@@ -198,6 +233,9 @@ public class DataTransferred {
                 CreateRelationsList(uuidArrayList,mNodesDB,mGraphRelations));
     }
 
+    /**
+     * UpdateNodeAndRelations class
+     */
     public class UpdateNodeAndRelations{
         private ArrayList<Node> nodeList;
         private ArrayList<NodeRelations> relationsList;

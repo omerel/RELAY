@@ -10,6 +10,7 @@ import java.util.UUID;
 
 /**
  * Created by omer on 01/03/2017.
+ * NodeDB saves all the Nodes information in the device;
  */
 
 public class NodesDB {
@@ -20,6 +21,11 @@ public class NodesDB {
     private GraphRelations graphRelations;
     final String DB = "nodes_db";
 
+    /**
+     * Constructor
+     * @param context
+     * @param graphRelations
+     */
     public NodesDB(Context context,GraphRelations graphRelations){
         dbManager = new DBManager(DB,context);
         dbManager.openDB();
@@ -28,6 +34,11 @@ public class NodesDB {
         this.graphRelations = graphRelations;
     }
 
+    /**
+     * Add Node
+     * @param node
+     * @return true if success
+     */
     public boolean addNode(Node node){
         if (!dbManager.isKeyExist(node.getId())) {
             dbManager.putJsonObject(node.getId(),JsonConvertor.ConvertToJson(node));
@@ -41,6 +52,11 @@ public class NodesDB {
         }
     }
 
+    /**
+     * Get Node
+     * @param uuid
+     * @return Node if found, Null if not found
+     */
     public Node getNode(UUID uuid){
         if (dbManager.isKeyExist(uuid)){
             return JsonConvertor.JsonToNode(dbManager.getJsonObject(uuid));
@@ -49,6 +65,11 @@ public class NodesDB {
             return null;
     }
 
+    /**
+     * delete Node from database
+     * @param uuid
+     * @return
+     */
     public boolean deleteNode(UUID uuid){
         if (dbManager.isKeyExist(uuid)){
             dbManager.deleteJsonObject(uuid);
@@ -60,6 +81,10 @@ public class NodesDB {
             return false;
     }
 
+    /**
+     * Get nodes list
+     * @return arraylist
+     */
     public ArrayList<UUID> getNodesIdList(){
         ArrayList<UUID> temp = dbManager.getKyes();
         temp.remove(NUM_OF_NODES);
@@ -67,11 +92,18 @@ public class NodesDB {
 
     }
 
+    /**
+     * Add to nodes counter
+     */
     private void addNumNodes(){
         int num = JsonConvertor.JsonToInt(dbManager.getJsonObject(NUM_OF_NODES));
         num++;
         dbManager.putJsonObject(NUM_OF_NODES,JsonConvertor.ConvertToJson(num));
     }
+
+    /**
+     * Reduce from node counter
+     */
     private void reduceNumNodes(){
         int num = JsonConvertor.JsonToInt(dbManager.getJsonObject(NUM_OF_NODES));
         num--;
@@ -79,10 +111,18 @@ public class NodesDB {
             dbManager.putJsonObject(NUM_OF_NODES,JsonConvertor.ConvertToJson(num));
     }
 
+    /**
+     * Get nodes counter
+     * @return
+     */
     public int getNumNodes() {
         return JsonConvertor.JsonToInt(dbManager.getJsonObject(NUM_OF_NODES));
     }
 
+    /**
+     * Delete nodes database
+     * @return
+     */
     public boolean deleteNodedb(){
         return dbManager.deleteDB();
     }
