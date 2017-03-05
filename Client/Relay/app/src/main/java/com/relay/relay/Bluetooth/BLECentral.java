@@ -7,7 +7,6 @@ import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
-import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
 import android.bluetooth.le.ScanResult;
 import android.os.Bundle;
@@ -17,7 +16,7 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
 
-import com.relay.relay.ConnectivityManager;
+import com.relay.relay.SubSystem.ConnectivityManager;
 
 import java.util.List;
 

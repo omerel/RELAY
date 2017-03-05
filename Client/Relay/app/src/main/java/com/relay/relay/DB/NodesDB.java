@@ -1,7 +1,6 @@
 package com.relay.relay.DB;
 
 import android.content.Context;
-import android.util.Log;
 
 import com.relay.relay.Util.JsonConvertor;
 import com.relay.relay.system.Node;

@@ -1,7 +1,6 @@
 package com.relay.relay.DB;
 
 import android.content.Context;
-import android.util.Log;
 
 import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.Database;
@@ -11,15 +10,12 @@ import com.couchbase.lite.Query;
 import com.couchbase.lite.QueryEnumerator;
 import com.couchbase.lite.QueryRow;
 import com.couchbase.lite.android.AndroidContext;
-import com.relay.relay.Util.JsonConvertor;
-import com.relay.relay.system.Node;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
 
 /**

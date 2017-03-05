@@ -28,7 +28,7 @@
         </activity>
 
         <service
-            android:name=".ConnectivityManager"
+            android:name=".SubSystem.ConnectivityManager"
             android:enabled="true">
 
             <receiver android:name=".PowerConnectionReceiver">

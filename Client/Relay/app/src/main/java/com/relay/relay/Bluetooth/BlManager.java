@@ -3,15 +3,14 @@ package com.relay.relay.Bluetooth;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
-import com.relay.relay.ConnectivityManager;
-import com.relay.relay.HandShake;
+import com.relay.relay.SubSystem.ConnectivityManager;
+import com.relay.relay.SubSystem.HandShake;
 import java.util.ArrayList;
 import java.util.List;
 

@@ -16,13 +16,12 @@ import android.bluetooth.BluetoothGattServerCallback;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
-import com.relay.relay.ConnectivityManager;
+import com.relay.relay.SubSystem.ConnectivityManager;
 
 
 public class BLEPeripheral implements BLConstants {

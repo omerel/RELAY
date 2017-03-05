@@ -1,4 +1,4 @@
-package com.relay.relay;
+package com.relay.relay.SubSystem;
 
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
@@ -16,6 +16,7 @@ import android.util.Log;
 import android.widget.Toast;
 import com.relay.relay.Bluetooth.BLConstants;
 import com.relay.relay.Bluetooth.*;
+import com.relay.relay.MainActivity;
 
 
 /**
@@ -82,8 +83,6 @@ public class ConnectivityManager extends Service implements BLConstants {
 
             }
         }
-
-
     }
 
     @Override

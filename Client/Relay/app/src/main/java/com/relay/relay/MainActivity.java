@@ -25,6 +25,7 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import com.relay.relay.DB.Test;
+import com.relay.relay.SubSystem.ConnectivityManager;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;

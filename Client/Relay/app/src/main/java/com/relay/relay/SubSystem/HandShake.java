@@ -1,9 +1,7 @@
-package com.relay.relay;
+package com.relay.relay.SubSystem;
 
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothSocket;
-import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;

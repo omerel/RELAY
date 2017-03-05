@@ -13,7 +13,7 @@ import android.os.Messenger;
 import android.os.ParcelUuid;
 import android.os.RemoteException;
 import android.util.Log;
-import com.relay.relay.ConnectivityManager;
+import com.relay.relay.SubSystem.ConnectivityManager;
 import java.util.ArrayList;
 import java.util.List;
 import static android.bluetooth.le.ScanSettings.MATCH_NUM_ONE_ADVERTISEMENT;

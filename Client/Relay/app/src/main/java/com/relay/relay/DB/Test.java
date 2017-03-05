@@ -6,11 +6,9 @@ import android.graphics.BitmapFactory;
 import android.util.Log;
 import com.relay.relay.R;
 import com.relay.relay.Util.DataTransferred;
-import com.relay.relay.Util.JsonConvertor;
 import com.relay.relay.system.Node;
 import com.relay.relay.system.RelayMessage;
 
-import java.io.ByteArrayOutputStream;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;

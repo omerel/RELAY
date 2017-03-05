@@ -2,6 +2,8 @@ package com.relay.relay.system;
 
 import android.graphics.Bitmap;
 
+import com.relay.relay.Util.BitmapConvertor;
+
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;

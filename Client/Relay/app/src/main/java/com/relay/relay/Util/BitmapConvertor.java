@@ -1,4 +1,4 @@
-package com.relay.relay.system;
+package com.relay.relay.Util;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
