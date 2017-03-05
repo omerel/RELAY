@@ -1,6 +1,7 @@
 package com.relay.relay.DB;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.Database;
@@ -10,12 +11,15 @@ import com.couchbase.lite.Query;
 import com.couchbase.lite.QueryEnumerator;
 import com.couchbase.lite.QueryRow;
 import com.couchbase.lite.android.AndroidContext;
+import com.relay.relay.Util.JsonConvertor;
+import com.relay.relay.system.Node;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -23,6 +27,8 @@ import java.util.UUID;
  */
 
 public class DBManager {
+
+    final String TAG = "RELAY_DEBUG: "+ DBManager.class.getSimpleName();
 
     private Database mDatabase = null;
     private Manager mManager = null;
@@ -60,14 +66,15 @@ public class DBManager {
     /**
      * Put key - value in data base
      * @param key
-     * @param object
+     * @param jsonObject
      * @return
      */
-    public boolean putObject(UUID key,Object object){
+    public boolean putJsonObject(UUID key, String jsonObject){
         Document document;
         Map<String, Object> properties;
         // create or get doc
         if (isKeyExist(key)){
+            // if file exists
             document = mDatabase.getDocument(key.toString());
             // update the old one (its like this to prevent conflicts)
             properties = new HashMap<String, Object>();
@@ -76,10 +83,10 @@ public class DBManager {
         else{
             document = mDatabase.getDocument(key.toString());
             // create a new properties
-            properties = new HashMap<String, Object>();
+            properties = new HashMap<String,Object>();
         }
         // update properties
-        properties.put(key.toString(),object);
+        properties.put(key.toString(),jsonObject);
         try {
             document.putProperties(properties);
         } catch (CouchbaseLiteException e) {
@@ -94,13 +101,13 @@ public class DBManager {
      * @param key
      * @return
      */
-    public Object getObject(UUID key){
+    public String getJsonObject(UUID key){
         Document doc = mDatabase.getDocument(key.toString());
-        // We can directly access properties from the document object:
-        return doc.getProperty(key.toString());
+        Map<String, Object> properties = doc.getProperties();
+        return (String) properties.get(key.toString());
     }
 
-    public boolean deleteObject(UUID key){
+    public boolean deleteJsonObject(UUID key){
         Document doc = mDatabase.getDocument(key.toString());
         try {
             doc.delete();

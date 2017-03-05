@@ -19,7 +19,7 @@ public class Node {
     private String mPhoneNumber;
     private String mUserName;
     private String mFullName;
-    private Bitmap mProfilePicture;
+    private byte[] mProfilePicture;
     private int mResidenceCode;
 
     public Node(UUID mId, Date mTimeStampNodeDetails, Date mTimeStampNodeRelations, int mRank,
@@ -33,7 +33,7 @@ public class Node {
         this.mPhoneNumber = mPhoneNumber;
         this.mUserName = mUserName;
         this.mFullName = mFullName;
-        this.mProfilePicture = mProfilePicture;
+        this.mProfilePicture = BitmapConvertor.ConvertBitmapToBytes(mProfilePicture);
         this.mResidenceCode = mResidenceCode;
     }
 
@@ -86,11 +86,11 @@ public class Node {
     }
 
     public Bitmap getProfilePicture() {
-        return mProfilePicture;
+        return BitmapConvertor.convertBytesToBitmap(mProfilePicture);
     }
 
     public void setProfilePicture(Bitmap mProfilePicture) {
-        this.mProfilePicture = mProfilePicture;
+        this.mProfilePicture = BitmapConvertor.ConvertBitmapToBytes(mProfilePicture);
     }
 
     public int getResidenceCode() {

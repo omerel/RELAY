@@ -17,13 +17,23 @@ import java.util.UUID;
 public class DataTransferred {
 
     final int MAXDEGREE = 6;
+    private Node mMyNode;
+    private GraphRelations mGraphRelations;
+    private NodesDB mNodesDB;
+    private MessagesDB mMessagesDB;
 
 
-    public Metadata createMetaData(Node myNode, GraphRelations graphRelations,NodesDB nodesDB,
-                                   MessagesDB messagesDB){
-        return new Metadata(myNode,
-                createKnownRelationsList(myNode,graphRelations,nodesDB),
-                createknownMessagesList(messagesDB));
+    public DataTransferred(Node myNode, GraphRelations graphRelations,NodesDB nodesDB,
+                           MessagesDB messagesDB){
+        this.mMyNode = myNode;
+        this.mGraphRelations = graphRelations;
+        this.mNodesDB = nodesDB;
+        this.mMessagesDB = messagesDB;
+    }
+    public Metadata createMetaData(){
+        return new Metadata(mMyNode,
+                createKnownRelationsList(mMyNode,mGraphRelations,mNodesDB),
+                createknownMessagesList(mMessagesDB));
     }
 
     private ArrayList<KnownRelations> createKnownRelationsList( Node myNode,
@@ -181,12 +191,11 @@ public class DataTransferred {
         }
     }
 
-    public UpdateNodeAndRelations createUpdateNodeAndRelations(ArrayList<UUID> uuidArrayList,
-                                   NodesDB nodesDB,GraphRelations graphRelations){
+    public UpdateNodeAndRelations createUpdateNodeAndRelations(){
 
-        return new UpdateNodeAndRelations(createNodeToUpdateList(uuidArrayList,nodesDB),
-                CreateRelationsList(uuidArrayList,nodesDB,graphRelations));
-
+        ArrayList<UUID> uuidArrayList = mNodesDB.getNodesIdList();
+        return new UpdateNodeAndRelations(createNodeToUpdateList(uuidArrayList,mNodesDB),
+                CreateRelationsList(uuidArrayList,mNodesDB,mGraphRelations));
     }
 
     public class UpdateNodeAndRelations{

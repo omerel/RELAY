@@ -1,6 +1,8 @@
 package com.relay.relay.DB;
 import android.content.Context;
 
+import com.relay.relay.Util.JsonConvertor;
+
 import java.util.*;
 import java.util.Queue;
 
@@ -32,7 +34,7 @@ public class GraphRelations {
     public boolean addNode(UUID uuid) {
         final UUID node = uuid;
         if (!hasNode(node)) {
-            dbManager.putObject(uuid, new ArrayList<UUID>());
+            dbManager.putJsonObject(uuid,JsonConvertor.ConvertToJson(new ArrayList<String>()));
             addNumNodes();
             return true;
         }
@@ -56,7 +58,7 @@ public class GraphRelations {
         ArrayList<UUID> temp = null;
         if (!hasNode(from) || !hasNode(to))
             return false;
-        temp = (ArrayList<UUID>)dbManager.getObject(from);
+        temp = JsonConvertor.JsonToUUIDArrayList(dbManager.getJsonObject(from));
         return temp.contains(to);
     }
 
@@ -80,13 +82,13 @@ public class GraphRelations {
 //        addNode(to);
         addNumEdges();
 
-        temp = (ArrayList<UUID>) dbManager.getObject(from);
+        temp = JsonConvertor.JsonToUUIDArrayList(dbManager.getJsonObject(from));
         temp.add(to);
-        dbManager.putObject(from,temp);
+        dbManager.putJsonObject(from,JsonConvertor.ConvertToJson(temp));
 
-        temp = (ArrayList<UUID>) dbManager.getObject(to);
+        temp = JsonConvertor.JsonToUUIDArrayList(dbManager.getJsonObject(to));
         temp.add(from);
-        dbManager.putObject(to,temp);
+        dbManager.putJsonObject(to,JsonConvertor.ConvertToJson(temp));
 
         return true;
     }
@@ -96,33 +98,37 @@ public class GraphRelations {
      * Return an iterator over the neighbors of UUID
      */
     public ArrayList<UUID> adjacentTo(UUID uuid) {
-        //if (!myGraph.containsKey(uuid))
+ //       ArrayList<UUID> arrayList = new ArrayList<>();
         if (!hasNode(uuid))
             return EMPTY_SET;
-        return (ArrayList<UUID>) dbManager.getObject(uuid);
+//        // the system has problem with list with UUID,therefor i put string and the conver it to uuid
+//        for(String s : (ArrayList<String>)dbManager.getJsonObject(uuid)){
+//            arrayList.add(UUID.fromString(s));
+//        }
+        return JsonConvertor.JsonToUUIDArrayList(dbManager.getJsonObject(uuid));
     }
 
 
     public void addNumNodes(){
 
         if (!dbManager.isKeyExist(NUM_OF_NODES)){
-            dbManager.putObject(NUM_OF_NODES,1);
+            dbManager.putJsonObject(NUM_OF_NODES,JsonConvertor.ConvertToJson(1));
         }
         else{
-            int num = (int) dbManager.getObject(NUM_OF_NODES);
+            int num = JsonConvertor.JsonToInt(dbManager.getJsonObject(NUM_OF_NODES));
             num++;
-            dbManager.putObject(NUM_OF_NODES,num);
+            dbManager.putJsonObject(NUM_OF_NODES,JsonConvertor.ConvertToJson(num));
         }
     }
 
     public void addNumEdges(){
         if (!dbManager.isKeyExist(NUM_OF_EDGES)){
-            dbManager.putObject(NUM_OF_EDGES,1);
+            dbManager.putJsonObject(NUM_OF_EDGES,JsonConvertor.ConvertToJson(1));
         }
         else{
-            int num = (int) dbManager.getObject(NUM_OF_EDGES);
+            int num = JsonConvertor.JsonToInt(dbManager.getJsonObject(NUM_OF_EDGES));
             num++;
-            dbManager.putObject(NUM_OF_EDGES,num);
+            dbManager.putJsonObject(NUM_OF_EDGES,JsonConvertor.ConvertToJson(num));
         }
     }
 
@@ -131,10 +137,10 @@ public class GraphRelations {
            return;
         }
         else{
-            int num = (int) dbManager.getObject(NUM_OF_EDGES);
+            int num = JsonConvertor.JsonToInt(dbManager.getJsonObject(NUM_OF_EDGES));
             num--;
             if (num>=0)
-                dbManager.putObject(NUM_OF_EDGES,num);
+                dbManager.putJsonObject(NUM_OF_EDGES,JsonConvertor.ConvertToJson(num));
         }
     }
 
@@ -143,10 +149,10 @@ public class GraphRelations {
             return;
         }
         else{
-            int num = (int) dbManager.getObject(NUM_OF_NODES);
+            int num = JsonConvertor.JsonToInt(dbManager.getJsonObject(NUM_OF_NODES));
             num--;
             if (num>=0)
-                dbManager.putObject(NUM_OF_NODES,num);
+                dbManager.putJsonObject(NUM_OF_NODES,JsonConvertor.ConvertToJson(num));
         }
     }
 
@@ -156,7 +162,7 @@ public class GraphRelations {
             return  0;
         }
         else{
-            return(int) dbManager.getObject(NUM_OF_NODES);
+            return JsonConvertor.JsonToInt(dbManager.getJsonObject(NUM_OF_NODES));
         }
     }
 
@@ -164,7 +170,7 @@ public class GraphRelations {
         if (!dbManager.isKeyExist(NUM_OF_EDGES)) {
             return 0;
         } else {
-            return (int) dbManager.getObject(NUM_OF_EDGES);
+            return JsonConvertor.JsonToInt(dbManager.getJsonObject(NUM_OF_EDGES));
         }
     }
 
@@ -172,11 +178,11 @@ public class GraphRelations {
         if (!dbManager.isKeyExist(uuid)) {
             return false;
         } else {
-            ArrayList<UUID> arrayList = (ArrayList<UUID>)adjacentTo(uuid);
+            ArrayList<UUID> arrayList = adjacentTo(uuid);
             while(arrayList.size()>0){
                 deleteRelation(arrayList.get(0),uuid);
             }
-            dbManager.deleteObject(uuid);
+            dbManager.deleteJsonObject(uuid);
             reduceNumNodes();
             return true;
         }
@@ -192,13 +198,14 @@ public class GraphRelations {
             return false;
         reduceNumEdges();
 
-        temp = (ArrayList<UUID>) dbManager.getObject(from);
-        temp.remove(to);
-        dbManager.putObject(from,temp);
 
-        temp = (ArrayList<UUID>) dbManager.getObject(to);
+        temp = JsonConvertor.JsonToUUIDArrayList(dbManager.getJsonObject(from));
+        temp.remove(to);
+        dbManager.putJsonObject(from,JsonConvertor.ConvertToJson(temp));
+
+        temp = JsonConvertor.JsonToUUIDArrayList(dbManager.getJsonObject(to));
         temp.remove(from);
-        dbManager.putObject(to,temp);
+        dbManager.putJsonObject(from,JsonConvertor.ConvertToJson(to));
         return true;
     }
 
@@ -207,6 +214,8 @@ public class GraphRelations {
      * returns hashMap of graphRelations Ordered By Degree
      */
     public HashMap< Integer, ArrayList<UUID>> bfs(GraphRelations graphRelations, UUID s) {
+
+
 
         final int INFINITY = Integer.MAX_VALUE;
         boolean[] marked;  // marked[v] = is there an s-v path

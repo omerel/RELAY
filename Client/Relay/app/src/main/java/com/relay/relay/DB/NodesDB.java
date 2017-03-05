@@ -1,7 +1,9 @@
 package com.relay.relay.DB;
 
 import android.content.Context;
+import android.util.Log;
 
+import com.relay.relay.Util.JsonConvertor;
 import com.relay.relay.system.Node;
 
 import java.util.ArrayList;
@@ -22,33 +24,35 @@ public class NodesDB {
     public NodesDB(Context context,GraphRelations graphRelations){
         dbManager = new DBManager(DB,context);
         dbManager.openDB();
-        dbManager.putObject(NUM_OF_NODES,0);
+        if (!dbManager.isKeyExist(NUM_OF_NODES))
+            dbManager.putJsonObject(NUM_OF_NODES, JsonConvertor.ConvertToJson(0));
         this.graphRelations = graphRelations;
     }
 
     public boolean addNode(Node node){
         if (!dbManager.isKeyExist(node.getId())) {
-            dbManager.putObject(node.getId(), node);
+            dbManager.putJsonObject(node.getId(),JsonConvertor.ConvertToJson(node));
             graphRelations.addNode(node.getId());
             addNumNodes();
             return true;
         }
         else{
-            dbManager.putObject(node.getId(), node);
+            dbManager.putJsonObject(node.getId(), JsonConvertor.ConvertToJson(node));
             return true;
         }
     }
 
     public Node getNode(UUID uuid){
-        if (dbManager.isKeyExist(uuid))
-            return (Node) dbManager.getObject(uuid);
+        if (dbManager.isKeyExist(uuid)){
+            return JsonConvertor.JsonToNode(dbManager.getJsonObject(uuid));
+        }
         else
             return null;
     }
 
     public boolean deleteNode(UUID uuid){
         if (dbManager.isKeyExist(uuid)){
-            dbManager.deleteObject(uuid);
+            dbManager.deleteJsonObject(uuid);
             graphRelations.deleteNode(uuid);
             reduceNumNodes();
             return true;
@@ -65,19 +69,19 @@ public class NodesDB {
     }
 
     private void addNumNodes(){
-        int num = (int) dbManager.getObject(NUM_OF_NODES);
+        int num = JsonConvertor.JsonToInt(dbManager.getJsonObject(NUM_OF_NODES));
         num++;
-        dbManager.putObject(NUM_OF_NODES,num);
+        dbManager.putJsonObject(NUM_OF_NODES,JsonConvertor.ConvertToJson(num));
     }
     private void reduceNumNodes(){
-        int num = (int) dbManager.getObject(NUM_OF_NODES);
+        int num = JsonConvertor.JsonToInt(dbManager.getJsonObject(NUM_OF_NODES));
         num--;
         if (num >= 0)
-            dbManager.putObject(NUM_OF_NODES,num);
+            dbManager.putJsonObject(NUM_OF_NODES,JsonConvertor.ConvertToJson(num));
     }
 
     public int getNumNodes() {
-        return(int) dbManager.getObject(NUM_OF_NODES);
+        return JsonConvertor.JsonToInt(dbManager.getJsonObject(NUM_OF_NODES));
     }
 
     public boolean deleteNodedb(){

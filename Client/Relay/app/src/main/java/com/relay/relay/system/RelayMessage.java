@@ -91,7 +91,8 @@ public class RelayMessage {
             return false;
 
         if ( type == TYPE_ATTACHMENT_BITMAP){
-            Attachment tempAttachment = new Attachment(content,type);
+            Attachment tempAttachment =
+                    new Attachment(BitmapConvertor.ConvertBitmapToBytes((Bitmap)content),type);
             mAttachments.put(tempAttachment.getId(),tempAttachment);
             return true;
         }
@@ -125,7 +126,7 @@ public class RelayMessage {
         public Bitmap getContent() {
 
             if ( mType == TYPE_ATTACHMENT_BITMAP)
-                return (Bitmap) mContent;
+                return (Bitmap) BitmapConvertor.convertBytesToBitmap((byte[])mContent);
 
             return null;
         }

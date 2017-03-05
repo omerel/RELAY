@@ -1,5 +1,7 @@
 package com.relay.relay.DB;
 import android.content.Context;
+
+import com.relay.relay.Util.JsonConvertor;
 import com.relay.relay.system.RelayMessage;
 
 import java.util.ArrayList;
@@ -18,29 +20,30 @@ public class MessagesDB {
     public MessagesDB(Context context){
         dbManager = new DBManager(DB,context);
         dbManager.openDB();
-        dbManager.putObject(NUM_OF_MESSAGES,0);
+        dbManager.putJsonObject(NUM_OF_MESSAGES, JsonConvertor.ConvertToJson(0));
     }
 
     public boolean addMessage(RelayMessage message){
         if (!dbManager.isKeyExist(message.getId())) {
-            dbManager.putObject(message.getId(), message);
+            dbManager.putJsonObject(message.getId(), JsonConvertor.ConvertToJson(message));
             addNumMessages();
             return true;
         }
         else{
-            dbManager.putObject(message.getId(), message);
+            dbManager.putJsonObject(message.getId(), JsonConvertor.ConvertToJson(message));
             return true;
         }
     }
+
     public RelayMessage getMessage(UUID uuid){
         if (dbManager.isKeyExist(uuid))
-            return (RelayMessage) dbManager.getObject(uuid);
+            return JsonConvertor.JsonToRelayMessage(dbManager.getJsonObject(uuid));
         else
             return null;
     }
     public boolean deleteMessage(UUID uuid){
         if (dbManager.isKeyExist(uuid)){
-            dbManager.deleteObject(uuid);
+            dbManager.deleteJsonObject(uuid);
             reduceNumNodes();
             return true;
         }
@@ -54,18 +57,23 @@ public class MessagesDB {
 
     }
     public void addNumMessages(){
-        int num = (int) dbManager.getObject(NUM_OF_MESSAGES);
+        int num = JsonConvertor.JsonToInt(dbManager.getJsonObject(NUM_OF_MESSAGES));
         num++;
-        dbManager.putObject(NUM_OF_MESSAGES,num);
+        dbManager.putJsonObject(NUM_OF_MESSAGES,JsonConvertor.ConvertToJson(num));
     }
+
     public void reduceNumNodes(){
-        int num = (int) dbManager.getObject(NUM_OF_MESSAGES);
+        int num = JsonConvertor.JsonToInt(dbManager.getJsonObject(NUM_OF_MESSAGES));
         num--;
         if (num >= 0)
-            dbManager.putObject(NUM_OF_MESSAGES,num);
+            dbManager.putJsonObject(NUM_OF_MESSAGES,JsonConvertor.ConvertToJson(num));
+    }
+
+    public boolean deleteMessageDB(){
+        return dbManager.deleteDB();
     }
 
     public int getNumNodes() {
-        return(int) dbManager.getObject(NUM_OF_MESSAGES);
+        return JsonConvertor.JsonToInt(dbManager.getJsonObject(NUM_OF_MESSAGES));
     }
 }
