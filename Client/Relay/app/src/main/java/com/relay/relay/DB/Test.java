@@ -11,6 +11,7 @@ import com.relay.relay.system.RelayMessage;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.UUID;
@@ -51,13 +52,14 @@ public class Test {
         this.myID = uuids[0];
 
         // create random dates
-        Date[] dates = new Date[30];
+        Calendar[] dates = new Calendar[30];
         for (int i =0;i<30;i++){
             long offset = Timestamp.valueOf("2017-01-01 00:00:00").getTime();
             long end = Timestamp.valueOf("2017-05-05 00:00:00").getTime();
             long diff = end - offset + 1;
             Timestamp rand = new Timestamp(offset + (long)(Math.random() * diff));
-            dates[i] = rand;
+            dates[i] = Calendar.getInstance();
+            dates[i].setTime(rand);
         }
 
         // creates names
@@ -153,14 +155,14 @@ public class Test {
 
     public void startTest(){
 
-     //   createDB();
+
+       // createDB();
 
         Log.e(TAG, "graphRelations.getMyNumEdges()--->"+ graphRelations.getMyNumEdges());
         Log.e(TAG, "graphRelations.getMyNumNodes()--->"+ graphRelations.getMyNumNodes());
         Log.e(TAG, "nodesDB.getNumNodes()--->"+ nodesDB.getNumNodes());
 
         ArrayList<UUID> t;
-
 //        myID = uuids[0];
         myID = nodesDB.getNodesIdList().get(0);
 
@@ -189,7 +191,7 @@ public class Test {
         ArrayList<DataTransferred.KnownRelations> kn = metadata.getKnownRelationsList();
         for (int i =0 ;i<kn.size(); i++){
             Log.e(TAG, "id: "+kn.get(i).getNodeId()+", degree: "+kn.get(i).getNodeDegree()+
-                    " , tmsp: "+kn.get(i).getTimeStampNodeDetails().toString());
+                    " , tmsp: "+kn.get(i).getTimeStampNodeDetails().getTime());
         }
 
         ArrayList<DataTransferred.KnownMessage> km = metadata.getKnownMessagesList();
@@ -218,6 +220,9 @@ public class Test {
             }
         }
         // deleteDB();
+
+
+
     }
 
 }

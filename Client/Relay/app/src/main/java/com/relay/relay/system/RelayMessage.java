@@ -28,7 +28,7 @@ public class RelayMessage {
     public static int TYPE_ATTACHMENT_BITMAP = 13;
 
     private UUID mId;
-    private Date mTimeCreated;
+    private Calendar mTimeCreated;
     private int mStatus;
     private UUID mSenderId;
     private UUID mDestinationId;
@@ -47,7 +47,7 @@ public class RelayMessage {
 
         this.mId = UUID.randomUUID(); // TODO check if is it the right generator
         this.mStatus = STATUS_MESSAGE_CREATED;
-        this.mTimeCreated = Calendar.getInstance().getTime();
+        this.mTimeCreated = Calendar.getInstance();
         this.mSenderId = mSenderId;
         this.mDestinationId = mDestinationId;
         this.mType = mType;
@@ -67,7 +67,7 @@ public class RelayMessage {
      * Get time message created
      * @return
      */
-    public Date getTimeCreated() {
+    public Calendar getTimeCreated() {
         return mTimeCreated;
     }
 

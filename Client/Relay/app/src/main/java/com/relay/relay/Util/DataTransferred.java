@@ -6,6 +6,7 @@ import com.relay.relay.DB.NodesDB;
 import com.relay.relay.system.Node;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.UUID;
@@ -127,12 +128,12 @@ public class DataTransferred {
      */
     public class KnownRelations{
         private UUID nodeId;
-        private Date timeStampNodeDetails;
-        private Date timeStampNodeRelations;
+        private Calendar timeStampNodeDetails;
+        private Calendar timeStampNodeRelations;
         private int nodeDegree;
 
-        public KnownRelations(UUID nodeId, Date timeStampNodeDetails,
-                              Date timeStampNodeRelations, int nodeDegree){
+        public KnownRelations(UUID nodeId, Calendar timeStampNodeDetails,
+                              Calendar timeStampNodeRelations, int nodeDegree){
             this.nodeId = nodeId;
             this.timeStampNodeDetails = timeStampNodeDetails;
             this.timeStampNodeRelations = timeStampNodeRelations;
@@ -144,11 +145,11 @@ public class DataTransferred {
             return nodeId;
         }
 
-        public Date getTimeStampNodeDetails() {
+        public Calendar getTimeStampNodeDetails() {
             return timeStampNodeDetails;
         }
 
-        public Date getTimeStampNodeRelations() {
+        public Calendar getTimeStampNodeRelations() {
             return timeStampNodeRelations;
         }
 
@@ -203,10 +204,10 @@ public class DataTransferred {
      */
     public class NodeRelations{
         private UUID nodeId;
-        private Date timeStampNodeRelations;
+        private Calendar timeStampNodeRelations;
         private ArrayList<UUID> relations;
 
-        public NodeRelations(UUID nodeId, Date timeStampNodeRelations,
+        public NodeRelations(UUID nodeId, Calendar timeStampNodeRelations,
                              ArrayList<UUID> relations) {
             this.nodeId = nodeId;
             this.timeStampNodeRelations = timeStampNodeRelations;
@@ -217,7 +218,7 @@ public class DataTransferred {
             return nodeId;
         }
 
-        public Date getTimeStampNodeRelations() {
+        public Calendar getTimeStampNodeRelations() {
             return timeStampNodeRelations;
         }
 

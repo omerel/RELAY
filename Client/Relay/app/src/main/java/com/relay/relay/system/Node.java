@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 
 import com.relay.relay.Util.BitmapConvertor;
 
+import java.util.Calendar;
 import java.util.Date;
 import java.util.UUID;
 
@@ -15,8 +16,8 @@ import java.util.UUID;
 public class Node {
 
     private UUID mId;
-    private Date mTimeStampNodeDetails;
-    private Date mTimeStampNodeRelations;
+    private Calendar mTimeStampNodeDetails;
+    private Calendar mTimeStampNodeRelations;
     private int mRank;
     private String mEmail;
     private String mPhoneNumber;
@@ -38,7 +39,7 @@ public class Node {
      * @param mProfilePicture
      * @param mResidenceCode
      */
-    public Node(UUID mId, Date mTimeStampNodeDetails, Date mTimeStampNodeRelations, int mRank,
+    public Node(UUID mId, Calendar mTimeStampNodeDetails, Calendar mTimeStampNodeRelations, int mRank,
                 String mEmail, String mPhoneNumber, String mUserName, String mFullName,
                 Bitmap mProfilePicture, int mResidenceCode) {
         this.mId = mId;
@@ -65,7 +66,7 @@ public class Node {
      * Get tsmp of last changes in node details
      * @return
      */
-    public Date getTimeStampNodeDetails() {
+    public Calendar getTimeStampNodeDetails() {
         return mTimeStampNodeDetails;
     }
 
@@ -73,7 +74,7 @@ public class Node {
      * set tsmp node details
      * @param mTimeStampNodeDetails
      */
-    public void setTimeStampNodeDetails(Date mTimeStampNodeDetails) {
+    public void setTimeStampNodeDetails(Calendar mTimeStampNodeDetails) {
         this.mTimeStampNodeDetails = mTimeStampNodeDetails;
     }
 
@@ -81,7 +82,7 @@ public class Node {
      * get tstmp of last node relations
      * @return
      */
-    public Date getTimeStampNodeRelations() {
+    public Calendar getTimeStampNodeRelations() {
         return mTimeStampNodeRelations;
     }
 
@@ -89,7 +90,7 @@ public class Node {
      * set tstmp node relations
      * @param mTimeStampNodeRelations
      */
-    public void setTimeStampNodeRelations(Date mTimeStampNodeRelations) {
+    public void setTimeStampNodeRelations(Calendar mTimeStampNodeRelations) {
         this.mTimeStampNodeRelations = mTimeStampNodeRelations;
     }
 
