@@ -52,7 +52,6 @@ public class HandShake implements BLConstants {
 
         String testout = BluetoothAdapter.getDefaultAdapter().getAddress();
         mBluetoothConnected.writePacket(testout);
-
     }
 
     /**
@@ -108,7 +107,6 @@ public class HandShake implements BLConstants {
                 finishHandshake();
             }
         }, 2000);
-
     }
 
     /**
@@ -125,7 +123,6 @@ public class HandShake implements BLConstants {
              sendRelayMessageToManager(NEW_RELAY_MESSAGE,relayMessage);
              Log.e(TAG, "Sending new relay message to manager");
          }
-
     }
 
 

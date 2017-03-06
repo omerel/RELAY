@@ -1,5 +1,15 @@
 package com.relay.relay.DB;
 
+import android.content.Context;
+
+import com.relay.relay.SubSystem.HandShake;
+import com.relay.relay.Util.JsonConvertor;
+import com.relay.relay.system.HandShakeHistory;
+import com.relay.relay.system.Node;
+
+import java.util.ArrayList;
+import java.util.UUID;
+
 /**
  * Created by omer on 05/03/2017.
  * HandShakeDB saves all the handshake history that device did.
@@ -7,4 +17,129 @@ package com.relay.relay.DB;
 
 public class HandShakeDB {
 
+
+    final String TAG = "RELAY_DEBUG: "+ HandShakeDB.class.getSimpleName();
+    final UUID NUM_OF_NODES = UUID.fromString("3add4bd4-836f-4ee9-a728-a815c534b515");
+    private DBManager dbManager;
+    final String DB = "handshake_db";
+
+    /**
+     * Constructor
+     * @param context
+     */
+    public HandShakeDB(Context context){
+        dbManager = new DBManager(DB,context);
+        dbManager.openDB();
+        if (!dbManager.isKeyExist(NUM_OF_NODES))
+            dbManager.putJsonObject(NUM_OF_NODES, JsonConvertor.ConvertToJson(0));
+    }
+
+    /**
+     * Add event to DB
+     * @param nodeId
+     * @return true if success
+     */
+    public boolean addEventToHandShakeHistoryWith(UUID nodeId){
+        HandShakeHistory temp;
+        if (!dbManager.isKeyExist(nodeId)) {
+            temp = new HandShakeHistory();
+            temp.addEvent();
+            dbManager.putJsonObject(nodeId,JsonConvertor.ConvertToJson(temp));
+            addNumNodes();
+            return true;
+        }
+        else{
+            temp = getHandShakeHistoryWith(nodeId);
+            temp.addEvent();
+            dbManager.putJsonObject(nodeId, JsonConvertor.ConvertToJson(temp));
+            return true;
+        }
+    }
+
+    /**
+     * Add handshakehistory with uuid to db
+     * @param nodeId
+     * @return
+     */
+    public boolean updateHandShakeHistoryWith(UUID nodeId, HandShakeHistory handShakeHistory){
+
+        dbManager.putJsonObject(nodeId, JsonConvertor.ConvertToJson(handShakeHistory));
+        return true;
+
+    }
+
+    /**
+     * Get HandShakeHistory of nodeId
+     * @param uuid
+     * @return Node if found, Null if not found
+     */
+    public HandShakeHistory getHandShakeHistoryWith(UUID uuid){
+        if (dbManager.isKeyExist(uuid)){
+            return JsonConvertor.JsonToHandShakeHistory(dbManager.getJsonObject(uuid));
+        }
+        else
+            return null;
+    }
+
+    /**
+     * delete nodeid from database
+     * @param uuid
+     * @return
+     */
+    public boolean deleteNodeId(UUID uuid){
+        if (dbManager.isKeyExist(uuid)){
+            dbManager.deleteJsonObject(uuid);
+            reduceNumNodes();
+            return true;
+        }
+        else
+            return false;
+    }
+
+    /**
+     * Get nodes list
+     * @return arraylist
+     */
+    public ArrayList<UUID> getNodesIdList(){
+        ArrayList<UUID> temp = dbManager.getKyes();
+        temp.remove(NUM_OF_NODES);
+        return temp;
+
+    }
+
+    /**
+     * Add to nodes counter
+     */
+    private void addNumNodes(){
+        int num = JsonConvertor.JsonToInt(dbManager.getJsonObject(NUM_OF_NODES));
+        num++;
+        dbManager.putJsonObject(NUM_OF_NODES,JsonConvertor.ConvertToJson(num));
+    }
+
+    /**
+     * Reduce from node counter
+     */
+    private void reduceNumNodes(){
+        int num = JsonConvertor.JsonToInt(dbManager.getJsonObject(NUM_OF_NODES));
+        num--;
+        if (num >= 0)
+            dbManager.putJsonObject(NUM_OF_NODES,JsonConvertor.ConvertToJson(num));
+    }
+
+    /**
+     * Get nodes counter
+     * @return
+     */
+    public int getNumNodes() {
+        return JsonConvertor.JsonToInt(dbManager.getJsonObject(NUM_OF_NODES));
+    }
+
+    /**
+     * Delete handshakeDB database
+     * @return
+     */
+    public boolean deleteHandShakeDB(){
+        return dbManager.deleteDB();
+    }
 }
+

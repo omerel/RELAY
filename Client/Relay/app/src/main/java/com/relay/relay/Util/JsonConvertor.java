@@ -2,6 +2,7 @@ package com.relay.relay.Util;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.relay.relay.system.HandShakeHistory;
 import com.relay.relay.system.Node;
 import com.relay.relay.system.RelayMessage;
 
@@ -68,6 +69,12 @@ public class JsonConvertor {
     public static RelayMessage JsonToRelayMessage( String jsonString){
         Gson gson = new Gson();
         Type type = new TypeToken<RelayMessage>(){}.getType();
+        return gson.fromJson(jsonString, type);
+    }
+
+    public static HandShakeHistory JsonToHandShakeHistory(String jsonString){
+        Gson gson = new Gson();
+        Type type = new TypeToken<HandShakeHistory>(){}.getType();
         return gson.fromJson(jsonString, type);
     }
 

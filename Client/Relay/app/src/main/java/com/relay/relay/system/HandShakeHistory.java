@@ -1,10 +1,7 @@
 package com.relay.relay.system;
 
-import com.relay.relay.SubSystem.HandShake;
-
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 
 /**
  * Created by omer on 05/03/2017.
@@ -17,15 +14,13 @@ public class HandShakeHistory {
 
     final int DEFAULT_RANK = 2;
 
-    private Node mMyNode;
     private int mHandShakeRank;
     private int mHandShakeCounter;
     private ArrayList<HandShakeEvent> mHandShakeEvents;
     private ArrayList<HandShakeEvent> mHandShakeEventLog;
 
-    public HandShakeHistory(Node node){
+    public HandShakeHistory(){
 
-        this.mMyNode = node;
         this.mHandShakeRank = DEFAULT_RANK;
         this.mHandShakeCounter = 0;
         this.mHandShakeEvents = new ArrayList<>();
@@ -128,7 +123,7 @@ public class HandShakeHistory {
      * reset HandShakeEventLog
      * @return
      */
-    public boolean resetHandShakeEventLog(){
+    public boolean clearHandShakeEventLog(){
         mHandShakeEventLog = new ArrayList<>();
         return true;
     }
@@ -137,7 +132,7 @@ public class HandShakeHistory {
      *  HandShakeEvent - saves the place and the time where the handshake with the device occurred.
      *  TODO for now the geo location is not usable;
      */
-     private class HandShakeEvent{
+     public class HandShakeEvent{
          private String geoLocation;
          private Calendar timeStamp;
 

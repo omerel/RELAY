@@ -5,7 +5,9 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Log;
 import com.relay.relay.R;
+import com.relay.relay.SubSystem.DataManager;
 import com.relay.relay.Util.DataTransferred;
+import com.relay.relay.system.HandShakeHistory;
 import com.relay.relay.system.Node;
 import com.relay.relay.system.RelayMessage;
 
@@ -28,14 +30,17 @@ public class Test {
     private NodesDB nodesDB;
     private MessagesDB messagesDB;
     private UUID myID;
+    private DataManager dataManager;
+    private HandShakeDB handShakeDB;
     private UUID[] uuids;
 
     public Test(Context context){
         this.context = context;
-        graphRelations = new GraphRelations(context);
-        nodesDB = new NodesDB(context,graphRelations);
-        messagesDB = new MessagesDB(context);
-
+        dataManager = new DataManager(context);
+        graphRelations = dataManager.getGraphRelations();
+        nodesDB = dataManager.getNodesDB();
+        messagesDB = dataManager.getMessagesDB();
+        handShakeDB = dataManager.getHandShakeDB();
     }
 
     public int randomIndex(int min,int max){
@@ -55,7 +60,7 @@ public class Test {
         Calendar[] dates = new Calendar[30];
         for (int i =0;i<30;i++){
             long offset = Timestamp.valueOf("2017-01-01 00:00:00").getTime();
-            long end = Timestamp.valueOf("2017-05-05 00:00:00").getTime();
+            long end = Timestamp.valueOf("2017-03-03 00:00:00").getTime();
             long diff = end - offset + 1;
             Timestamp rand = new Timestamp(offset + (long)(Math.random() * diff));
             dates[i] = Calendar.getInstance();
@@ -188,12 +193,15 @@ public class Test {
         Log.e(TAG, "My node id is: "+metadata.getMyNode().getId().toString());
         Log.e(TAG, "My name is is: "+metadata.getMyNode().getFullName());
 
+
+        Log.e(TAG, "checking metadata - KnownRelations ");
         ArrayList<DataTransferred.KnownRelations> kn = metadata.getKnownRelationsList();
         for (int i =0 ;i<kn.size(); i++){
             Log.e(TAG, "id: "+kn.get(i).getNodeId()+", degree: "+kn.get(i).getNodeDegree()+
                     " , tmsp: "+kn.get(i).getTimeStampNodeDetails().getTime());
         }
 
+        Log.e(TAG, "checking metadata - KnownMessage ");
         ArrayList<DataTransferred.KnownMessage> km = metadata.getKnownMessagesList();
 
         for (int i =0 ;i<kn.size(); i++){
@@ -204,12 +212,12 @@ public class Test {
 
          DataTransferred.UpdateNodeAndRelations up =
                  dataTransferredManager.createUpdateNodeAndRelations();
-
+        Log.e(TAG, "checking UpdateNodeAndRelations - nodeList ");
         ArrayList<Node> nd = up.getNodeList();
         for (int i =0 ;i<nd.size(); i++){
             Log.e(TAG, "email: "+nd.get(i).getEmail());
         }
-
+        Log.e(TAG, "checking UpdateNodeAndRelations - NodeRelations ");
         ArrayList<DataTransferred.NodeRelations> nr = up.getRelationsList();
         for (int i =0 ;i<nd.size(); i++){
             DataTransferred.NodeRelations n = nr.get(i);
@@ -219,6 +227,67 @@ public class Test {
                 Log.e(TAG, "friend id : "+ids.get(j).toString());
             }
         }
+
+
+        Log.e(TAG, "checking Handshake History DB - adding  random handshakes ");
+        ArrayList<UUID> nodeList = nodesDB.getNodesIdList();
+        for(int i = 0; i < 50; i++){
+            UUID tempid = nodeList.get(randomIndex(1,nodeList.size()-1));
+            handShakeDB.addEventToHandShakeHistoryWith(tempid);
+            Log.e(TAG, "hand shake with "+tempid);
+        }
+
+
+        Log.e(TAG, "checking Handshake History - picking one for example ");
+         HandShakeHistory handShakeHistory =
+                 handShakeDB.getHandShakeHistoryWith(UUID.fromString(
+                         "bed3b22f-b65f-48a7-97d5-67b6a9e4a9f3"));
+
+        Log.e(TAG, "handShakeHistory.getmHandShakeCounter()-->"+handShakeHistory.getmHandShakeCounter());
+        Log.e(TAG, "handShakeHistory.getmHandShakeRank()-->"+handShakeHistory.getmHandShakeRank());
+        Log.e(TAG, "adding events to arise the rank");
+        handShakeHistory.addEvent();
+        handShakeHistory.addEvent();
+        handShakeHistory.addEvent();
+        handShakeHistory.addEvent();
+        handShakeHistory.addEvent();
+        handShakeHistory.addEvent();
+        handShakeHistory.addEvent();
+        handShakeHistory.addEvent();
+        Log.e(TAG, "handShakeHistory.getmHandShakeCounter()-->"+handShakeHistory.getmHandShakeCounter());
+        Log.e(TAG, "handShakeHistory.getmHandShakeRank()-->"+handShakeHistory.getmHandShakeRank());
+
+        Log.e(TAG, "get handshake events:");
+        ArrayList<HandShakeHistory.HandShakeEvent> handShakeEvents = handShakeHistory.getmHandShakeEvents();
+        for (HandShakeHistory.HandShakeEvent h : handShakeEvents){
+            Log.e(TAG, "geo: "+h.getGeoLocation()+" ,  time:"+h.getTimeStamp().getTime());
+        }
+
+        Log.e(TAG, "cleaning hand shake events before this moment");
+        handShakeHistory.cleanHandShakeEvents(0);
+
+        Log.e(TAG, "handshake events size: "+handShakeEvents.size());
+
+        Log.e(TAG, "get handshake events: need to be empty");
+        handShakeEvents = handShakeHistory.getmHandShakeEvents();
+        for (HandShakeHistory.HandShakeEvent h : handShakeEvents){
+            Log.e(TAG, "geo: "+h.getGeoLocation()+" ,  time:"+h.getTimeStamp().getTime());
+        }
+
+        Log.e(TAG, "HandShakeEventLog size: "+handShakeHistory.getmHandShakeEventLog().size());
+        Log.e(TAG, "clean HandShakeEventLog: "+handShakeHistory.clearHandShakeEventLog());
+        Log.e(TAG, "HandShakeEventLog size: "+handShakeHistory.getmHandShakeEventLog().size());
+
+
+        Log.e(TAG, "Update handShak history DB");
+        handShakeDB.updateHandShakeHistoryWith(UUID.fromString(
+                "bed3b22f-b65f-48a7-97d5-67b6a9e4a9f3"),handShakeHistory);
+
+        Log.e(TAG, "cleanHandShakeHistory: "+ dataManager.cleanHandShakeHistory(0));
+        Log.e(TAG, "clearHandShakeHistoryLog: "+ dataManager.clearHandShakeHistoryLog());
+
+        handShakeDB.deleteHandShakeDB();
+
         // deleteDB();
 
 
