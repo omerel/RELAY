@@ -6,7 +6,9 @@ import com.relay.relay.DB.GraphRelations;
 import com.relay.relay.DB.HandShakeDB;
 import com.relay.relay.DB.MessagesDB;
 import com.relay.relay.DB.NodesDB;
+import com.relay.relay.Util.DataTransferred;
 import com.relay.relay.system.HandShakeHistory;
+import com.relay.relay.system.Node;
 
 import java.util.ArrayList;
 import java.util.UUID;
@@ -17,7 +19,6 @@ import java.util.UUID;
  */
 
 public class DataManager {
-
 
     private GraphRelations mGraphRelations;
     private MessagesDB mMessagesDB;
@@ -49,6 +50,7 @@ public class DataManager {
     public HandShakeDB getHandShakeDB() {
         return mHandShakeDB;
     }
+
 
     /**
      * transfer all the events that happened before weeks to history log. if there is an empty node

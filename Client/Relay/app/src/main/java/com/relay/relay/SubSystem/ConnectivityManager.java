@@ -45,8 +45,7 @@ public class ConnectivityManager extends Service implements BLConstants {
     // Handler for all incoming messages from Bluetooth Manager
     private final Messenger mMessenger = new Messenger(new IncomingHandler());
     private BLManager mBluetoothManager;
-    // TODO change device uuid TEMP
-    private  final String mDeviceUUID = "0002280F-0000-1000-8000-00805f9234f1";
+    private DataManager mDataManager;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -57,6 +56,7 @@ public class ConnectivityManager extends Service implements BLConstants {
         startConnectivityByPriority();
         setWakeLock();
         mRestart = false;
+        mDataManager = new DataManager(this);
         return  START_NOT_STICKY;
     }
 
@@ -143,7 +143,7 @@ public class ConnectivityManager extends Service implements BLConstants {
     }
 
     private void initialBluetoothMode(){
-        this.mBluetoothManager = new BLManager(mDeviceUUID,mMessenger,this);
+        this.mBluetoothManager = new BLManager(mMessenger,this,mDataManager);
     }
 
     private void startBluetoothMode(){
@@ -165,6 +165,7 @@ public class ConnectivityManager extends Service implements BLConstants {
         mFilter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
         mFilter.addAction(Intent.ACTION_POWER_CONNECTED);
         mFilter.addAction(Intent.ACTION_POWER_DISCONNECTED);
+        // TODO enter receiver when fail while connecting
 
         mBroadcastReceiver = new BroadcastReceiver() {
 

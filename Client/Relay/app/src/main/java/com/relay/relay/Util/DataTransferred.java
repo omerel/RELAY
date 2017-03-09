@@ -26,17 +26,16 @@ public class DataTransferred {
 
     /**
      * Counstructor to create manager
-     * @param myNode
      * @param graphRelations
      * @param nodesDB
      * @param messagesDB
      */
-    public DataTransferred(Node myNode, GraphRelations graphRelations,NodesDB nodesDB,
+    public DataTransferred(GraphRelations graphRelations,NodesDB nodesDB,
                            MessagesDB messagesDB){
-        this.mMyNode = myNode;
         this.mGraphRelations = graphRelations;
         this.mNodesDB = nodesDB;
         this.mMessagesDB = messagesDB;
+        this.mMyNode = mNodesDB.getNode(mNodesDB.getMyNodeId());
     }
 
     /**
@@ -73,7 +72,7 @@ public class DataTransferred {
                 Node tempNode = nodesDB.getNode(uuidArrayList.get(j));
                 knownRelationsArrayList.add(new KnownRelations(tempNode.getId(),
                         tempNode.getTimeStampNodeDetails(),tempNode.getTimeStampNodeRelations(),
-                        i));
+                        i,tempNode.getRank()));
             }
         }
         return knownRelationsArrayList;
@@ -131,18 +130,24 @@ public class DataTransferred {
         private Calendar timeStampNodeDetails;
         private Calendar timeStampNodeRelations;
         private int nodeDegree;
+        private int rank;
 
         public KnownRelations(UUID nodeId, Calendar timeStampNodeDetails,
-                              Calendar timeStampNodeRelations, int nodeDegree){
+                              Calendar timeStampNodeRelations, int nodeDegree,int rank){
             this.nodeId = nodeId;
             this.timeStampNodeDetails = timeStampNodeDetails;
             this.timeStampNodeRelations = timeStampNodeRelations;
             this.nodeDegree = nodeDegree;
+            this.rank = rank;
 
         }
 
         public UUID getNodeId() {
             return nodeId;
+        }
+
+        public int getNodeRank() {
+            return rank;
         }
 
         public Calendar getTimeStampNodeDetails() {

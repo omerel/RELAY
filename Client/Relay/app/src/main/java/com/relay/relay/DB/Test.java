@@ -161,15 +161,15 @@ public class Test {
     public void startTest(){
 
 
-       // createDB();
+        createDB();
 
         Log.e(TAG, "graphRelations.getMyNumEdges()--->"+ graphRelations.getMyNumEdges());
         Log.e(TAG, "graphRelations.getMyNumNodes()--->"+ graphRelations.getMyNumNodes());
         Log.e(TAG, "nodesDB.getNumNodes()--->"+ nodesDB.getNumNodes());
 
         ArrayList<UUID> t;
-//        myID = uuids[0];
-        myID = nodesDB.getNodesIdList().get(0);
+        nodesDB.setMyNodeId(uuids[0]);
+        myID = nodesDB.getMyNodeId();
 
         Log.e(TAG, "Start BFS on uuid[0]");
         HashMap< Integer, ArrayList<UUID>>  b = graphRelations.bfs(graphRelations,myID);
@@ -185,7 +185,7 @@ public class Test {
 
 
         Log.e(TAG, "Creating dataTransferredManager");
-        DataTransferred dataTransferredManager = new DataTransferred((Node)nodesDB.getNode(myID),
+        DataTransferred dataTransferredManager = new DataTransferred(
                                                         graphRelations,nodesDB,messagesDB);
         Log.e(TAG, "Creating createMetaData()");
         DataTransferred.Metadata metadata = dataTransferredManager.createMetaData();
@@ -288,7 +288,7 @@ public class Test {
 
         handShakeDB.deleteHandShakeDB();
 
-        // deleteDB();
+        //deleteDB();
 
 
 

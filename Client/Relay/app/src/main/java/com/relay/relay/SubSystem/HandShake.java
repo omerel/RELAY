@@ -2,6 +2,7 @@ package com.relay.relay.SubSystem;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothSocket;
+import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -11,10 +12,13 @@ import android.util.Log;
 
 import com.relay.relay.Bluetooth.BLConstants;
 import com.relay.relay.Bluetooth.BluetoothConnected;
+import com.relay.relay.Util.DataTransferred;
+
+import java.util.UUID;
 
 /**
  * Created by omer on 12/12/2016.
- *
+ * HandShake using bluetooth connection
  */
 
 public class HandShake implements BLConstants {
@@ -24,22 +28,21 @@ public class HandShake implements BLConstants {
     private Messenger mMessenger;
     private BluetoothSocket mBluetoothSocket;
     private BluetoothConnected mBluetoothConnected;
-    private final String mDeviceUUID;
     private boolean mInitiator;
-
+    private DataManager mDataManager;
 
     // TEST
     private boolean testReceieved = false;
     //
 
-    public HandShake(String deviceUUID, BluetoothSocket bluetoothSocket, Messenger messenger
-            ,boolean initiator){
+    public HandShake(BluetoothSocket bluetoothSocket,
+                     Messenger messenger, boolean initiator, Context context,DataManager dataManager){
 
-        this.mDeviceUUID = deviceUUID;
         this.mMessenger = messenger;
         this.mBluetoothSocket = bluetoothSocket;
         this.mInitiator = initiator;
         this.mBluetoothConnected = new BluetoothConnected(mBluetoothSocket,messenger);
+        this.mDataManager = dataManager;
         this.mBluetoothConnected.start();
 
         startHandshake();
@@ -50,8 +53,9 @@ public class HandShake implements BLConstants {
      */
     private void startHandshake() {
 
-        String testout = BluetoothAdapter.getDefaultAdapter().getAddress();
-        mBluetoothConnected.writePacket(testout);
+        if (mInitiator){
+            //DataTransferred.Metadata metadata = mDataManager.
+        }
     }
 
     /**
@@ -133,7 +137,6 @@ public class HandShake implements BLConstants {
     private String convertPacketToRelayMessage(String packet) {
 
         //String relayMessage  = new String(packet, 0, packet.length);
-        testReceieved = true;
         return packet;
     }
 
@@ -141,7 +144,6 @@ public class HandShake implements BLConstants {
      * Convert packet to relay message
      */
     private boolean isMessageForMe(String relayMessage) {
-        testReceieved = true;
         return true;
     }
 

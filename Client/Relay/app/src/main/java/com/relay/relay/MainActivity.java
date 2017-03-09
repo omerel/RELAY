@@ -80,8 +80,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         checkPermissions();
 
-        Test t = new Test(this);
-        t.startTest();
+        //Test t = new Test(this);
+        //t.startTest();
 
     }
 

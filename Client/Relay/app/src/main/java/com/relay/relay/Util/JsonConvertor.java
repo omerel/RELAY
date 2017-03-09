@@ -78,4 +78,10 @@ public class JsonConvertor {
         return gson.fromJson(jsonString, type);
     }
 
+    public static UUID JsonToUUID(String jsonString){
+        Gson gson = new Gson();
+        Type type = new TypeToken<UUID>(){}.getType();
+        return gson.fromJson(jsonString, type);
+    }
+
 }

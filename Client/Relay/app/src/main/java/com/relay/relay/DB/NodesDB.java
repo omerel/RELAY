@@ -17,6 +17,7 @@ public class NodesDB {
 
     final String TAG = "RELAY_DEBUG: "+ NodesDB.class.getSimpleName();
     final UUID NUM_OF_NODES = UUID.fromString("3add4bd4-836f-4ee9-a728-a815c534b515");
+    final UUID MY_NODE_ID = UUID.fromString("3add4bd4-836f-4ee9-a728-a815c534b214");
     private DBManager dbManager;
     private GraphRelations graphRelations;
     final String DB = "nodes_db";
@@ -86,8 +87,10 @@ public class NodesDB {
      * @return arraylist
      */
     public ArrayList<UUID> getNodesIdList(){
+
         ArrayList<UUID> temp = dbManager.getKyes();
         temp.remove(NUM_OF_NODES);
+        temp.remove(MY_NODE_ID);
         return temp;
 
     }
@@ -127,5 +130,22 @@ public class NodesDB {
         return dbManager.deleteDB();
     }
 
+
+    /**
+     * Add MY Node
+     * @param nodeId
+     * @return true if success
+     */
+    public boolean setMyNodeId(UUID nodeId){
+        dbManager.putJsonObject(MY_NODE_ID,JsonConvertor.ConvertToJson(nodeId));
+        return true;
+    }
+
+    /**
+     * Get MY Node
+     */
+    public UUID getMyNodeId(){
+        return JsonConvertor.JsonToUUID(dbManager.getJsonObject(MY_NODE_ID));
+    }
 
 }

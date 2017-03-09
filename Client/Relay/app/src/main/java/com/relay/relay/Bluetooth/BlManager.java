@@ -10,9 +10,11 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
 import com.relay.relay.SubSystem.ConnectivityManager;
+import com.relay.relay.SubSystem.DataManager;
 import com.relay.relay.SubSystem.HandShake;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import static java.lang.System.exit;
 
@@ -48,16 +50,16 @@ public class BLManager extends Thread implements BLConstants {
     private Handler mHandler;
     private Handler mAdvertiserHandler;
     private HandShake mHandShake;
-    private final String mDeviceUUID;
     private int mStatus;
     private ConnectivityManager mConnectivityManager;
     // who connect(initiate) to who
     private boolean mInitiator;
+    private DataManager mDataManager;
 
 
-     public BLManager(String deviceUUID, Messenger connectivityMessenger, ConnectivityManager connectivityManager){
+     public BLManager(Messenger connectivityMessenger, ConnectivityManager connectivityManager,
+                      DataManager dataManager){
 
-        this.mDeviceUUID = deviceUUID;
         this.mLastConnectedDevices = new ArrayList<>();
         this.mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (mBluetoothAdapter == null) {
@@ -78,6 +80,7 @@ public class BLManager extends Thread implements BLConstants {
          this.mAdvertiserHandler = new Handler();
          this.mHandShake = null;
          this.mStatus = DISCONNECTED;
+         this.mDataManager = dataManager;
          Log.d(TAG, "Class created");
          Log.d(TAG, "I am :" +mBluetoothAdapter.getName()+", MAC : "+ mBluetoothAdapter.getAddress());
 
@@ -272,6 +275,9 @@ public class BLManager extends Thread implements BLConstants {
     }
 
 
+
+    //  mFilter.addAction(BluetoothAdapter.ACTION_CONNECTION_STATE_CHANGED);
+
     /**
      * Handler of incoming messages from one of the BL classes
      */
@@ -299,7 +305,8 @@ public class BLManager extends Thread implements BLConstants {
                     // reset interval search time and counter
                     resetSearch();
                     // Start handshake
-                    mHandShake = new HandShake(mDeviceUUID,bluetoothSocket,mMessenger,mInitiator);
+                    mHandShake = new HandShake(bluetoothSocket,mMessenger,mInitiator,
+                            mConnectivityManager,mDataManager);
                     break;
 
                 case FAILED_CONNECTING_TO_DEVICE:
@@ -323,7 +330,8 @@ public class BLManager extends Thread implements BLConstants {
                     // cancel socket if working
                     mBluetoothServer.cancel();
                     // Start handshake
-                    mHandShake = new HandShake(mDeviceUUID,bluetoothSocket,mMessenger,mInitiator);
+                    mHandShake = new HandShake(bluetoothSocket,mMessenger,mInitiator,
+                            mConnectivityManager,mDataManager);
 
                     break;
 
@@ -403,6 +411,7 @@ public class BLManager extends Thread implements BLConstants {
                     Log.e(TAG, "BLE_ADVERTISE_ERROR");
                     sendRelayMessageToConnectivityManager(BLE_ERROR,null);
                     break;
+
                 case BLE_SCAN_ERROR:
                     Log.e(TAG, "BLE_SCAN_ERROR");
                     sendRelayMessageToConnectivityManager(BLE_ERROR,null);
