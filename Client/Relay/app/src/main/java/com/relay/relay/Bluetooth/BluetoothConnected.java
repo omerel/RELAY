@@ -87,6 +87,7 @@ public class BluetoothConnected extends Thread implements BLConstants {
                     String stringPacketWithHeader = firstDeliver + tempString.substring(firstDeliver.length());
                     // the sent packet without header
                     String stringPacket = (stringPacketWithHeader.split(DELIMITER))[1];
+                    stringPacket = stringPacket.substring(0,packetSize);
                     sendPacketToBluetoothManager(READ_PACKET, stringPacket);
                 }
 

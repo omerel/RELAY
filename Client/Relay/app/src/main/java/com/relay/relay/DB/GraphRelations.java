@@ -43,7 +43,7 @@ public class GraphRelations {
     public boolean addNode(UUID uuid) {
         final UUID node = uuid;
         if (!hasNode(node)) {
-            dbManager.putJsonObject(uuid,JsonConvertor.ConvertToJson(new ArrayList<String>()));
+            dbManager.putJsonObject(uuid,JsonConvertor.convertToJson(new ArrayList<String>()));
             addNumNodes();
             return true;
         }
@@ -91,15 +91,14 @@ public class GraphRelations {
 
         temp = JsonConvertor.JsonToUUIDArrayList(dbManager.getJsonObject(from));
         temp.add(to);
-        dbManager.putJsonObject(from,JsonConvertor.ConvertToJson(temp));
+        dbManager.putJsonObject(from,JsonConvertor.convertToJson(temp));
 
         temp = JsonConvertor.JsonToUUIDArrayList(dbManager.getJsonObject(to));
         temp.add(from);
-        dbManager.putJsonObject(to,JsonConvertor.ConvertToJson(temp));
+        dbManager.putJsonObject(to,JsonConvertor.convertToJson(temp));
 
         return true;
     }
-
 
     /**
      * Return an ArrayList over the neighbors of UUID
@@ -116,12 +115,12 @@ public class GraphRelations {
     public void addNumNodes(){
 
         if (!dbManager.isKeyExist(NUM_OF_NODES)){
-            dbManager.putJsonObject(NUM_OF_NODES,JsonConvertor.ConvertToJson(1));
+            dbManager.putJsonObject(NUM_OF_NODES,JsonConvertor.convertToJson(1));
         }
         else{
             int num = JsonConvertor.JsonToInt(dbManager.getJsonObject(NUM_OF_NODES));
             num++;
-            dbManager.putJsonObject(NUM_OF_NODES,JsonConvertor.ConvertToJson(num));
+            dbManager.putJsonObject(NUM_OF_NODES,JsonConvertor.convertToJson(num));
         }
     }
 
@@ -130,12 +129,12 @@ public class GraphRelations {
      */
     public void addNumEdges(){
         if (!dbManager.isKeyExist(NUM_OF_EDGES)){
-            dbManager.putJsonObject(NUM_OF_EDGES,JsonConvertor.ConvertToJson(1));
+            dbManager.putJsonObject(NUM_OF_EDGES,JsonConvertor.convertToJson(1));
         }
         else{
             int num = JsonConvertor.JsonToInt(dbManager.getJsonObject(NUM_OF_EDGES));
             num++;
-            dbManager.putJsonObject(NUM_OF_EDGES,JsonConvertor.ConvertToJson(num));
+            dbManager.putJsonObject(NUM_OF_EDGES,JsonConvertor.convertToJson(num));
         }
     }
 
@@ -150,7 +149,7 @@ public class GraphRelations {
             int num = JsonConvertor.JsonToInt(dbManager.getJsonObject(NUM_OF_EDGES));
             num--;
             if (num>=0)
-                dbManager.putJsonObject(NUM_OF_EDGES,JsonConvertor.ConvertToJson(num));
+                dbManager.putJsonObject(NUM_OF_EDGES,JsonConvertor.convertToJson(num));
         }
     }
     /**
@@ -164,7 +163,7 @@ public class GraphRelations {
             int num = JsonConvertor.JsonToInt(dbManager.getJsonObject(NUM_OF_NODES));
             num--;
             if (num>=0)
-                dbManager.putJsonObject(NUM_OF_NODES,JsonConvertor.ConvertToJson(num));
+                dbManager.putJsonObject(NUM_OF_NODES,JsonConvertor.convertToJson(num));
         }
     }
 
@@ -232,11 +231,11 @@ public class GraphRelations {
 
         temp = JsonConvertor.JsonToUUIDArrayList(dbManager.getJsonObject(from));
         temp.remove(to);
-        dbManager.putJsonObject(from,JsonConvertor.ConvertToJson(temp));
+        dbManager.putJsonObject(from,JsonConvertor.convertToJson(temp));
 
         temp = JsonConvertor.JsonToUUIDArrayList(dbManager.getJsonObject(to));
         temp.remove(from);
-        dbManager.putJsonObject(from,JsonConvertor.ConvertToJson(to));
+        dbManager.putJsonObject(from,JsonConvertor.convertToJson(to));
         return true;
     }
 
@@ -245,7 +244,6 @@ public class GraphRelations {
      * returns hashMap of graphRelations Ordered By Degree
      */
     public HashMap< Integer, ArrayList<UUID>> bfs(GraphRelations graphRelations, UUID s) {
-
 
 
         final int INFINITY = Integer.MAX_VALUE;
@@ -291,12 +289,16 @@ public class GraphRelations {
                 }
 
                 for (UUID w : graphRelations.adjacentTo(v)) {
-                    if (!marked[nodesArrayList.indexOf(w)]) {
-                        edgeTo[nodesArrayList.indexOf(w)] = nodesArrayList.indexOf(v);
-                        distTo[nodesArrayList.indexOf(w)]= distTo[nodesArrayList.indexOf(v)] + 1;
-                        marked[nodesArrayList.indexOf(w)] = true;
-                        q.add(w);
+
+                    if (nodesArrayList.contains(w)){ // Ignore relations of nodes that aren't in nodeDB
+                        if (!marked[nodesArrayList.indexOf(w)]) {
+                            edgeTo[nodesArrayList.indexOf(w)] = nodesArrayList.indexOf(v);
+                            distTo[nodesArrayList.indexOf(w)]= distTo[nodesArrayList.indexOf(v)] + 1;
+                            marked[nodesArrayList.indexOf(w)] = true;
+                            q.add(w);
+                        }
                     }
+
                 }
             }
         }

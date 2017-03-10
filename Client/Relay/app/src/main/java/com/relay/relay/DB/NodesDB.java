@@ -31,7 +31,7 @@ public class NodesDB {
         dbManager = new DBManager(DB,context);
         dbManager.openDB();
         if (!dbManager.isKeyExist(NUM_OF_NODES))
-            dbManager.putJsonObject(NUM_OF_NODES, JsonConvertor.ConvertToJson(0));
+            dbManager.putJsonObject(NUM_OF_NODES, JsonConvertor.convertToJson(0));
         this.graphRelations = graphRelations;
     }
 
@@ -42,15 +42,19 @@ public class NodesDB {
      */
     public boolean addNode(Node node){
         if (!dbManager.isKeyExist(node.getId())) {
-            dbManager.putJsonObject(node.getId(),JsonConvertor.ConvertToJson(node));
+            dbManager.putJsonObject(node.getId(),JsonConvertor.convertToJson(node));
             graphRelations.addNode(node.getId());
             addNumNodes();
             return true;
         }
         else{
-            dbManager.putJsonObject(node.getId(), JsonConvertor.ConvertToJson(node));
+            dbManager.putJsonObject(node.getId(), JsonConvertor.convertToJson(node));
             return true;
         }
+    }
+
+    public boolean isNodeExist(UUID nodeId){
+         return dbManager.isKeyExist(nodeId);
     }
 
     /**
@@ -101,7 +105,7 @@ public class NodesDB {
     private void addNumNodes(){
         int num = JsonConvertor.JsonToInt(dbManager.getJsonObject(NUM_OF_NODES));
         num++;
-        dbManager.putJsonObject(NUM_OF_NODES,JsonConvertor.ConvertToJson(num));
+        dbManager.putJsonObject(NUM_OF_NODES,JsonConvertor.convertToJson(num));
     }
 
     /**
@@ -111,7 +115,7 @@ public class NodesDB {
         int num = JsonConvertor.JsonToInt(dbManager.getJsonObject(NUM_OF_NODES));
         num--;
         if (num >= 0)
-            dbManager.putJsonObject(NUM_OF_NODES,JsonConvertor.ConvertToJson(num));
+            dbManager.putJsonObject(NUM_OF_NODES,JsonConvertor.convertToJson(num));
     }
 
     /**
@@ -137,7 +141,7 @@ public class NodesDB {
      * @return true if success
      */
     public boolean setMyNodeId(UUID nodeId){
-        dbManager.putJsonObject(MY_NODE_ID,JsonConvertor.ConvertToJson(nodeId));
+        dbManager.putJsonObject(MY_NODE_ID,JsonConvertor.convertToJson(nodeId));
         return true;
     }
 

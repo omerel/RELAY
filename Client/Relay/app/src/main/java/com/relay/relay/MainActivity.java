@@ -80,8 +80,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         checkPermissions();
 
-        //Test t = new Test(this);
-        //t.startTest();
+//        Test t = new Test(this);
+//        t.startTest();
 
     }
 
@@ -153,7 +153,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 if (clicked){
                     if (!BluetoothAdapter.getDefaultAdapter().isEnabled()) {
                         startActivity(new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE));
-                        //BluetoothAdapter.getDefaultAdapter().enable();
                         clicked = !clicked;
                     }
                     else{
@@ -198,7 +197,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 String action = intent.getAction();
 
                 switch (action){
-
                     // When incoming message received
                     case MESSAGE_RECEIVED:
                         String relayMessage = intent.getStringExtra("relayMessage");

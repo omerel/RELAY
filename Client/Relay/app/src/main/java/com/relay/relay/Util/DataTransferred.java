@@ -7,8 +7,8 @@ import com.relay.relay.system.Node;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -45,7 +45,12 @@ public class DataTransferred {
     public Metadata createMetaData(){
         return new Metadata(mMyNode,
                 createKnownRelationsList(mMyNode,mGraphRelations,mNodesDB),
-                createknownMessagesList(mMessagesDB));
+                createKnownMessagesList(mMessagesDB));
+    }
+
+    public NodeRelations createNodeRelations(UUID nodeId,Calendar timeStampNodeRelations,
+                                             ArrayList<UUID> relations){
+        return new NodeRelations(nodeId,timeStampNodeRelations,relations);
     }
 
     /**
@@ -55,10 +60,10 @@ public class DataTransferred {
      * @param nodesDB
      * @return
      */
-    private ArrayList<KnownRelations> createKnownRelationsList( Node myNode,
+    private Map<UUID,KnownRelations> createKnownRelationsList( Node myNode,
                                       GraphRelations graphRelations, NodesDB nodesDB){
         int degree = MAXDEGREE;
-        ArrayList<KnownRelations> knownRelationsArrayList = new ArrayList<>();
+        Map<UUID,KnownRelations> knownRelationsArrayList = new HashMap<>();
         ArrayList<UUID> uuidArrayList;
         HashMap< Integer, ArrayList<UUID>> bfs = graphRelations.bfs(graphRelations, myNode.getId());
 
@@ -66,11 +71,11 @@ public class DataTransferred {
         if ( bfs.size() < degree)
             degree = bfs.size();
 
-        for (int i = 1; i < degree; i++){
+        for (int i = 0; i < degree; i++){
             uuidArrayList = bfs.get(i);
             for(int j =0; j< uuidArrayList.size(); j++){
                 Node tempNode = nodesDB.getNode(uuidArrayList.get(j));
-                knownRelationsArrayList.add(new KnownRelations(tempNode.getId(),
+                knownRelationsArrayList.put(tempNode.getId(),new KnownRelations(tempNode.getId(),
                         tempNode.getTimeStampNodeDetails(),tempNode.getTimeStampNodeRelations(),
                         i,tempNode.getRank()));
             }
@@ -83,12 +88,12 @@ public class DataTransferred {
      * @param messagesDB
      * @return
      */
-    private ArrayList<KnownMessage> createknownMessagesList(MessagesDB messagesDB){
-        ArrayList<KnownMessage> knownMessageArrayList = new ArrayList<>();
+    private Map<UUID,KnownMessage> createKnownMessagesList(MessagesDB messagesDB){
+        Map<UUID,KnownMessage> knownMessageArrayList = new HashMap<>();
         ArrayList<UUID> uuidArrayList = messagesDB.getMessagesIdList();
 
         for (int i = 0 ; i < uuidArrayList.size(); i++ ){
-            knownMessageArrayList.add(new KnownMessage(uuidArrayList.get(i),
+            knownMessageArrayList.put(uuidArrayList.get(i),new KnownMessage(uuidArrayList.get(i),
                     messagesDB.getMessage(uuidArrayList.get(i)).getStatus()));
         }
         return  knownMessageArrayList;
@@ -99,11 +104,11 @@ public class DataTransferred {
      */
     public class Metadata{
         private Node myNode;
-        private ArrayList<KnownRelations> knownRelationsList;
-        private ArrayList<KnownMessage> knownMessagesList;
+        private Map<UUID,KnownRelations> knownRelationsList;
+        private Map<UUID,KnownMessage> knownMessagesList;
 
-        public Metadata(Node myNode, ArrayList<KnownRelations> knownRelationsList,
-                        ArrayList<KnownMessage> knownMessagesList) {
+        public Metadata(Node myNode, Map<UUID,KnownRelations> knownRelationsList,
+                        Map<UUID,KnownMessage> knownMessagesList) {
             this.myNode = myNode;
             this.knownRelationsList = knownRelationsList;
             this.knownMessagesList = knownMessagesList;
@@ -113,11 +118,11 @@ public class DataTransferred {
             return myNode;
         }
 
-        public ArrayList<KnownRelations> getKnownRelationsList() {
+        public Map<UUID,KnownRelations> getKnownRelationsList() {
             return knownRelationsList;
         }
 
-        public ArrayList<KnownMessage> getKnownMessagesList() {
+        public Map<UUID,KnownMessage> getKnownMessagesList() {
             return knownMessagesList;
         }
     }
@@ -139,7 +144,6 @@ public class DataTransferred {
             this.timeStampNodeRelations = timeStampNodeRelations;
             this.nodeDegree = nodeDegree;
             this.rank = rank;
-
         }
 
         public UUID getNodeId() {
@@ -184,26 +188,6 @@ public class DataTransferred {
         }
     }
 
-    private ArrayList<Node> createNodeToUpdateList(ArrayList<UUID> uuidArrayList,NodesDB nodesDB){
-        ArrayList<Node> nodeArrayList = new ArrayList<>();
-        for (int i = 0; i<uuidArrayList.size(); i++){
-            nodeArrayList.add(nodesDB.getNode(uuidArrayList.get(i)));
-        }
-        return nodeArrayList;
-    }
-
-    private ArrayList<NodeRelations> CreateRelationsList(ArrayList<UUID> uuidArrayList,
-                                         NodesDB nodesDB,GraphRelations graphRelations){
-
-        ArrayList<NodeRelations> nodeRelationsArrayList = new ArrayList<>();
-        for (int i = 0; i<uuidArrayList.size(); i++){
-            Node temp = nodesDB.getNode(uuidArrayList.get(i));
-            nodeRelationsArrayList.add(new NodeRelations(temp.getId(),
-                    temp.getTimeStampNodeRelations(),graphRelations.adjacentTo(temp.getId())));
-        }
-        return nodeRelationsArrayList;
-    }
-
     /**
      * NodeRelations class
      */
@@ -232,11 +216,12 @@ public class DataTransferred {
         }
     }
 
-    public UpdateNodeAndRelations createUpdateNodeAndRelations(){
 
-        ArrayList<UUID> uuidArrayList = mNodesDB.getNodesIdList();
-        return new UpdateNodeAndRelations(createNodeToUpdateList(uuidArrayList,mNodesDB),
-                CreateRelationsList(uuidArrayList,mNodesDB,mGraphRelations));
+    public UpdateNodeAndRelations createUpdateNodeAndRelations
+                                            (ArrayList<Node> nodeList,
+                                             ArrayList<NodeRelations> relationsList  ){
+
+        return new UpdateNodeAndRelations(nodeList,relationsList);
     }
 
     /**

@@ -2,12 +2,11 @@ package com.relay.relay.DB;
 
 import android.content.Context;
 
-import com.relay.relay.SubSystem.HandShake;
 import com.relay.relay.Util.JsonConvertor;
 import com.relay.relay.system.HandShakeHistory;
-import com.relay.relay.system.Node;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.UUID;
 
 /**
@@ -20,6 +19,8 @@ public class HandShakeDB {
 
     final String TAG = "RELAY_DEBUG: "+ HandShakeDB.class.getSimpleName();
     final UUID NUM_OF_NODES = UUID.fromString("3add4bd4-836f-4ee9-a728-a815c534b515");
+    final int DELAY_BETWEEN_EVENTS = 4;
+
     private DBManager dbManager;
     final String DB = "handshake_db";
 
@@ -31,7 +32,7 @@ public class HandShakeDB {
         dbManager = new DBManager(DB,context);
         dbManager.openDB();
         if (!dbManager.isKeyExist(NUM_OF_NODES))
-            dbManager.putJsonObject(NUM_OF_NODES, JsonConvertor.ConvertToJson(0));
+            dbManager.putJsonObject(NUM_OF_NODES, JsonConvertor.convertToJson(0));
     }
 
     /**
@@ -44,15 +45,23 @@ public class HandShakeDB {
         if (!dbManager.isKeyExist(nodeId)) {
             temp = new HandShakeHistory();
             temp.addEvent();
-            dbManager.putJsonObject(nodeId,JsonConvertor.ConvertToJson(temp));
+            dbManager.putJsonObject(nodeId,JsonConvertor.convertToJson(temp));
             addNumNodes();
             return true;
         }
         else{
             temp = getHandShakeHistoryWith(nodeId);
-            temp.addEvent();
-            dbManager.putJsonObject(nodeId, JsonConvertor.ConvertToJson(temp));
-            return true;
+            ArrayList<HandShakeHistory.HandShakeEvent> handShakeEvents = temp.getmHandShakeEvents();
+            Calendar timestamp1 = handShakeEvents.get(handShakeEvents.size()-1).getTimeStamp();
+            Calendar timestamp2 = Calendar.getInstance();
+            // check if time pass between two events. makes the history handshake rank be more accurate
+            timestamp1.add(Calendar.HOUR,DELAY_BETWEEN_EVENTS);
+            if ( timestamp1.before(timestamp2)){
+                temp.addEvent();
+                dbManager.putJsonObject(nodeId, JsonConvertor.convertToJson(temp));
+                return true;
+            }
+            return false;
         }
     }
 
@@ -63,8 +72,11 @@ public class HandShakeDB {
      */
     public boolean updateHandShakeHistoryWith(UUID nodeId, HandShakeHistory handShakeHistory){
 
-        dbManager.putJsonObject(nodeId, JsonConvertor.ConvertToJson(handShakeHistory));
-        return true;
+        if (dbManager.isKeyExist(nodeId)){
+            dbManager.putJsonObject(nodeId, JsonConvertor.convertToJson(handShakeHistory));
+            return true;
+        }
+        return false;
 
     }
 
@@ -113,7 +125,7 @@ public class HandShakeDB {
     private void addNumNodes(){
         int num = JsonConvertor.JsonToInt(dbManager.getJsonObject(NUM_OF_NODES));
         num++;
-        dbManager.putJsonObject(NUM_OF_NODES,JsonConvertor.ConvertToJson(num));
+        dbManager.putJsonObject(NUM_OF_NODES,JsonConvertor.convertToJson(num));
     }
 
     /**
@@ -123,7 +135,7 @@ public class HandShakeDB {
         int num = JsonConvertor.JsonToInt(dbManager.getJsonObject(NUM_OF_NODES));
         num--;
         if (num >= 0)
-            dbManager.putJsonObject(NUM_OF_NODES,JsonConvertor.ConvertToJson(num));
+            dbManager.putJsonObject(NUM_OF_NODES,JsonConvertor.convertToJson(num));
     }
 
     /**

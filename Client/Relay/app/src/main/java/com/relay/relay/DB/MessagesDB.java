@@ -25,7 +25,7 @@ public class MessagesDB {
     public MessagesDB(Context context){
         dbManager = new DBManager(DB,context);
         dbManager.openDB();
-        dbManager.putJsonObject(NUM_OF_MESSAGES, JsonConvertor.ConvertToJson(0));
+        dbManager.putJsonObject(NUM_OF_MESSAGES, JsonConvertor.convertToJson(0));
     }
 
     /**
@@ -35,12 +35,12 @@ public class MessagesDB {
      */
     public boolean addMessage(RelayMessage message){
         if (!dbManager.isKeyExist(message.getId())) {
-            dbManager.putJsonObject(message.getId(), JsonConvertor.ConvertToJson(message));
+            dbManager.putJsonObject(message.getId(), JsonConvertor.convertToJson(message));
             addNumMessages();
             return true;
         }
         else{
-            dbManager.putJsonObject(message.getId(), JsonConvertor.ConvertToJson(message));
+            dbManager.putJsonObject(message.getId(), JsonConvertor.convertToJson(message));
             return true;
         }
     }
@@ -55,6 +55,11 @@ public class MessagesDB {
             return JsonConvertor.JsonToRelayMessage(dbManager.getJsonObject(uuid));
         else
             return null;
+    }
+
+
+    public boolean isMessageExist(UUID uuid){
+        return dbManager.isKeyExist(uuid);
     }
 
     /**
@@ -89,7 +94,7 @@ public class MessagesDB {
     public void addNumMessages(){
         int num = JsonConvertor.JsonToInt(dbManager.getJsonObject(NUM_OF_MESSAGES));
         num++;
-        dbManager.putJsonObject(NUM_OF_MESSAGES,JsonConvertor.ConvertToJson(num));
+        dbManager.putJsonObject(NUM_OF_MESSAGES,JsonConvertor.convertToJson(num));
     }
 
     /**
@@ -99,7 +104,7 @@ public class MessagesDB {
         int num = JsonConvertor.JsonToInt(dbManager.getJsonObject(NUM_OF_MESSAGES));
         num--;
         if (num >= 0)
-            dbManager.putJsonObject(NUM_OF_MESSAGES,JsonConvertor.ConvertToJson(num));
+            dbManager.putJsonObject(NUM_OF_MESSAGES,JsonConvertor.convertToJson(num));
     }
 
     /**

@@ -89,7 +89,6 @@ public class DataManager {
         return true;
     }
 
-
     /**
      * Get all handShakeHistory from DB
      * @return
@@ -101,6 +100,19 @@ public class DataManager {
             handShakeHistories.add(mHandShakeDB.getHandShakeHistoryWith(nodeId));
         }
         return handShakeHistories;
+    }
+
+
+    /**
+     * Check if the nodeId is in handshake history
+     * @param nodeId
+     * @return
+     */
+    public int getMyHandShakeHistoryRankWith(UUID nodeId){
+        HandShakeHistory handShakeHistory  = mHandShakeDB.getHandShakeHistoryWith(nodeId);
+        if (handShakeHistory == null)
+            return 0; // min
+        return handShakeHistory.getmHandShakeRank();
     }
 
 }

@@ -57,8 +57,7 @@ public class BLManager extends Thread implements BLConstants {
     private DataManager mDataManager;
 
 
-     public BLManager(Messenger connectivityMessenger, ConnectivityManager connectivityManager,
-                      DataManager dataManager){
+     public BLManager(Messenger connectivityMessenger, ConnectivityManager connectivityManager){
 
         this.mLastConnectedDevices = new ArrayList<>();
         this.mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -80,7 +79,7 @@ public class BLManager extends Thread implements BLConstants {
          this.mAdvertiserHandler = new Handler();
          this.mHandShake = null;
          this.mStatus = DISCONNECTED;
-         this.mDataManager = dataManager;
+         this.mDataManager = new DataManager(connectivityManager);
          Log.d(TAG, "Class created");
          Log.d(TAG, "I am :" +mBluetoothAdapter.getName()+", MAC : "+ mBluetoothAdapter.getAddress());
 
@@ -372,8 +371,6 @@ public class BLManager extends Thread implements BLConstants {
                     // Open server socket
                     mBluetoothServer.cancel();
                     mBluetoothServer = new BluetoothServer(mBluetoothAdapter,mMessenger);
-                    //
-
                     if (mInitiator)
                         new Handler().postDelayed(new Runnable() {
                             @Override

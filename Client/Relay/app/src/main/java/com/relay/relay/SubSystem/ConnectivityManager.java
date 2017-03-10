@@ -56,7 +56,6 @@ public class ConnectivityManager extends Service implements BLConstants {
         startConnectivityByPriority();
         setWakeLock();
         mRestart = false;
-        mDataManager = new DataManager(this);
         return  START_NOT_STICKY;
     }
 
@@ -143,7 +142,7 @@ public class ConnectivityManager extends Service implements BLConstants {
     }
 
     private void initialBluetoothMode(){
-        this.mBluetoothManager = new BLManager(mMessenger,this,mDataManager);
+        this.mBluetoothManager = new BLManager(mMessenger,this);
     }
 
     private void startBluetoothMode(){

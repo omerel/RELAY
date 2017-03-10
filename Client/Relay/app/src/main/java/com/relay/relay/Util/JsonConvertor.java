@@ -9,6 +9,8 @@ import com.relay.relay.system.RelayMessage;
 import java.lang.reflect.Array;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -17,31 +19,61 @@ import java.util.UUID;
 
 public class JsonConvertor {
 
-    public static String createJsonWithCommand(int command,Object content){
-        if ( content == null )
+    final static int COMMAND = 1;
+    final static int CONTENT = 2;
+
+    public static String createJsonWithCommand(int command,String jsonContent){
+        if ( jsonContent == null )
             return null;
-        Object[] array = new Array[2];
-        array[0] = command;
-        array[1] = content;
-        String jsonString = new Gson().toJson(array);
-        return jsonString;
+        Map<Integer,String> map = new HashMap<>();
+        map.put(COMMAND,String.valueOf(command));
+        map.put(CONTENT,jsonContent);
+        return  convertToJson(map);
     }
 
     public static int getCommand(String jsonString){
         Gson gson = new Gson();
-        Type type = new TypeToken<Object[]>(){}.getType();
-        Object[] array = gson.fromJson(jsonString, type);
-        return (int)array[0];
+        Type type = new TypeToken<Map<Integer,String>>(){}.getType();
+        Map<Integer,String> map = gson.fromJson(jsonString, type);
+        return Integer.valueOf(map.get(COMMAND));
     }
 
-    public static Object getContent(String jsonString){
+    public static String getJsonContent(String jsonString){
         Gson gson = new Gson();
-        Type type = new TypeToken<Object[]>(){}.getType();
-        Object[] array = gson.fromJson(jsonString, type);
-        return array[1];
+        Type type = new TypeToken<Map<Integer,String>>(){}.getType();
+        Map<Integer,String> map = gson.fromJson(jsonString, type);
+        return map.get(CONTENT);
     }
 
-    public static String ConvertToJson(Object content){
+    public static DataTransferred.Metadata getMetadataFromJsonContent(String jsonString){
+        String jsonMetadata = getJsonContent(jsonString);
+        Gson gson = new Gson();
+        Type type = new TypeToken<DataTransferred.Metadata>(){}.getType();
+        return gson.fromJson(jsonMetadata, type);
+    }
+
+    public static RelayMessage getRelayMessageFromJsonContent(String jsonString){
+        String jsonRelayMessage = getJsonContent(jsonString);
+        Gson gson = new Gson();
+        Type type = new TypeToken<RelayMessage>(){}.getType();
+        return gson.fromJson(jsonRelayMessage, type);
+    }
+
+    public static DataTransferred.UpdateNodeAndRelations getUpdateNodeAndRelationsFromJsonContent(String jsonString){
+        String jsonUpdateNodeAndRelations = getJsonContent(jsonString);
+        Gson gson = new Gson();
+        Type type = new TypeToken<DataTransferred.UpdateNodeAndRelations>(){}.getType();
+        return gson.fromJson(jsonUpdateNodeAndRelations, type);
+    }
+
+    public static ArrayList<RelayMessage> getRelayMessageListFromJsonContent(String jsonString){
+        String jsonRelayMessageList= getJsonContent(jsonString);
+        Gson gson = new Gson();
+        Type type = new TypeToken<ArrayList<RelayMessage>>(){}.getType();
+        return gson.fromJson(jsonRelayMessageList, type);
+    }
+
+    public static String convertToJson(Object content){
         if ( content == null )
             return null;
         String jsonString = new Gson().toJson(content);
