@@ -12,9 +12,11 @@ import com.relay.relay.Bluetooth.BLConstants;
 import com.relay.relay.Bluetooth.BluetoothConnected;
 import com.relay.relay.Util.DataTransferred;
 import com.relay.relay.Util.JsonConvertor;
+import com.relay.relay.Util.TimePerformence;
 import com.relay.relay.system.Node;
 import com.relay.relay.system.RelayMessage;
 
+import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.UUID;
@@ -54,10 +56,10 @@ public class HandShake implements BLConstants {
     private ArrayList<RelayMessage> textMessagesToSend;
     private ArrayList<RelayMessage> objectMessagesToSend;
     private int finalDegree; // the actual degree for getting data from the other device
+    private TimePerformence timePerformence1 = new TimePerformence();
+    private TimePerformence timePerformence2 = new TimePerformence();
 
-    // TEST
-    private boolean testReceieved = false;
-    //
+
 
     public HandShake(BluetoothSocket bluetoothSocket,
                      Messenger messenger, boolean initiator, Context context,DataManager dataManager){
@@ -81,9 +83,14 @@ public class HandShake implements BLConstants {
      * Start handshake process
      */
     private void startHandshake() {
+
+        timePerformence1.start();
         this.metadata = mDataTransferred.createMetaData();
+        Log.e(TAG,"creates metadata:"+timePerformence1.stop());
+
         this.knownRelations = metadata.getKnownRelationsList();
         if(mInitiator){
+            timePerformence2.start();
             sendPacket(STEP_1_METADATA,JsonConvertor.convertToJson(metadata));
         }
     }
@@ -93,36 +100,50 @@ public class HandShake implements BLConstants {
      */
     public void getPacket(String jsonPacket){
 
-        Log.e(TAG,jsonPacket);
-        Log.e(TAG,String.valueOf(jsonPacket.length()));
-
         int command = JsonConvertor.getCommand(jsonPacket);
 
         switch (command){
             case STEP_1_METADATA:
                 // receive meta data
+                if (mInitiator)
+                    Log.e(TAG,"time to send and get metadata :"+timePerformence2.stop());
+                timePerformence1.start();
                 receivedMetadata = JsonConvertor.getMetadataFromJsonContent(jsonPacket);
                 receivedKnownMessage = receivedMetadata.getKnownMessagesList();
                 receivedKnownRelations = receivedMetadata.getKnownRelationsList();
+                Log.e(TAG,"converting metadata: "+timePerformence1.stop());
                 checkRankBeforeHandShake(receivedMetadata);
                 finalDegree = CalculateFinalRank();
+
+                timePerformence1.start();
                 updateNodeAndRelations = createUpdateNodeAndRelations(finalDegree);
+                Log.e(TAG,"createUpdateNodeAndRelations: "+timePerformence1.stop());
+
                 if(!mInitiator){
                     sendPacket(STEP_1_METADATA,JsonConvertor.convertToJson(metadata));
                 }
                 else{
+                    timePerformence2.start();
                     sendPacket(STEP_2_UPDATE_NODES_AND_RELATIONS,JsonConvertor.convertToJson(updateNodeAndRelations));
                 }
                 break;
+
             case STEP_2_UPDATE_NODES_AND_RELATIONS:
+                timePerformence1.start();
                 receivedUpdateNodeAndRelations =
                         JsonConvertor.getUpdateNodeAndRelationsFromJsonContent(jsonPacket);
                 updateNodeAndRelations(receivedUpdateNodeAndRelations);
+                Log.e(TAG,"UpdateNodeAndRelations: "+timePerformence1.stop());
+                timePerformence1.start();
                 updateMessagesAndCreateMessagesListToSend();
+                Log.e(TAG,"updateMessagesAndCreateMessagesListToSend: "+timePerformence1.stop());
+
                 if(!mInitiator){
                     sendPacket(STEP_2_UPDATE_NODES_AND_RELATIONS,JsonConvertor.convertToJson(updateNodeAndRelations));
                 }
                 else{
+                    Log.e(TAG,"send update and node relations : "+timePerformence2.stop());
+                    timePerformence2.start();
                     sendPacket(STEP_3_TEXT_MESSAGES,JsonConvertor.convertToJson(textMessagesToSend));
                 }
                 break;
@@ -136,6 +157,7 @@ public class HandShake implements BLConstants {
                     sendPacket(STEP_3_TEXT_MESSAGES,JsonConvertor.convertToJson(textMessagesToSend));
                 }
                 else{
+                    Log.e(TAG,"Time to send messages and get them back "+timePerformence2.stop());
                     for(int i = 0; i < objectMessagesToSend.size();i++){
                         sendPacket(STEP_4_OBJECT_MESSAGE,JsonConvertor.convertToJson(objectMessagesToSend.get(i)));
                     }
@@ -301,6 +323,7 @@ public class HandShake implements BLConstants {
      * Finish handshake process
      */
     private void finishHandshake() {
+        // On BLManager  there will be update messages status
         //  add event in history
         mDataManager.getHandShakeDB().addEventToHandShakeHistoryWith(receivedMetadata.getMyNode().getId());
         //  add edge between node
@@ -325,6 +348,7 @@ public class HandShake implements BLConstants {
         // Send address as a String
         Bundle bundle = new Bundle();
         bundle.putString("address", address);
+        bundle.putString("deviceUUID", receivedMetadata.getMyNode().getId().toString());
         Message msg = Message.obtain(null, m);
         msg.setData(bundle);
 

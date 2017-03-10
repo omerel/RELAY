@@ -1,6 +1,7 @@
 package com.relay.relay.SubSystem;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.relay.relay.DB.GraphRelations;
 import com.relay.relay.DB.HandShakeDB;
@@ -9,6 +10,7 @@ import com.relay.relay.DB.NodesDB;
 import com.relay.relay.Util.DataTransferred;
 import com.relay.relay.system.HandShakeHistory;
 import com.relay.relay.system.Node;
+import com.relay.relay.system.RelayMessage;
 
 import java.util.ArrayList;
 import java.util.UUID;
@@ -19,6 +21,9 @@ import java.util.UUID;
  */
 
 public class DataManager {
+
+    private final String TAG = "RELAY_DEBUG: "+ DataManager.class.getSimpleName();
+
 
     private GraphRelations mGraphRelations;
     private MessagesDB mMessagesDB;
@@ -115,4 +120,42 @@ public class DataManager {
         return handShakeHistory.getmHandShakeRank();
     }
 
+
+    /**
+     * update all messages that got to destination and all messages that sent
+     * @param handShakeDevice
+     */
+    public void updateMessagesStatus(UUID handShakeDevice){
+        ArrayList<UUID> messagesId = getMessagesDB().getMessagesIdList();
+        UUID myId = getNodesDB().getMyNodeId();
+        for(UUID msgId : messagesId){
+            boolean updateMsg = false;
+            RelayMessage relayMessage = getMessagesDB().getMessage(msgId);
+            // TODO FIX what if error in handshake. still need to update messages the delivered
+            // any msg in status created will be changed to sent
+            if (relayMessage.getStatus() == RelayMessage.STATUS_MESSAGE_CREATED){
+                relayMessage.setStatus(RelayMessage.STATUS_MESSAGE_SENT);
+                updateMsg = true;
+            }
+            // if the msg is for me update  msg status to delivered
+            if (relayMessage.getDestinationId().equals(myId)){
+                if (relayMessage.getStatus() < RelayMessage.STATUS_MESSAGE_DELIVERED){
+                    relayMessage.setStatus(RelayMessage.STATUS_MESSAGE_DELIVERED);
+                    updateMsg = true;
+                }
+            }
+            // if the msg got to destination in the last hand shake, update status to delivered
+            if (relayMessage.getDestinationId().equals(handShakeDevice)){
+                if (relayMessage.getStatus() < RelayMessage.STATUS_MESSAGE_DELIVERED){
+                    relayMessage.setStatus(RelayMessage.STATUS_MESSAGE_DELIVERED);
+                    updateMsg = true;
+                }
+            }
+            // if need to update meesgeDB
+            if (updateMsg){
+                getMessagesDB().addMessage(relayMessage);
+                Log.e(TAG,"msg "+msgId+" was updated");
+            }
+        }
+    }
 }

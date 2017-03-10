@@ -7,6 +7,7 @@ import android.util.Log;
 import com.relay.relay.R;
 import com.relay.relay.SubSystem.DataManager;
 import com.relay.relay.Util.DataTransferred;
+import com.relay.relay.Util.TimePerformence;
 import com.relay.relay.system.HandShakeHistory;
 import com.relay.relay.system.Node;
 import com.relay.relay.system.RelayMessage;
@@ -176,6 +177,9 @@ public class Test {
        //nodesDB.setMyNodeId(uuids[0]);
         myID = nodesDB.getMyNodeId();
 
+        TimePerformence timePerformence = new TimePerformence();
+
+        timePerformence.start();
         Log.e(TAG, "Start BFS on uuid[0]");
         HashMap< Integer, ArrayList<UUID>>  b = graphRelations.bfs(graphRelations,myID);
 
@@ -187,6 +191,7 @@ public class Test {
                 Log.e(TAG, "Node :"+arr.get(j));
             }
         }
+        Log.e(TAG,"BFS :"+timePerformence.stop());
 
 
 //        Log.e(TAG, "Creating dataTransferredManager");

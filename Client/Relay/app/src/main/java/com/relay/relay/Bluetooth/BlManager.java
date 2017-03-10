@@ -12,6 +12,8 @@ import android.util.Log;
 import com.relay.relay.SubSystem.ConnectivityManager;
 import com.relay.relay.SubSystem.DataManager;
 import com.relay.relay.SubSystem.HandShake;
+import com.relay.relay.system.RelayMessage;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -273,8 +275,6 @@ public class BLManager extends Thread implements BLConstants {
         }
     }
 
-
-
     //  mFilter.addAction(BluetoothAdapter.ACTION_CONNECTION_STATE_CHANGED);
 
     /**
@@ -365,6 +365,7 @@ public class BLManager extends Thread implements BLConstants {
                     // update status
                     mStatus = DISCONNECTED;
                     address = msg.getData().getString("address");
+                    UUID deviceUUID = UUID.fromString(msg.getData().getString("deviceUUID"));
                     addToLastConnectedDevicesList(address);
                     // close handShake connection
                     mHandShake.closeConnection();
@@ -385,6 +386,10 @@ public class BLManager extends Thread implements BLConstants {
                         mBluetoothServer.start();
                         intervalSearch();
                     }
+
+                    // update all messages that got to destination and all messages that sent
+                    mDataManager.updateMessagesStatus(deviceUUID);
+
                     break;
 
                 case READ_PACKET:
