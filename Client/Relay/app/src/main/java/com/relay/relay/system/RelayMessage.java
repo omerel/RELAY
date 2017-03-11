@@ -111,6 +111,15 @@ public class RelayMessage {
         return mContent;
     }
 
+
+
+    public void deleteContent(){
+        mContent = null;
+    }
+
+    public void deleteAttachments(){
+        mAttachments = null;
+    }
     /**
      * Get all attachments
      * @return

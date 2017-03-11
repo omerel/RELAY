@@ -18,6 +18,7 @@ import com.relay.relay.system.RelayMessage;
 
 import java.sql.Time;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -56,13 +57,14 @@ public class HandShake implements BLConstants {
     private ArrayList<RelayMessage> textMessagesToSend;
     private ArrayList<RelayMessage> objectMessagesToSend;
     private int finalDegree; // the actual degree for getting data from the other device
-    private TimePerformence timePerformence1 = new TimePerformence();
-    private TimePerformence timePerformence2 = new TimePerformence();
+    private Map<UUID,Node> newNodeIdList; // store all the  new nodes that sent to the device. used to update messages status
+    private TimePerformence timePerformence = new TimePerformence();
 
 
 
     public HandShake(BluetoothSocket bluetoothSocket,
-                     Messenger messenger, boolean initiator, Context context,DataManager dataManager){
+                     Messenger messenger, boolean initiator, Context context,
+                     DataManager dataManager,DataTransferred.Metadata metadata){
 
         this.mMessenger = messenger;
         this.mBluetoothSocket = bluetoothSocket;
@@ -74,7 +76,7 @@ public class HandShake implements BLConstants {
         this.mMyNode = mDataManager.getNodesDB().getNode(mDataManager.getNodesDB().getMyNodeId());
         this.textMessagesToSend = new ArrayList<>();
         this.objectMessagesToSend = new ArrayList<>();
-
+        this.metadata = metadata;
         this.mBluetoothConnected.start();
         startHandshake();
     }
@@ -84,13 +86,11 @@ public class HandShake implements BLConstants {
      */
     private void startHandshake() {
 
-        timePerformence1.start();
-        this.metadata = mDataTransferred.createMetaData();
-        Log.e(TAG,"creates metadata:"+timePerformence1.stop());
-
+        timePerformence.start();
+        //this.metadata = mDataTransferred.createMetaData();
+        Log.e(TAG,"TIME TO : "+"createMetaData"+" "+timePerformence.stop());
         this.knownRelations = metadata.getKnownRelationsList();
         if(mInitiator){
-            timePerformence2.start();
             sendPacket(STEP_1_METADATA,JsonConvertor.convertToJson(metadata));
         }
     }
@@ -99,111 +99,198 @@ public class HandShake implements BLConstants {
      * Getter of incoming messages from one of the BluetoothConnected
      */
     public void getPacket(String jsonPacket){
-
         int command = JsonConvertor.getCommand(jsonPacket);
-
         switch (command){
             case STEP_1_METADATA:
                 // receive meta data
-                if (mInitiator)
-                    Log.e(TAG,"time to send and get metadata :"+timePerformence2.stop());
-                timePerformence1.start();
                 receivedMetadata = JsonConvertor.getMetadataFromJsonContent(jsonPacket);
                 receivedKnownMessage = receivedMetadata.getKnownMessagesList();
                 receivedKnownRelations = receivedMetadata.getKnownRelationsList();
-                Log.e(TAG,"converting metadata: "+timePerformence1.stop());
+                timePerformence.start();
                 checkRankBeforeHandShake(receivedMetadata);
+                Log.e(TAG,"TIME TO : "+"checkRankBeforeHandShake"+" "+timePerformence.stop());
                 finalDegree = CalculateFinalRank();
-
-                timePerformence1.start();
+                timePerformence.start();
                 updateNodeAndRelations = createUpdateNodeAndRelations(finalDegree);
-                Log.e(TAG,"createUpdateNodeAndRelations: "+timePerformence1.stop());
-
+                Log.e(TAG,"TIME TO : "+"createUpdateNodeAndRelations"+" "+timePerformence.stop());
                 if(!mInitiator){
                     sendPacket(STEP_1_METADATA,JsonConvertor.convertToJson(metadata));
                 }
                 else{
-                    timePerformence2.start();
                     sendPacket(STEP_2_UPDATE_NODES_AND_RELATIONS,JsonConvertor.convertToJson(updateNodeAndRelations));
                 }
                 break;
 
             case STEP_2_UPDATE_NODES_AND_RELATIONS:
-                timePerformence1.start();
                 receivedUpdateNodeAndRelations =
                         JsonConvertor.getUpdateNodeAndRelationsFromJsonContent(jsonPacket);
+                timePerformence.start();
                 updateNodeAndRelations(receivedUpdateNodeAndRelations);
-                Log.e(TAG,"UpdateNodeAndRelations: "+timePerformence1.stop());
-                timePerformence1.start();
+                Log.e(TAG,"TIME TO : "+"updateNodeAndRelations"+" "+timePerformence.stop());
+                timePerformence.start();
                 updateMessagesAndCreateMessagesListToSend();
-                Log.e(TAG,"updateMessagesAndCreateMessagesListToSend: "+timePerformence1.stop());
+                Log.e(TAG,"TIME TO : "+"updateMessagesAndCreateMessagesListToSend"+" "+timePerformence.stop());
 
                 if(!mInitiator){
                     sendPacket(STEP_2_UPDATE_NODES_AND_RELATIONS,JsonConvertor.convertToJson(updateNodeAndRelations));
                 }
                 else{
-                    Log.e(TAG,"send update and node relations : "+timePerformence2.stop());
-                    timePerformence2.start();
                     sendPacket(STEP_3_TEXT_MESSAGES,JsonConvertor.convertToJson(textMessagesToSend));
                 }
                 break;
             case STEP_3_TEXT_MESSAGES:
+
                 ArrayList<RelayMessage> relayMessages =
                          JsonConvertor.getRelayMessageListFromJsonContent(jsonPacket);
+                timePerformence.start();
                 for (RelayMessage relayMessage : relayMessages){
+                    updateReceivedMessage(relayMessage);
                     mDataManager.getMessagesDB().addMessage(relayMessage);
                 }
+                Log.e(TAG,"TIME TO : "+"updateReceivedMessage"+" "+timePerformence.stop());
+
                 if(!mInitiator){
                     sendPacket(STEP_3_TEXT_MESSAGES,JsonConvertor.convertToJson(textMessagesToSend));
                 }
                 else{
-                    Log.e(TAG,"Time to send messages and get them back "+timePerformence2.stop());
+                    timePerformence.start();
+                    updateSentTextMessages();
+                    Log.e(TAG,"TIME TO : "+"updateSentTextMessages"+" "+timePerformence.stop());
+                    timePerformence.start();
                     for(int i = 0; i < objectMessagesToSend.size();i++){
                         sendPacket(STEP_4_OBJECT_MESSAGE,JsonConvertor.convertToJson(objectMessagesToSend.get(i)));
                     }
+                    Log.e(TAG,"TIME TO : "+"objectMessagesToSend"+" "+timePerformence.stop());
                     sendPacket(FINISH_STEP_4,new String("DUMMY"));
                 }
                 break;
 
+            case STEP_4_OBJECT_MESSAGE:
+                RelayMessage relayMessage = JsonConvertor.getRelayMessageFromJsonContent(jsonPacket);
+                mDataManager.getMessagesDB().addMessage(relayMessage);
+                break;
+
             case FINISH_STEP_4:
+                updateSentTextMessages();
                 if(!mInitiator){
                     for(int i = 0; i < objectMessagesToSend.size();i++){
                         sendPacket(STEP_4_OBJECT_MESSAGE,JsonConvertor.convertToJson(objectMessagesToSend.get(i)));
                     }
                     sendPacket(FINISH,new String("DUMMY"));
+                    updateSentAttachmentMessages();
                     finishHandshake();
                 }
                 break;
-            case STEP_4_OBJECT_MESSAGE:
-                RelayMessage relayMessage = JsonConvertor.getRelayMessageFromJsonContent(jsonPacket);
-                mDataManager.getMessagesDB().addMessage(relayMessage);
-                break;
             case FINISH:
+                updateSentAttachmentMessages();
                 finishHandshake();
                 break;
         }
     }
 
+    /**
+     * if msg status is created, update it to sent
+     * if the msg destination is me update msg status to delivered
+     * if the msg status is delivered and i'm not the destination or the sender delete the content (double check)
+     * @param msg
+     */
+     private void updateReceivedMessage(RelayMessage msg){
+
+         if (msg.getStatus() == RelayMessage.STATUS_MESSAGE_CREATED)
+             msg.setStatus(RelayMessage.STATUS_MESSAGE_SENT);
+         if (msg.getDestinationId().equals(mMyNode.getId()))
+             msg.setStatus(RelayMessage.STATUS_MESSAGE_DELIVERED);
+         if (msg.getStatus() == RelayMessage.STATUS_MESSAGE_DELIVERED){
+             if ( !msg.getDestinationId().equals(mMyNode.getId()) &&
+                     !msg.getSenderId().equals(mMyNode.getId())){
+                 msg.deleteContent();
+                 msg.deleteAttachments();
+             }
+         }
+     }
 
     /**
-     * update messages status from received known messages
-     * add to textMessagesToSend and to objectMessageToSend
-     * all the  text messages that relevant to the device
+     * If I get here, it's means that all my text messages where delivered therefor:
+     * if text msg status is created and  the sender id or destination id is in device metadata or
+     * in the new node the the device received, change the status to sent.
+     * if the msg destination is the device update msg status to delivered and delete
+     * the content (unless i sent the msg)/
+     */
+    private void updateSentTextMessages(){
+
+        for (RelayMessage msg : textMessagesToSend){
+
+            UUID destinationId = msg.getDestinationId();
+            UUID senderId = msg.getSenderId();
+
+            if ( msg.getStatus() == RelayMessage.STATUS_MESSAGE_CREATED){
+                if (receivedKnownRelations.containsKey(destinationId) ||
+                        receivedKnownRelations.containsKey(senderId)||
+                        newNodeIdList.containsKey(destinationId) ||
+                        newNodeIdList.containsKey(senderId)){
+                    msg.setStatus(RelayMessage.STATUS_MESSAGE_SENT);
+                }
+            }
+            if (receivedMetadata.getMyNode().equals(destinationId)) {
+                msg.setStatus(RelayMessage.STATUS_MESSAGE_DELIVERED);
+                if (!mMyNode.getId().equals(msg.getSenderId()))
+                    msg.deleteContent();
+            }
+            // update msg
+            mDataManager.getMessagesDB().addMessage(msg);
+        }
+    }
+
+    private void updateSentAttachmentMessages(){
+
+        for (RelayMessage msg : objectMessagesToSend){
+
+            UUID destinationId = msg.getDestinationId();
+            UUID senderId = msg.getSenderId();
+
+            if ( msg.getStatus() == RelayMessage.STATUS_MESSAGE_CREATED){
+                if (receivedKnownRelations.containsKey(destinationId) ||
+                        receivedKnownRelations.containsKey(senderId)||
+                        newNodeIdList.containsKey(destinationId) ||
+                        newNodeIdList.containsKey(senderId)){
+                    msg.setStatus(RelayMessage.STATUS_MESSAGE_SENT);
+                }
+            }
+            if (receivedMetadata.getMyNode().equals(destinationId)) {
+                msg.setStatus(RelayMessage.STATUS_MESSAGE_DELIVERED);
+                if (!mMyNode.getId().equals(msg.getSenderId()))
+                    msg.deleteAttachments();
+            }
+            // update msg
+            mDataManager.getMessagesDB().addMessage(msg);
+        }
+    }
+
+    /**
+     * Update all messages status and create messagesList to send
+     * message to send : if the device doesn't have the msg and the sender id or the
+     * destination id is in device's graph or in the new nodes that the device is going to get.
+     * make sure that if it's my msg that already delivered,add the msg without content.
+     * update messages:
+     * go over all the received msgs , if the msg status is higher, update it. if the
+     * status is delivered , delete the content(only if i'm not the destination or sender)
      * @return
      */
-    private boolean updateMessagesAndCreateMessagesListToSend(){
+    private void updateMessagesAndCreateMessagesListToSend(){
 
         ArrayList<UUID> messageIdList = mDataManager.getMessagesDB().getMessagesIdList();
-
         for (UUID uuid : messageIdList){
             // new message
             if (!receivedKnownMessage.containsKey(uuid)) {
                 RelayMessage relayMessage = mDataManager.getMessagesDB().getMessage(uuid);
                 UUID destinationId = relayMessage.getDestinationId();
-                UUID sender = relayMessage.getSenderId();
+                UUID senderId = relayMessage.getSenderId();
                 // if the sender or the destination in the nodeList of device add to message list
+
                 if (receivedKnownRelations.containsKey(destinationId) ||
-                        receivedKnownRelations.containsKey(sender)) {
+                        receivedKnownRelations.containsKey(senderId)||
+                        newNodeIdList.containsKey(destinationId) ||
+                        newNodeIdList.containsKey(senderId)) {
                     // add message according to its type
                     if ( relayMessage.getType() == RelayMessage.TYPE_MESSAGE_TEXT )
                         textMessagesToSend.add(relayMessage);
@@ -211,17 +298,26 @@ public class HandShake implements BLConstants {
                         objectMessagesToSend.add(relayMessage);
                 }
             }
-            else{
+            else{// my device recognise this msg
                 // update message status if needed
                 int status = receivedKnownMessage.get(uuid).getStatus();
-                if ( status > mDataManager.getMessagesDB().getMessage(uuid).getStatus() ){
-                    mDataManager.getMessagesDB().getMessage(uuid).setStatus(status);
+                RelayMessage msg = mDataManager.getMessagesDB().getMessage(uuid);
+                if ( status > msg.getStatus() ){
+                    msg.setStatus(status);
+                    if (status == RelayMessage.STATUS_MESSAGE_DELIVERED){
+                        if ( !msg.getSenderId().equals(mMyNode.getId()) &&
+                                !msg.getDestinationId().equals(mMyNode.getId())){
+                            msg.deleteAttachments();
+                            msg.deleteContent();
+                        }
+                    }
+                    // update msg status and content
+                    mDataManager.getMessagesDB().addMessage(msg);
                 }
-
             }
         }
-        return true;
     }
+
 
     private boolean updateNodeAndRelations
             (DataTransferred.UpdateNodeAndRelations updateNodeAndRelations){
@@ -241,8 +337,15 @@ public class HandShake implements BLConstants {
         return true;
     }
 
+    /**
+     * createUpdateNodeAndRelations
+     * in this process newNodeIdList will be updated. it's not connected to UpdateNodeAndRelations
+     * @param degree
+     * @return
+     */
     private DataTransferred.UpdateNodeAndRelations createUpdateNodeAndRelations(int degree){
 
+        newNodeIdList = new HashMap<>();
         ArrayList<Node> updateNodeList = new ArrayList<>();
         ArrayList<DataTransferred.NodeRelations> updateRelationsList = new ArrayList<>();
         ArrayList<UUID> myNodeList = mDataManager.getNodesDB().getNodesIdList();
@@ -264,6 +367,7 @@ public class HandShake implements BLConstants {
 
                     updateNodeList.add(mDataManager.getNodesDB().getNode(nodeId));
                     updateRelationsList.add(tempRelations);
+                    newNodeIdList.put(nodeId,mDataManager.getNodesDB().getNode(nodeId));
                 }else{
                     // if timestamp relation is newer, update relation
                     updateRelationsList.add(tempRelations);
@@ -273,6 +377,7 @@ public class HandShake implements BLConstants {
             else{
                 if (knownRelations.get(nodeId).getNodeDegree() <= finalDegree){
                     updateNodeList.add(mDataManager.getNodesDB().getNode(nodeId));
+                    newNodeIdList.put(nodeId,mDataManager.getNodesDB().getNode(nodeId));
                 }
             }
         }

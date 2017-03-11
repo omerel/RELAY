@@ -12,6 +12,7 @@ import android.util.Log;
 import com.relay.relay.SubSystem.ConnectivityManager;
 import com.relay.relay.SubSystem.DataManager;
 import com.relay.relay.SubSystem.HandShake;
+import com.relay.relay.Util.DataTransferred;
 import com.relay.relay.system.RelayMessage;
 
 import java.util.ArrayList;
@@ -57,6 +58,8 @@ public class BLManager extends Thread implements BLConstants {
     // who connect(initiate) to who
     private boolean mInitiator;
     private DataManager mDataManager;
+    private DataTransferred mDataTransferred;
+    private DataTransferred.Metadata metadata; // calculate in BLManager saves time in handshake
 
 
      public BLManager(Messenger connectivityMessenger, ConnectivityManager connectivityManager){
@@ -82,6 +85,8 @@ public class BLManager extends Thread implements BLConstants {
          this.mHandShake = null;
          this.mStatus = DISCONNECTED;
          this.mDataManager = new DataManager(connectivityManager);
+         this.mDataTransferred = new DataTransferred(mDataManager.getGraphRelations(),
+                 mDataManager.getNodesDB(),mDataManager.getMessagesDB());
          Log.d(TAG, "Class created");
          Log.d(TAG, "I am :" +mBluetoothAdapter.getName()+", MAC : "+ mBluetoothAdapter.getAddress());
 
@@ -159,8 +164,8 @@ public class BLManager extends Thread implements BLConstants {
      */
     private void startSearchImmediately(){
 
+        metadata = mDataTransferred.createMetaData();
         mBLECentral.getBleScan().startScanning();
-
         mHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -195,14 +200,12 @@ public class BLManager extends Thread implements BLConstants {
      * Start new search with the interval time delayed
      */
     private void intervalSearch(){
-
         mHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
                 startSearchImmediately();
             }
         }, mIntervalSearchTime);
-
         Log.d(TAG, "Start intervalSearch()");
     }
 
@@ -305,7 +308,7 @@ public class BLManager extends Thread implements BLConstants {
                     resetSearch();
                     // Start handshake
                     mHandShake = new HandShake(bluetoothSocket,mMessenger,mInitiator,
-                            mConnectivityManager,mDataManager);
+                            mConnectivityManager,mDataManager,metadata);
                     break;
 
                 case FAILED_CONNECTING_TO_DEVICE:
@@ -330,7 +333,7 @@ public class BLManager extends Thread implements BLConstants {
                     mBluetoothServer.cancel();
                     // Start handshake
                     mHandShake = new HandShake(bluetoothSocket,mMessenger,mInitiator,
-                            mConnectivityManager,mDataManager);
+                            mConnectivityManager,mDataManager,metadata);
 
                     break;
 
@@ -386,10 +389,6 @@ public class BLManager extends Thread implements BLConstants {
                         mBluetoothServer.start();
                         intervalSearch();
                     }
-
-                    // update all messages that got to destination and all messages that sent
-                    mDataManager.updateMessagesStatus(deviceUUID);
-
                     break;
 
                 case READ_PACKET:
@@ -443,7 +442,6 @@ public class BLManager extends Thread implements BLConstants {
                     mStatus = DISCONNECTED;
                     intervalSearch();
                     break;
-
                 default:
                     super.handleMessage(msg);
             }
