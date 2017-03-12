@@ -19,10 +19,15 @@ public class BitmapConvertor {
      * @return
      */
     public static byte[] ConvertBitmapToBytes(Bitmap bitmap) {
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG,QUALITY,stream);
 
-        return stream.toByteArray();
+        if (bitmap != null){
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG,QUALITY,stream);
+
+            return stream.toByteArray();
+        }
+        return null;
+
     }
 
     /**
@@ -31,8 +36,11 @@ public class BitmapConvertor {
      * @return
      */
     public static Bitmap convertBytesToBitmap(byte[] byteArray){
-        Bitmap bitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
-        return bitmap;
+        if (byteArray != null){
+            Bitmap bitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
+            return bitmap;
+        }
+        return null;
     }
 
 

@@ -33,6 +33,7 @@ public class HandShake implements BLConstants {
     private final String TAG = "RELAY_DEBUG: "+ HandShake.class.getSimpleName();
     // commands
     private final int STEP_1_METADATA = 1;
+    private final int FINISH_STEP_1 = 2;
     private final int STEP_2_UPDATE_NODES_AND_RELATIONS = 3;
     private final int STEP_3_TEXT_MESSAGES = 5;
     private final int STEP_4_OBJECT_MESSAGE = 6;
@@ -87,7 +88,7 @@ public class HandShake implements BLConstants {
     private void startHandshake() {
 
         timePerformence.start();
-        //this.metadata = mDataTransferred.createMetaData();
+        this.metadata = mDataTransferred.createMetaData();
         Log.e(TAG,"TIME TO : "+"createMetaData"+" "+timePerformence.stop());
         this.knownRelations = metadata.getKnownRelationsList();
         if(mInitiator){
@@ -120,7 +121,6 @@ public class HandShake implements BLConstants {
                     sendPacket(STEP_2_UPDATE_NODES_AND_RELATIONS,JsonConvertor.convertToJson(updateNodeAndRelations));
                 }
                 break;
-
             case STEP_2_UPDATE_NODES_AND_RELATIONS:
                 receivedUpdateNodeAndRelations =
                         JsonConvertor.getUpdateNodeAndRelationsFromJsonContent(jsonPacket);
@@ -167,6 +167,7 @@ public class HandShake implements BLConstants {
 
             case STEP_4_OBJECT_MESSAGE:
                 RelayMessage relayMessage = JsonConvertor.getRelayMessageFromJsonContent(jsonPacket);
+                updateReceivedMessage(relayMessage);
                 mDataManager.getMessagesDB().addMessage(relayMessage);
                 break;
 
@@ -231,7 +232,8 @@ public class HandShake implements BLConstants {
                     msg.setStatus(RelayMessage.STATUS_MESSAGE_SENT);
                 }
             }
-            if (receivedMetadata.getMyNode().equals(destinationId)) {
+
+            if (receivedMetadata.getMyNode().getId().equals(destinationId)) {
                 msg.setStatus(RelayMessage.STATUS_MESSAGE_DELIVERED);
                 if (!mMyNode.getId().equals(msg.getSenderId()))
                     msg.deleteContent();
@@ -256,7 +258,7 @@ public class HandShake implements BLConstants {
                     msg.setStatus(RelayMessage.STATUS_MESSAGE_SENT);
                 }
             }
-            if (receivedMetadata.getMyNode().equals(destinationId)) {
+            if (receivedMetadata.getMyNode().getId().equals(destinationId)) {
                 msg.setStatus(RelayMessage.STATUS_MESSAGE_DELIVERED);
                 if (!mMyNode.getId().equals(msg.getSenderId()))
                     msg.deleteAttachments();
@@ -352,14 +354,15 @@ public class HandShake implements BLConstants {
 
 
         for (UUID nodeId : myNodeList){
+
+            DataTransferred.NodeRelations tempRelations =
+                    mDataTransferred.createNodeRelations(
+                            nodeId,
+                            mDataManager.getNodesDB().getNode(nodeId).getTimeStampNodeDetails(),
+                            mDataManager.getGraphRelations().adjacentTo(nodeId));
+
             // if node is known check if need to update its node and/or relations
             if (receivedKnownRelations.containsKey(nodeId)){
-
-                DataTransferred.NodeRelations tempRelations =
-                         mDataTransferred.createNodeRelations(
-                                nodeId,
-                                mDataManager.getNodesDB().getNode(nodeId).getTimeStampNodeDetails(),
-                                mDataManager.getGraphRelations().adjacentTo(nodeId));
 
                 // if my node timestamp is newer ' update node and relation
                 if (mDataManager.getNodesDB().getNode(nodeId).getTimeStampNodeDetails().after(
@@ -373,10 +376,11 @@ public class HandShake implements BLConstants {
                     updateRelationsList.add(tempRelations);
                 }
             }
-            // if node is in the share final degree, add it to update nodes
+            // if node is in the share final degree, add it to update nodes and his relations
             else{
-                if (knownRelations.get(nodeId).getNodeDegree() <= finalDegree){
+                if (knownRelations.get(nodeId).getNodeDegree() <= degree){
                     updateNodeList.add(mDataManager.getNodesDB().getNode(nodeId));
+                    updateRelationsList.add(tempRelations);
                     newNodeIdList.put(nodeId,mDataManager.getNodesDB().getNode(nodeId));
                 }
             }

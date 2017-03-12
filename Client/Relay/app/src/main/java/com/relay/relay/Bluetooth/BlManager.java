@@ -87,6 +87,7 @@ public class BLManager extends Thread implements BLConstants {
          this.mDataManager = new DataManager(connectivityManager);
          this.mDataTransferred = new DataTransferred(mDataManager.getGraphRelations(),
                  mDataManager.getNodesDB(),mDataManager.getMessagesDB());
+         this.metadata = mDataTransferred.createMetaData();
          Log.d(TAG, "Class created");
          Log.d(TAG, "I am :" +mBluetoothAdapter.getName()+", MAC : "+ mBluetoothAdapter.getAddress());
 
@@ -163,8 +164,6 @@ public class BLManager extends Thread implements BLConstants {
      * Start search with timer
      */
     private void startSearchImmediately(){
-
-        metadata = mDataTransferred.createMetaData();
         mBLECentral.getBleScan().startScanning();
         mHandler.postDelayed(new Runnable() {
             @Override
@@ -372,6 +371,8 @@ public class BLManager extends Thread implements BLConstants {
                     addToLastConnectedDevicesList(address);
                     // close handShake connection
                     mHandShake.closeConnection();
+                    // update metadata
+                    metadata = mDataTransferred.createMetaData();
                     // Open server socket
                     mBluetoothServer.cancel();
                     mBluetoothServer = new BluetoothServer(mBluetoothAdapter,mMessenger);

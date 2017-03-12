@@ -2,6 +2,7 @@ package com.relay.relay.DB;
 import android.content.Context;
 
 import com.relay.relay.Util.JsonConvertor;
+import com.relay.relay.system.Node;
 
 import java.util.*;
 import java.util.Queue;
@@ -19,6 +20,7 @@ public class GraphRelations {
     final UUID NUM_OF_NODES = UUID.fromString("3add4bd4-836f-4ee9-a728-a815c534b515");
     final UUID NUM_OF_EDGES = UUID.fromString("3add4bd4-836f-4ee9-a728-a815c534b513");
     private static final ArrayList<UUID> EMPTY_SET = new ArrayList<>();
+    private NodesDB mNodesDB;
 
     /**
      * Construct empty GraphRelations
@@ -36,6 +38,9 @@ public class GraphRelations {
         return dbManager.deleteDB();
     }
 
+    public void setNodesDB(NodesDB nodesDB){
+        this.mNodesDB = nodesDB;
+    }
 
     /**
      * Add a new node with no neighbors
@@ -97,6 +102,10 @@ public class GraphRelations {
         temp.add(from);
         dbManager.putJsonObject(to,JsonConvertor.convertToJson(temp));
 
+        // update node realtaion timestamp
+        Node myNode = mNodesDB.getNode(mNodesDB.getMyNodeId());
+        myNode.setTimeStampNodeRelations(Calendar.getInstance());
+        mNodesDB.addNode(myNode);
         return true;
     }
 
@@ -236,6 +245,11 @@ public class GraphRelations {
         temp = JsonConvertor.JsonToUUIDArrayList(dbManager.getJsonObject(to));
         temp.remove(from);
         dbManager.putJsonObject(from,JsonConvertor.convertToJson(to));
+
+        // update node realtaion timestamp
+        Node myNode = mNodesDB.getNode(mNodesDB.getMyNodeId());
+        myNode.setTimeStampNodeRelations(Calendar.getInstance());
+        mNodesDB.addNode(myNode);
         return true;
     }
 

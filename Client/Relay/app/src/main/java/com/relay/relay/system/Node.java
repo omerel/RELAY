@@ -108,6 +108,7 @@ public class Node {
      */
     public void setRank(int rank) {
          this.mRank = rank;
+        setTimeStampNodeDetails(Calendar.getInstance());
     }
 
     /**
@@ -124,6 +125,7 @@ public class Node {
      */
     public void setEmail(String mEmail) {
         this.mEmail = mEmail;
+        setTimeStampNodeDetails(Calendar.getInstance());
     }
 
     /**
@@ -155,7 +157,9 @@ public class Node {
      * @param mFullName
      */
     public void setFullName(String mFullName) {
+
         this.mFullName = mFullName;
+        setTimeStampNodeDetails(Calendar.getInstance());
     }
 
     /**
@@ -172,6 +176,7 @@ public class Node {
      */
     public void setProfilePicture(Bitmap mProfilePicture) {
         this.mProfilePicture = BitmapConvertor.ConvertBitmapToBytes(mProfilePicture);
+        setTimeStampNodeDetails(Calendar.getInstance());
     }
 
     /**
@@ -187,6 +192,8 @@ public class Node {
      * @param mResidenceCode
      */
     public void setResidenceCode(int mResidenceCode) {
+
         this.mResidenceCode = mResidenceCode;
+        setTimeStampNodeDetails(Calendar.getInstance());
     }
 }
