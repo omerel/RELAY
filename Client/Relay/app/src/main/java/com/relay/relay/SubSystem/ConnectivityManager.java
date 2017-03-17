@@ -16,7 +16,7 @@ import android.util.Log;
 import android.widget.Toast;
 import com.relay.relay.Bluetooth.BLConstants;
 import com.relay.relay.Bluetooth.*;
-import com.relay.relay.MainActivity;
+import com.relay.relay.RelayMainActivity;
 
 
 /**
@@ -136,7 +136,7 @@ public class ConnectivityManager extends Service implements BLConstants {
     public void updateActivityNewMessage(String message) {
 
     //  BroadCast relay message to activity
-        Intent updateActivity = new Intent(MainActivity.MESSAGE_RECEIVED);
+        Intent updateActivity = new Intent(RelayMainActivity.MESSAGE_RECEIVED);
         updateActivity.putExtra("relayMessage", message);
         sendBroadcast(updateActivity);
     }
@@ -237,7 +237,6 @@ public class ConnectivityManager extends Service implements BLConstants {
             switch (msg.what) {
 
                 case NEW_RELAY_MESSAGE:
-                    // TODO change string to relay message
                     String relayMessage = msg.getData().getString("relayMessage");
                     updateActivityNewMessage(relayMessage);
                     Log.e(TAG, "update activity with new message");

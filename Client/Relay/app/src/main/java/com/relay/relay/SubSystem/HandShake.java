@@ -99,6 +99,7 @@ public class HandShake implements BLConstants {
     /**
      * Getter of incoming messages from one of the BluetoothConnected
      */
+
     public void getPacket(String jsonPacket){
         int command = JsonConvertor.getCommand(jsonPacket);
         switch (command){

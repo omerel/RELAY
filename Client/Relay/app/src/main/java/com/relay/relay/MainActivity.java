@@ -1,338 +1,204 @@
 package com.relay.relay;
 
-import android.Manifest;
-import android.annotation.TargetApi;
-import android.app.NotificationManager;
-import android.bluetooth.BluetoothAdapter;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.pm.PackageManager;
-import android.media.RingtoneManager;
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.support.v7.app.AlertDialog;
+import android.support.design.widget.Snackbar;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
+import android.support.design.widget.NavigationView;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.app.NotificationCompat;
-import android.util.Log;
+import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.ListView;
-import android.widget.Toast;
 
-import com.relay.relay.DB.Test;
-import com.relay.relay.SubSystem.ConnectivityManager;
+public class MainActivity extends AppCompatActivity
+        implements NavigationView.OnNavigationItemSelectedListener ,ConnectionFragment.OnFragmentInteractionListener{
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Map;
+    // tool bar and navigator
+    private ActionBarDrawerToggle toggle;
+    private DrawerLayout drawer;
+    private Toolbar toolbar;
+    private NavigationView navigationView;
 
+    // current fragment
+    private Fragment mFragment;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
-
-    private final String TAG = "RELAY_DEBUG: "+ MainActivity.class.getSimpleName();
-
-    private static final int PERMISSION_REQUEST_COARSE_LOCATION = 1;
-
-    // Views
-    private ListView mDevicesList;
-    private Button mStartButton;
-    private Button mManualSyncButton;
-    private boolean clicked = false;
-
-    //for testing
-    RelayDevice mRelayDevice;
-    Map<String,RelayDevice> mHashMapRelayDevice = new HashMap<>();
-
-    private ArrayAdapter<String> mArrayAdapter;
-
-    public static final String MESSAGE_RECEIVED = "relay.BroadcastReceiver.MESSAGE";
-    private BroadcastReceiver mBroadcastReceiver;
-    private IntentFilter mFilter;
+    // animation between views
+    private View mContentView;
+    private View mLoadingView;
+    private int mShortAnimationDuration;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
 
-        checkBluetoothAndBleSupport();
+        drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        toggle = new ActionBarDrawerToggle(
+                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawer.setDrawerListener(toggle);
+        toggle.syncState();
 
-        createBroadcastReceiver();
+        navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
 
-        // Bind layout's view to class
-        mStartButton = (Button) findViewById(R.id.button);
-        mDevicesList = (ListView)findViewById(R.id.listview);
-        mManualSyncButton = (Button) findViewById(R.id.button2);
+        mContentView = findViewById(R.id.content_body);
+        mLoadingView = findViewById(R.id.loading_spinner);
 
-        // Set on click listener
-        mStartButton.setOnClickListener(this);
-        mManualSyncButton.setOnClickListener(this);
+        // Retrieve and cache the system's default "short" animation time.
+        mShortAnimationDuration = getResources().getInteger(
+                android.R.integer.config_longAnimTime);
 
-        // bind device list
-        mArrayAdapter = new ArrayAdapter<>(this,R.layout.item_device);
-        mDevicesList.setAdapter(mArrayAdapter);
-
-        checkPermissions();
-
-        Test t = new Test(this);
-        t.startTest();
-
+        displayFragment(0);
     }
 
-    private void checkBluetoothAndBleSupport() {
-
-        if (BluetoothAdapter.getDefaultAdapter() == null)
-            createAlertDialog("ERROR","Your device doesn't support bluetooth. you can't use" +
-                    "this application",true);
-        else {
-            if (BluetoothAdapter.getDefaultAdapter().isEnabled())
-                checkAdvertiseSupport();
-            else
-                enableBluetooth();
+    @Override
+    public void onBackPressed() {
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        if (drawer.isDrawerOpen(GravityCompat.START)) {
+            drawer.closeDrawer(GravityCompat.START);
+        } else {
+            if (mFragment.getClass().equals(InboxFragment.class))
+                super.onBackPressed();
+            else{
+                displayFragment(0);
+                navigationView.setCheckedItem(R.id.nav_inbox);
+            }
         }
     }
 
-    private void checkAdvertiseSupport(){
-        if (!BluetoothAdapter.getDefaultAdapter().isMultipleAdvertisementSupported())
-            createAlertDialog("NOTICE", "Your device doesn't support Bluetooth Low Energy " +
-                    "advertisement (Beacon Transmission).\n Unfortunately your App's performance ,to get " +
-                    "new messages from other users will be poor.\n To get better results use manual sync button" +
-                    " when you are closes to another user.", false);
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.main, menu);
+        menu.findItem(R.id.action_manual_handshake).setVisible(false);
+        menu.findItem(R.id.action_search).setVisible(false);
+        return true;
     }
 
-    private void enableBluetooth(){
-        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("This app needs Bluetooth to be available");
-        builder.setMessage("By pressing ok bluetooth will be open");
-        builder.setPositiveButton(android.R.string.ok, null);
-        builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
-            @Override
-            public void onDismiss(DialogInterface dialog) {
-                BluetoothAdapter.getDefaultAdapter().enable();
-                checkAdvertiseSupport();
-            }
-        });
-        builder.show();
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_search) {
+           // navigationView.setCheckedItem(R.id.nav_connection_setting);
+            return super.onOptionsItemSelected(item);
+        }
+
+
+        return super.onOptionsItemSelected(item);
     }
 
-    @TargetApi(23)
-    private void checkPermissions() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (this.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                builder.setTitle("This app needs location access");
-                builder.setMessage("Please grant location access so this app can detect ble devices.");
-                builder.setPositiveButton(android.R.string.ok, null);
-                builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
+    @SuppressWarnings("StatementWithEmptyBody")
+    @Override
+    public boolean onNavigationItemSelected(MenuItem item) {
+        // Handle navigation view item clicks here.
+        int id = item.getItemId();
+
+        if (id == R.id.nav_inbox) {
+            displayFragment(0);
+        }else if (id == R.id.nav_connection_setting) {
+            displayFragment(1);
+        } else if (id == R.id.nav_user_properties) {
+
+        } else if (id == R.id.nav_debug_screen) {
+
+        } else if (id == R.id.nav_setting) {
+
+        } else if (id == R.id.nav_logout) {
+
+        } else if (id == R.id.nav_about_us) {
+
+        }
+
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawer.closeDrawer(GravityCompat.START);
+        return true;
+    }
+
+    private void displayFragment(int position) {
+
+        // Initially hide the content view.
+        mContentView.setVisibility(View.INVISIBLE);
+
+        mFragment = null;
+        String title = getString(R.string.app_name);
+        switch (position) {
+            case 0:
+                mFragment = new InboxFragment();
+                title = getString(R.string.title_home_fragment);
+                break;
+            case 1:
+                mFragment = new ConnectionFragment();
+                title = getString(R.string.title_connection_fragment);
+                break;
+            case 2:
+                break;
+            default:
+                break;
+        }
+
+        if (mFragment != null) {
+            FragmentManager fragmentManager = getSupportFragmentManager();
+            FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+            fragmentTransaction.replace(R.id.content_body, mFragment);
+            fragmentTransaction.commit();
+
+            // set the toolbar title
+            getSupportActionBar().setTitle(title);
+        }
+
+        crossfade();
+    }
+
+    // Animation between two views
+    private void crossfade() {
+
+        // setup progress bar
+        mLoadingView.setVisibility(View.VISIBLE);
+        mLoadingView.setAlpha(1f);
+
+        // Set the content view to 0% opacity but visible, so that it is visible
+        // (but fully transparent) during the animation.
+        mContentView.setAlpha(0f);
+        mContentView.setVisibility(View.VISIBLE);
+
+        // Animate the content view to 100% opacity, and clear any animation
+        // listener set on the view.
+        mContentView.animate()
+                .alpha(1f)
+                .setDuration(mShortAnimationDuration)
+                .setListener(null);
+
+        // Animate the loading view to 0% opacity. After the animation ends,
+        // set its visibility to GONE as an optimization step (it won't
+        // participate in layout passes, etc.)
+        mLoadingView.animate()
+                .alpha(0f)
+                .setDuration(mShortAnimationDuration)
+                .setListener(new AnimatorListenerAdapter() {
                     @Override
-                    public void onDismiss(DialogInterface dialog) {
-                        requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, PERMISSION_REQUEST_COARSE_LOCATION);
+                    public void onAnimationEnd(Animator animation) {
+                        mLoadingView.setVisibility(View.GONE);
                     }
                 });
-                builder.show();
-            }
-        }
-    }
-
-    /**
-     * on click listener
-     * */
-    @Override
-    public void onClick(View v) {
-        switch (v.getId()) {
-            case (R.id.button):
-
-                clicked = !clicked;
-
-                if (clicked){
-                    if (!BluetoothAdapter.getDefaultAdapter().isEnabled()) {
-                        startActivity(new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE));
-                        clicked = !clicked;
-                    }
-                    else{
-                        Toast.makeText(getApplicationContext(),"Start service",
-                                Toast.LENGTH_LONG).show();
-                        startService(new Intent(MainActivity.this,ConnectivityManager.class));
-                    }
-                }else{
-                    Toast.makeText(getApplicationContext(),"Stop service",
-                            Toast.LENGTH_LONG).show();
-                    killService();
-                }
-                break;
-
-            case(R.id.button2):
-                if(clicked)
-                    startManualSync();
-                else
-                    Toast.makeText(getApplicationContext(),"Service need to be started",
-                        Toast.LENGTH_LONG).show();
-                break;
-        }
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        killService();
-        unregisterReceiver(this.mBroadcastReceiver);
+    public void onFragmentInteraction(String string) {
+
     }
-
-    private  void createBroadcastReceiver() {
-
-        mFilter = new IntentFilter();
-        mFilter.addAction(MESSAGE_RECEIVED);
-
-        mBroadcastReceiver = new BroadcastReceiver() {
-
-            @Override
-            public void onReceive(Context context, Intent intent) {
-
-                String action = intent.getAction();
-
-                switch (action){
-                    // When incoming message received
-                    case MESSAGE_RECEIVED:
-                        String relayMessage = intent.getStringExtra("relayMessage");
-                        mArrayAdapter.add(MainActivity.this.setResult(relayMessage));
-                        mDevicesList.setSelection(mArrayAdapter.getCount()-1);
-                        notifyMessageArrived();
-                }
-
-            }
-        };
-        registerReceiver(mBroadcastReceiver, mFilter);
-    }
-
-    private String setResult(String relayMessage) {
-        if (!mHashMapRelayDevice.containsKey(relayMessage)) {
-            mRelayDevice = new RelayDevice(relayMessage);
-        }
-        else
-            mRelayDevice = mHashMapRelayDevice.get(relayMessage);
-        mRelayDevice.add();
-        mHashMapRelayDevice.put(relayMessage,mRelayDevice);
-
-        String result= "";
-
-        result =result +  mRelayDevice.address+": " + mRelayDevice.count+" times\n";
-
-        DateFormat df = new SimpleDateFormat("EEE, d MMM yyyy, HH:mm");
-        String date = df.format(Calendar.getInstance().getTime());
-
-        result = result +"time : "+date;
-        return result;
-    }
-
-
-    public void killService() {
-        //  BroadCast to service
-        Intent updateActivity = new Intent(ConnectivityManager.KILL_SERVICE);
-        sendBroadcast(updateActivity);
-    }
-
-    public void startManualSync(){
-        //  BroadCast to service
-        Intent updateActivity = new Intent(ConnectivityManager.MANUAL_SYNC);
-        sendBroadcast(updateActivity);
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           String permissions[],
-                                           int[] grantResults) {
-        switch (requestCode) {
-            case PERMISSION_REQUEST_COARSE_LOCATION: {
-                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    Log.d(TAG, "coarse location permission granted");
-                } else {
-                    final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                    builder.setTitle("Functionality limited");
-                    builder.setMessage("Since location access has not been granted, this app will not be able to discover ble devices when in the background.");
-                    builder.setPositiveButton(android.R.string.ok, null);
-                    builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
-                        @Override
-                        public void onDismiss(DialogInterface dialog) {
-                        }
-                    });
-                    builder.show();
-                }
-                return;
-            }
-        }
-    }
-
-
-    /**
-     *  Notify when new message arrived
-     */
-
-    public void notifyMessageArrived(){
-
-        Toast.makeText(getApplicationContext(), "Finish handshake",
-                Toast.LENGTH_SHORT).show();
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            //Define Notification Manager
-            NotificationManager notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
-            //Define sound URI
-            Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-            NotificationCompat.Builder mBuilder = (NotificationCompat.Builder) new NotificationCompat.Builder(getApplicationContext())
-                        .setSound(soundUri); //This sets the sound to play
-            //Display notification
-            notificationManager.notify(0, mBuilder.build());
-        }
-    }
-
-    /**
-     *  Create  Exit alert dialog
-     */
-    private void createAlertDialog(String title,String msg,boolean toExit) {
-
-        AlertDialog alertDialog = new AlertDialog.Builder(this).create();
-        alertDialog.setTitle(title);
-        alertDialog.setMessage(msg);
-        if (toExit){
-            alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, "EXIT",
-                    new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.dismiss();
-                            finish();
-                            System.exit(0);
-                        }
-                    });
-        }
-        else{
-            alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, "OK",
-                    new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.dismiss();
-                        }
-                    });
-        }
-        alertDialog.show();
-    }
-
-
-    private class RelayDevice{
-
-        String address;
-        int count;
-
-        RelayDevice(String address){
-            count = 0;
-            this.address= address;
-        }
-
-        public void add(){
-            count++;
-        }
-    }
-
 }
