@@ -2,7 +2,6 @@ package com.relay.relay;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
@@ -17,14 +16,14 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener ,ConnectionFragment.OnFragmentInteractionListener{
+        implements NavigationView.OnNavigationItemSelectedListener ,
+        PreferencesConnectionFragment.OnFragmentInteractionListener,
+        InboxFragment.OnFragmentInteractionListener{
 
     // tool bar and navigator
-    private ActionBarDrawerToggle toggle;
-    private DrawerLayout drawer;
-    private Toolbar toolbar;
     private NavigationView navigationView;
 
     // current fragment
@@ -39,11 +38,11 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar  toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        toggle = new ActionBarDrawerToggle(
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.setDrawerListener(toggle);
         toggle.syncState();
@@ -58,7 +57,9 @@ public class MainActivity extends AppCompatActivity
         mShortAnimationDuration = getResources().getInteger(
                 android.R.integer.config_longAnimTime);
 
+        // start on inbox
         displayFragment(0);
+
     }
 
     @Override
@@ -93,6 +94,7 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
+        // TODO  change
         if (id == R.id.action_search) {
            // navigationView.setCheckedItem(R.id.nav_connection_setting);
             return super.onOptionsItemSelected(item);
@@ -136,13 +138,14 @@ public class MainActivity extends AppCompatActivity
 
         mFragment = null;
         String title = getString(R.string.app_name);
+
         switch (position) {
             case 0:
                 mFragment = new InboxFragment();
                 title = getString(R.string.title_home_fragment);
                 break;
             case 1:
-                mFragment = new ConnectionFragment();
+                mFragment = new PreferencesConnectionFragment();
                 title = getString(R.string.title_connection_fragment);
                 break;
             case 2:

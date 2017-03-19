@@ -82,7 +82,6 @@ public class RelayMainActivity extends AppCompatActivity implements View.OnClick
 
         Test t = new Test(this);
         t.startTest();
-
     }
 
     private void checkBluetoothAndBleSupport() {

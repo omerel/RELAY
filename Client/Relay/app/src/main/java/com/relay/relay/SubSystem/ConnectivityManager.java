@@ -18,7 +18,6 @@ import com.relay.relay.Bluetooth.BLConstants;
 import com.relay.relay.Bluetooth.*;
 import com.relay.relay.RelayMainActivity;
 
-
 /**
  * Created by omer on 13/12/2016.
  * Service which run on the background an sense if using wifi/cellular data or bluetooth mode
@@ -53,9 +52,10 @@ public class ConnectivityManager extends Service implements BLConstants {
         // set off data mobile uses
         mMobileDataUses = false;
         mWifiConnection = false;
+        mRestart = false;
         startConnectivityByPriority();
         setWakeLock();
-        mRestart = false;
+
         return  START_NOT_STICKY;
     }
 
@@ -69,7 +69,6 @@ public class ConnectivityManager extends Service implements BLConstants {
                 // start connection using mobile data
             }
             else{
-
                 // make sure bluetooth enable
                 if (!BluetoothAdapter.getDefaultAdapter().isEnabled())
                     startActivity(new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE));
@@ -79,7 +78,6 @@ public class ConnectivityManager extends Service implements BLConstants {
                 createBroadcastReceiver();
                 checkPowerConnection();
                 startBluetoothMode();
-
             }
         }
     }
@@ -203,7 +201,6 @@ public class ConnectivityManager extends Service implements BLConstants {
                                 break;
                         }
                         break;
-
                     case Intent.ACTION_POWER_DISCONNECTED:
                         // do the next case
                     case Intent.ACTION_POWER_CONNECTED:
@@ -214,6 +211,7 @@ public class ConnectivityManager extends Service implements BLConstants {
 
                         // update bluetooth manager
                         mBluetoothManager.powerConnectionDetected(usbCharge || acCharge);
+                        // show detection
                         if (usbCharge || acCharge)
                             Toast.makeText(getApplicationContext(), "Relay detects power connection",
                                     Toast.LENGTH_SHORT).show();
@@ -254,7 +252,4 @@ public class ConnectivityManager extends Service implements BLConstants {
             }
         }
     }
-
-
-
 }
