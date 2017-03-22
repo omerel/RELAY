@@ -51,6 +51,9 @@ public interface BLConstants {
     int BLE_ERROR = 32;
 
 
+    // Constants from Connectivity manager
+    int CHANGE_PRIORITY = 43;
+
     // status
     int CONNECTED = 51;
     int DISCONNECTED = 52;

@@ -13,7 +13,8 @@ import android.os.Messenger;
 import android.os.ParcelUuid;
 import android.os.RemoteException;
 import android.util.Log;
-import com.relay.relay.SubSystem.ConnectivityManager;
+import com.relay.relay.SubSystem.RelayConnectivityManager;
+
 import java.util.ArrayList;
 import java.util.List;
 import static android.bluetooth.le.ScanSettings.MATCH_NUM_ONE_ADVERTISEMENT;
@@ -33,13 +34,13 @@ public class BLEScan implements BLConstants {
     private BluetoothLeScanner mBluetoothLeScanner;
     private ScanCallback mScanCallback;
     private Messenger mMessenger;
-    private ConnectivityManager mConnectivityManager;
+    private RelayConnectivityManager mRelayConnectivityManager;
 
-    public BLEScan(BluetoothAdapter bluetoothAdapter,Messenger messenger,ConnectivityManager connectivityManager) {
+    public BLEScan(BluetoothAdapter bluetoothAdapter,Messenger messenger,RelayConnectivityManager relayConnectivityManager) {
         this.mBluetoothAdapter = bluetoothAdapter;
         this.mScanCallback = null;
         this.mMessenger = messenger;
-        this.mConnectivityManager = connectivityManager;
+        this.mRelayConnectivityManager = relayConnectivityManager;
         mBluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
         Log.d(TAG, "Class created");
     }

@@ -16,7 +16,7 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
 
-import com.relay.relay.SubSystem.ConnectivityManager;
+import com.relay.relay.SubSystem.RelayConnectivityManager;
 
 import java.util.List;
 
@@ -28,7 +28,7 @@ import java.util.List;
 public class BLECentral implements BLConstants {
     private final String TAG = "RELAY_DEBUG: "+ BLECentral.class.getSimpleName();
 
-    private ConnectivityManager mConnectivityManager;
+    private RelayConnectivityManager mRelayConnectivityManager;
     private List<String> mLastConnectedDevices;
     private Messenger mManagerMessenger;
     private BLEScan mBleScan;
@@ -113,15 +113,15 @@ public class BLECentral implements BLConstants {
      * @param bluetoothAdapter to check if bluetooth enable
      * @param messenger to send result to bluetooth manager
      * @param lastConnectedDevices list contains all the devices that sync with this device
-     * @param connectivityManager needed to create bluetooth gatt
+     * @param relayConnectivityManager needed to create bluetooth gatt
      */
     BLECentral(BluetoothAdapter bluetoothAdapter, Messenger messenger,
-               List<String> lastConnectedDevices,ConnectivityManager connectivityManager){
-        this.mConnectivityManager = connectivityManager;
+               List<String> lastConnectedDevices,RelayConnectivityManager relayConnectivityManager){
+        this.mRelayConnectivityManager = relayConnectivityManager;
         this.mBluetoothAdapter = bluetoothAdapter;
         this.mManagerMessenger = messenger;
         this.mLastConnectedDevices = lastConnectedDevices;
-        this.mBleScan = new BLEScan(mBluetoothAdapter,mMessenger,connectivityManager);
+        this.mBleScan = new BLEScan(mBluetoothAdapter,mMessenger, relayConnectivityManager);
         Log.d(TAG, "Class created");
     }
 
@@ -134,7 +134,7 @@ public class BLECentral implements BLConstants {
     public boolean connect(BluetoothDevice bluetoothDevice) {
         if (mBluetoothAdapter.isEnabled()) {
             // disable connection automatically
-            mBluetoothGatt = bluetoothDevice.connectGatt(mConnectivityManager, false, mGattCallback);
+            mBluetoothGatt = bluetoothDevice.connectGatt(mRelayConnectivityManager, false, mGattCallback);
             Log.d(TAG, "Connecting to gatt server ");
         }
         return true;

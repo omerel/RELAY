@@ -1,6 +1,7 @@
 package com.relay.relay;
 
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -11,6 +12,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+
+import com.relay.relay.SubSystem.RelayConnectivityManager;
 
 
 /**
@@ -31,7 +34,7 @@ public class InboxFragment extends Fragment {
     private String mParam1;
     private String mParam2;
     private FloatingActionButton fab;
-    private  View view = null;
+    private View view = null;
 
     private OnFragmentInteractionListener mListener;
 
@@ -145,6 +148,7 @@ public class InboxFragment extends Fragment {
         if (id == R.id.action_manual_handshake) {
             Snackbar.make(view, "Manual handshake", Snackbar.LENGTH_SHORT)
                     .setAction("Action", null).show();
+            startManualSync();
             return true;
         }
         if (id == R.id.action_search) {
@@ -154,5 +158,11 @@ public class InboxFragment extends Fragment {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    public void startManualSync(){
+        //  BroadCast to service
+        Intent updateActivity = new Intent(RelayConnectivityManager.MANUAL_SYNC);
+        getActivity().sendBroadcast(updateActivity);
     }
 }

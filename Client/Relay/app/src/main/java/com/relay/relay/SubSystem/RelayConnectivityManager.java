@@ -6,16 +6,21 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.BatteryManager;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.PowerManager;
+import android.support.v7.preference.PreferenceManager;
 import android.util.Log;
-import android.widget.Toast;
+
 import com.relay.relay.Bluetooth.BLConstants;
 import com.relay.relay.Bluetooth.*;
+import com.relay.relay.R;
 import com.relay.relay.RelayMainActivity;
 
 /**
@@ -24,12 +29,18 @@ import com.relay.relay.RelayMainActivity;
  * the service starts the manager that controls the operations
  */
 
-public class ConnectivityManager extends Service implements BLConstants {
+public class RelayConnectivityManager extends Service implements BLConstants {
 
-    private final String TAG = "RELAY_DEBUG: "+ ConnectivityManager.class.getSimpleName();
+    private final String TAG = "RELAY_DEBUG: "+ RelayConnectivityManager.class.getSimpleName();
 
     public static final String KILL_SERVICE = "relay.BroadcastReceiver.KILL_SERVICE";
     public static final String MANUAL_SYNC = "relay.BroadcastReceiver.MANUAL_SYNC";
+    public static final String CHANGE_PRIORITY_B = "relay.BroadcastReceiver.CHANGE_PRIORITY_B";
+
+    private static final int BLUETOOTH_MODE = 1;
+    private static final int WIFI_MODE = 2;
+    private static final int DATA_MODE = 3;
+
     private BroadcastReceiver mBroadcastReceiver;
     // Power manager to keep service wake when phone locked
     private PowerManager mPowerManager;
@@ -37,48 +48,59 @@ public class ConnectivityManager extends Service implements BLConstants {
     private IntentFilter mFilter;
     // define if mobile data is available to use
     private boolean mMobileDataUses;
-    // define if to start again bluetooth connection
-    private boolean mRestart;
-    // define if there is an internet connection
+    // define if wifi available to use
     private boolean mWifiConnection;
+    // define if bluetooth available to use
+    private boolean mBluetootConnection;
+    // saves current mode
+    private int mCurrentMode;
+
+
     // Handler for all incoming messages from Bluetooth Manager
     private final Messenger mMessenger = new Messenger(new IncomingHandler());
     private BLManager mBluetoothManager;
     private DataManager mDataManager;
+    private SharedPreferences sharedPreferences;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "Service started");
-        // set off data mobile uses
-        mMobileDataUses = false;
-        mWifiConnection = false;
-        mRestart = false;
+        // get values from sharedPreferences
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        setConnectivityValues();
+        mCurrentMode = 0; // null
         startConnectivityByPriority();
         setWakeLock();
-
         return  START_NOT_STICKY;
     }
 
+    // setConnectivityValues from sharedPreferences
+    private void setConnectivityValues(){
+        mWifiConnection = sharedPreferences.getBoolean(getString(R.string.key_enable_wifi),false);
+        mMobileDataUses = sharedPreferences.getBoolean(getString(R.string.key_enable_data),false);
+        mBluetootConnection = sharedPreferences.getBoolean(getString(R.string.key_enable_bluetooth),false);
+    }
+
     private void startConnectivityByPriority() {
+        if (mWifiConnection && isWifiAvailable()){
 
-        if (mWifiConnection){
-            // start wifi connection
+            // start Wifi mode
+            //TODO initialWifiMode();
+            createWifiBroadcastReceiver();
+            // TODO startWIFIhMode();
+            mCurrentMode = WIFI_MODE;
+            Log.e(TAG,"Starting WIFI_MODE");
         }
-        else{
-            if(mMobileDataUses){
-                // start connection using mobile data
-            }
-            else{
-                // make sure bluetooth enable
-                if (!BluetoothAdapter.getDefaultAdapter().isEnabled())
-                    startActivity(new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE));
+        else if (mBluetootConnection && BluetoothAdapter.getDefaultAdapter().isEnabled()){
 
-                // start bluetooth mode
-                initialBluetoothMode();
-                createBroadcastReceiver();
-                checkPowerConnection();
-                startBluetoothMode();
-            }
+            // start bluetooth mode
+            initialBluetoothMode();
+            createBluetoothBroadcastReceiver();
+            // Update bluetooth manager
+            mBluetoothManager.powerConnectionDetected(isConnectedToPower());
+            startBluetoothMode();
+            mCurrentMode = BLUETOOTH_MODE;
+            Log.e(TAG,"Starting BLUETOOTH_MODE");
         }
     }
 
@@ -105,12 +127,13 @@ public class ConnectivityManager extends Service implements BLConstants {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        stopBluetoothMode();
-        unregisterReceiver(this.mBroadcastReceiver);
+        if (mCurrentMode == BLUETOOTH_MODE)
+            stopBluetoothMode();
+        if (mCurrentMode == WIFI_MODE);
+        unregisterReceiver(mBroadcastReceiver);
         mWakeLock.release();
         Log.d(TAG, "Service destroyed");
     }
-
 
     private void setWakeLock() {
         mPowerManager = (PowerManager) getSystemService(POWER_SERVICE);
@@ -118,17 +141,13 @@ public class ConnectivityManager extends Service implements BLConstants {
                 "MyWakelockTag");
         mWakeLock.acquire();
     }
-
-    private void checkPowerConnection() {
+    private boolean isConnectedToPower() {
         IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
         Intent batteryStatus = this.registerReceiver(null, ifilter);
-
         // Are we charging / charged?
         int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-
-        boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING;
-        // Update bluetooth manager
-        mBluetoothManager.powerConnectionDetected(isCharging);
+        boolean isConnected = status == BatteryManager.BATTERY_STATUS_CHARGING;
+        return isConnected;
     }
 
     public void updateActivityNewMessage(String message) {
@@ -143,22 +162,30 @@ public class ConnectivityManager extends Service implements BLConstants {
         this.mBluetoothManager = new BLManager(mMessenger,this);
     }
 
-    private void startBluetoothMode(){
-        mBluetoothManager.start();
-    }
+    private void startBluetoothMode(){mBluetoothManager.start();}
 
-    private void stopBluetoothMode(){
-        mBluetoothManager.cancel();
+    private void stopBluetoothMode(){mBluetoothManager.cancel();}
+
+    private boolean isWifiAvailable() {
+
+        ConnectivityManager connMgr = (ConnectivityManager)
+                getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connMgr.getActiveNetworkInfo();
+        boolean isWifiConnection =  activeNetworkInfo != null && activeNetworkInfo.isConnected() &&
+                activeNetworkInfo.getType() == ConnectivityManager.TYPE_WIFI;
+        Log.e(TAG, "Wifi connected: " + isWifiConnection);
+        return isWifiConnection;
     }
 
     /**
-     * BroadcastReceiver of incoming messages from all activities
+     * BroadcastReceiver for Bluetooth
      */
-    private  void createBroadcastReceiver() {
+    private  void createBluetoothBroadcastReceiver() {
 
         mFilter = new IntentFilter();
         mFilter.addAction(KILL_SERVICE);
         mFilter.addAction(MANUAL_SYNC);
+        mFilter.addAction(CHANGE_PRIORITY_B);
         mFilter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
         mFilter.addAction(Intent.ACTION_POWER_CONNECTED);
         mFilter.addAction(Intent.ACTION_POWER_DISCONNECTED);
@@ -177,6 +204,13 @@ public class ConnectivityManager extends Service implements BLConstants {
                         stopSelf();
                         break;
 
+                    case CHANGE_PRIORITY_B:
+                        stopBluetoothMode();
+                        unregisterReceiver(mBroadcastReceiver);
+                        setConnectivityValues();
+                        startConnectivityByPriority();
+                        break;
+
                     case MANUAL_SYNC:
                         mBluetoothManager.startManualSync();
                         break;
@@ -185,15 +219,15 @@ public class ConnectivityManager extends Service implements BLConstants {
                     case BluetoothAdapter.ACTION_STATE_CHANGED:
                         final int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
                         switch(state) {
+
                             case BluetoothAdapter.STATE_OFF:
-                                if (mRestart){
-                                    BluetoothAdapter.getDefaultAdapter().enable();
-                                    initialBluetoothMode();
-                                    startBluetoothMode();
-                                }
+                                // startConnectivityByPriority
+                                startConnectivityByPriority();
                                 break;
                             case BluetoothAdapter.STATE_TURNING_OFF:
+                                // stop bluetooth mode
                                 stopBluetoothMode();
+                                unregisterReceiver(mBroadcastReceiver);
                                 break;
                             case BluetoothAdapter.STATE_ON:
                                 break;
@@ -204,20 +238,65 @@ public class ConnectivityManager extends Service implements BLConstants {
                     case Intent.ACTION_POWER_DISCONNECTED:
                         // do the next case
                     case Intent.ACTION_POWER_CONNECTED:
-
                         int chargePlug = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
                         boolean usbCharge = chargePlug == BatteryManager.BATTERY_PLUGGED_USB;
                         boolean acCharge = chargePlug == BatteryManager.BATTERY_PLUGGED_AC;
-
                         // update bluetooth manager
                         mBluetoothManager.powerConnectionDetected(usbCharge || acCharge);
                         // show detection
                         if (usbCharge || acCharge)
-                            Toast.makeText(getApplicationContext(), "Relay detects power connection",
-                                    Toast.LENGTH_SHORT).show();
+                            Log.e(TAG,"Relay detects power connection");
                         else
-                            Toast.makeText(getApplicationContext(), "Relay detects power disconnection",
-                                    Toast.LENGTH_SHORT).show();
+                            Log.e(TAG,"Relay detects power disconnection");
+                        break;
+                }
+            }
+        };
+        registerReceiver(mBroadcastReceiver, mFilter);
+    }
+
+
+    /**
+     * BroadcastReceiver for Wifi
+     */
+    private  void createWifiBroadcastReceiver() {
+
+        mFilter = new IntentFilter();
+        mFilter.addAction(KILL_SERVICE);
+        mFilter.addAction(CHANGE_PRIORITY_B);
+        mFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+
+        mBroadcastReceiver = new BroadcastReceiver() {
+
+            @Override
+            public void onReceive(Context context, Intent intent) {
+
+                // TODO add KILL service like bluetooth receiver or put it in handler
+
+                String action = intent.getAction();
+
+                switch (action) {
+
+                    // When incoming message received
+                    case KILL_SERVICE:
+                        stopSelf();
+                        break;
+                    case CHANGE_PRIORITY_B:
+                        stopBluetoothMode();
+                        unregisterReceiver(mBroadcastReceiver);
+                        setConnectivityValues();
+                        startConnectivityByPriority();
+                        break;
+                    case ConnectivityManager.CONNECTIVITY_ACTION:
+                        // Check if wifi connected and available
+                        if (!isWifiAvailable()){
+                            // stop Wifi mode
+                            // TODO stopWifiMode();
+                            unregisterReceiver(mBroadcastReceiver);
+                            // start startConnectivityByPriority
+                            startConnectivityByPriority();
+                            Log.e(TAG, " Wifi turn off ");
+                        }
                         break;
                 }
             }
@@ -244,7 +323,10 @@ public class ConnectivityManager extends Service implements BLConstants {
                     mBluetoothManager.cancel();
                     // make sure bluetooth enable
                     BluetoothAdapter.getDefaultAdapter().disable();
-                    mRestart = true;
+                    unregisterReceiver(mBroadcastReceiver);
+                    Log.e(TAG,"Received BLE error. stop bluetooth mode");
+                    setConnectivityValues();
+                    startConnectivityByPriority();
                     break;
 
                 default:

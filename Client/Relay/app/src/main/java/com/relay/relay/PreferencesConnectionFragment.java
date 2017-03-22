@@ -4,18 +4,24 @@ package com.relay.relay;
  * Created by omer on 17/03/2017.
  */
 
+import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
-import android.support.v7.preference.EditTextPreference;
+import android.support.design.widget.Snackbar;
+import android.support.v7.preference.Preference;
 import android.support.v7.preference.PreferenceFragmentCompat;
-import android.support.v7.preference.PreferenceManager;
+import android.support.v7.preference.SwitchPreferenceCompat;
+import android.util.Log;
 
 public class PreferencesConnectionFragment extends PreferenceFragmentCompat
         implements SharedPreferences.OnSharedPreferenceChangeListener{
 
-    EditTextPreference editTextPreference;
-    SharedPreferences sharedPreferences;
+    SwitchPreferenceCompat switchPreferenceCompat;
+    private SharedPreferences sharedPreferences;
     private OnFragmentInteractionListener mListener;
 
     @Override
@@ -46,6 +52,7 @@ public class PreferencesConnectionFragment extends PreferenceFragmentCompat
         //unregister the preferenceChange listener
         getPreferenceScreen().getSharedPreferences()
                 .registerOnSharedPreferenceChangeListener(this);
+        updateSwitchState();
     }
 
     @Override
@@ -60,23 +67,86 @@ public class PreferencesConnectionFragment extends PreferenceFragmentCompat
     public void onCreatePreferences(Bundle bundle, String s) {
         // Load the Preferences from the XML file
         addPreferencesFromResource(R.xml.app_preferences_connection);
-
-        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
-
-        editTextPreference = (EditTextPreference) getPreferenceManager().findPreference("key2");
-      //  editTextPreference.setText("its works");
-
+        sharedPreferences = getActivity().getSharedPreferences(MainActivity.SYSTEM_SETTING, 0);
+        // update default preference
+        updateSwitchState();
     }
 
+    private void updateSwitchState(){
+
+        boolean bool = sharedPreferences.getBoolean(getString(R.string.key_enable_bluetooth),false);
+        switchPreferenceCompat = (SwitchPreferenceCompat) getPreferenceManager().findPreference(getString(R.string.key_enable_bluetooth));
+        // check if bluetooth didn't shot off
+        if (BluetoothAdapter.getDefaultAdapter().isEnabled())
+            switchPreferenceCompat.setChecked(bool);
+        else
+            switchPreferenceCompat.setChecked(false);
+
+        // set up bluetooth switch wifi switch
+        bool = sharedPreferences.getBoolean(getString(R.string.key_enable_data),false);
+        switchPreferenceCompat = (SwitchPreferenceCompat)getPreferenceManager().findPreference(getString(R.string.key_enable_data));
+        // check if wifi didn't shot off
+        if ( ((WifiManager)getActivity().getSystemService(Context.WIFI_SERVICE)).isWifiEnabled() )
+            switchPreferenceCompat.setChecked(bool);
+        else
+            switchPreferenceCompat.setChecked(false);
+        switchPreferenceCompat.setChecked(bool);
+
+        // set up bluetooth switch mobile data switch
+        bool = sharedPreferences.getBoolean(getString(R.string.key_enable_wifi),false);
+        switchPreferenceCompat = (SwitchPreferenceCompat)getPreferenceManager().findPreference(getString(R.string.key_enable_wifi));
+        switchPreferenceCompat.setChecked(bool);
+    }
+    @Override
+    public boolean onPreferenceTreeClick(Preference preference) {
+        // convert to switchPreferenceCompat
+        SwitchPreferenceCompat switchPreferenceCompat = (SwitchPreferenceCompat) preference;
+        changeStatusIfClicked(switchPreferenceCompat);
+        return super.onPreferenceTreeClick(preference);
+    }
+
+
+    public void changeStatusIfClicked(SwitchPreferenceCompat switchPreferenceCompat){
+        String key = switchPreferenceCompat.getKey();
+        boolean changePririty = false;
+        String mode = key;
+
+        // if Bluetooth pressed
+        if (key.equals(getString(R.string.key_enable_bluetooth)) &&
+                BluetoothAdapter.getDefaultAdapter().isEnabled()){
+            // change state only if bluetooth is enable
+            changePririty = true;
+        }
+        // if Wifi pressed
+        if (key.equals(getString(R.string.key_enable_wifi)) &&
+                ((WifiManager)getActivity().getSystemService(Context.WIFI_SERVICE)).isWifiEnabled() ){
+            changePririty = true;
+        }
+        // if Mobile data pressed
+        if (key.equals(getString(R.string.key_enable_data))){
+
+        }
+
+        //TODO change
+        if (changePririty){
+            // saving state into sharedPreferences
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putBoolean(switchPreferenceCompat.getKey(),switchPreferenceCompat.isChecked());
+            editor.commit();
+            // update activity
+            onButtonPressed(MainActivity.CHANGE_PRIORITY_F);
+        }
+        else{
+            boolean bool = sharedPreferences.getBoolean(key,false);
+            switchPreferenceCompat.setChecked(false);
+            // Alert user
+            Snackbar.make(this.getView(), " Please Turn on "+mode+" first " , Snackbar.LENGTH_SHORT)
+                    .setAction("Action", null).show();
+        }
+
+    }
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-
-        switch (key){
-            case "key1":
-                editTextPreference.setText("its working");
-                onButtonPressed("omer");
-                break;
-        }
     }
 
     public interface OnFragmentInteractionListener {
@@ -87,6 +157,16 @@ public class PreferencesConnectionFragment extends PreferenceFragmentCompat
         if (mListener != null) {
             mListener.onFragmentInteraction(string);
         }
+    }
+
+    private boolean isWifiAvailable() {
+
+        ConnectivityManager connMgr = (ConnectivityManager)
+                getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connMgr.getActiveNetworkInfo();
+        boolean isWifiConnection =  activeNetworkInfo != null && activeNetworkInfo.isConnected() &&
+                activeNetworkInfo.getType() == ConnectivityManager.TYPE_WIFI;
+        return isWifiConnection;
     }
 }
 

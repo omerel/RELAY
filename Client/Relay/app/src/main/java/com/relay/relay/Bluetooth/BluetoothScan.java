@@ -13,7 +13,7 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
 
-import com.relay.relay.SubSystem.ConnectivityManager;
+import com.relay.relay.SubSystem.RelayConnectivityManager;
 
 /**
  * Created by omer on 03/01/2017.
@@ -26,7 +26,7 @@ public class BluetoothScan implements BLConstants{
     private final String TAG = "RELAY_DEBUG: "+BluetoothScan.class.getSimpleName();
 
     private BluetoothAdapter mBluetoothAdapter;
-    private ConnectivityManager mConnectivityManager;
+    private RelayConnectivityManager mRelayConnectivityManager;
     private Messenger mMessenger;
     private BroadcastReceiver mBroadcastReceiver;
     private IntentFilter mFilter;
@@ -35,17 +35,17 @@ public class BluetoothScan implements BLConstants{
 
 
     public BluetoothScan(BluetoothAdapter bluetoothAdapter,Messenger messenger,
-                         ConnectivityManager connectivityManager) {
+                         RelayConnectivityManager relayConnectivityManager) {
         // Use messenger to update bluetooth manger
         this.mMessenger = messenger;
         this.mBluetoothAdapter = bluetoothAdapter;
-        this.mConnectivityManager = connectivityManager;
+        this.mRelayConnectivityManager = relayConnectivityManager;
         this.isDeviceFound = false;
         createBroadcastReceiver();
     }
 
     public void startScan(){
-        mConnectivityManager.registerReceiver(mBroadcastReceiver, mFilter);
+        mRelayConnectivityManager.registerReceiver(mBroadcastReceiver, mFilter);
 
         if (mBluetoothAdapter != null) {
             mBluetoothName = mBluetoothAdapter.getName();
@@ -68,7 +68,7 @@ public class BluetoothScan implements BLConstants{
         if (mBluetoothAdapter != null)
             mBluetoothAdapter.cancelDiscovery();
         mBluetoothAdapter.setName(mBluetoothName);
-//        mConnectivityManager.unregisterReceiver(mBroadcastReceiver);
+//        mRelayConnectivityManager.unregisterReceiver(mBroadcastReceiver);
         Log.e(TAG, "cancel Discovery ");
     }
 
@@ -123,7 +123,7 @@ public class BluetoothScan implements BLConstants{
                     Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
             discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, DISCOVERABLE_TIME);
             discoverableIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            mConnectivityManager.startActivity(discoverableIntent);
+            mRelayConnectivityManager.startActivity(discoverableIntent);
         }
     }
 

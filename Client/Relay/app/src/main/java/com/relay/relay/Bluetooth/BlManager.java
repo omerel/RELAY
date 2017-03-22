@@ -9,11 +9,10 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
-import com.relay.relay.SubSystem.ConnectivityManager;
+import com.relay.relay.SubSystem.RelayConnectivityManager;
 import com.relay.relay.SubSystem.DataManager;
 import com.relay.relay.SubSystem.HandShake;
 import com.relay.relay.Util.DataTransferred;
-import com.relay.relay.system.RelayMessage;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,13 +47,13 @@ public class BLManager extends Thread implements BLConstants {
     private int mSearchWithoutChangeCounter;
     // Handler for all incoming messages from BL classes
     private final Messenger mMessenger = new Messenger(new IncomingHandler());
-    // Messenger from ConnectivityManager
+    // Messenger from RelayConnectivityManager
     private Messenger mConnectivityMessenger;
     private Handler mHandler;
     private Handler mAdvertiserHandler;
     private HandShake mHandShake;
     private int mStatus;
-    private ConnectivityManager mConnectivityManager;
+    private RelayConnectivityManager mRelayConnectivityManager;
     // who connect(initiate) to who
     private boolean mInitiator;
     private DataManager mDataManager;
@@ -62,7 +61,7 @@ public class BLManager extends Thread implements BLConstants {
     private DataTransferred.Metadata metadata; // calculate in BLManager saves time in handshake
 
 
-     public BLManager(Messenger connectivityMessenger, ConnectivityManager connectivityManager){
+     public BLManager(Messenger connectivityMessenger, RelayConnectivityManager relayConnectivityManager){
 
         this.mLastConnectedDevices = new ArrayList<>();
         this.mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -70,10 +69,10 @@ public class BLManager extends Thread implements BLConstants {
             Log.e(TAG, "Unable to initialize BLManager.");
             exit(1);
         }
-         this.mConnectivityManager = connectivityManager;
-         this.mBLECentral = new BLECentral(mBluetoothAdapter,mMessenger,mLastConnectedDevices,connectivityManager);
-         this.mBlePeripheral = new BLEPeripheral(mBluetoothAdapter,mMessenger,connectivityManager);
-         this.mBluetoothScan = new BluetoothScan(mBluetoothAdapter,mMessenger,connectivityManager);
+         this.mRelayConnectivityManager = relayConnectivityManager;
+         this.mBLECentral = new BLECentral(mBluetoothAdapter,mMessenger,mLastConnectedDevices, relayConnectivityManager);
+         this.mBlePeripheral = new BLEPeripheral(mBluetoothAdapter,mMessenger, relayConnectivityManager);
+         this.mBluetoothScan = new BluetoothScan(mBluetoothAdapter,mMessenger, relayConnectivityManager);
          this.mBluetoothClient =  null;
          this.mBluetoothServer = new BluetoothServer(mBluetoothAdapter,mMessenger);
          this.mIntervalSearchTime = TIME_RELAY_SEARCH_INTERVAL;
@@ -84,13 +83,12 @@ public class BLManager extends Thread implements BLConstants {
          this.mAdvertiserHandler = new Handler();
          this.mHandShake = null;
          this.mStatus = DISCONNECTED;
-         this.mDataManager = new DataManager(connectivityManager);
+         this.mDataManager = new DataManager(relayConnectivityManager);
          this.mDataTransferred = new DataTransferred(mDataManager.getGraphRelations(),
                  mDataManager.getNodesDB(),mDataManager.getMessagesDB());
          this.metadata = mDataTransferred.createMetaData();
          Log.d(TAG, "Class created");
          Log.d(TAG, "I am :" +mBluetoothAdapter.getName()+", MAC : "+ mBluetoothAdapter.getAddress());
-
     }
 
     // Start thread
@@ -251,7 +249,7 @@ public class BLManager extends Thread implements BLConstants {
     }
 
     /**
-     * Send relay message to the ConnectivityManager class
+     * Send relay message to the RelayConnectivityManager class
      * @param m message
      * @param relayMessage
      */
@@ -307,7 +305,7 @@ public class BLManager extends Thread implements BLConstants {
                     resetSearch();
                     // Start handshake
                     mHandShake = new HandShake(bluetoothSocket,mMessenger,mInitiator,
-                            mConnectivityManager,mDataManager,metadata);
+                            mRelayConnectivityManager,mDataManager,metadata);
                     break;
 
                 case FAILED_CONNECTING_TO_DEVICE:
@@ -332,7 +330,7 @@ public class BLManager extends Thread implements BLConstants {
                     mBluetoothServer.cancel();
                     // Start handshake
                     mHandShake = new HandShake(bluetoothSocket,mMessenger,mInitiator,
-                            mConnectivityManager,mDataManager,metadata);
+                            mRelayConnectivityManager,mDataManager,metadata);
 
                     break;
 
@@ -358,6 +356,7 @@ public class BLManager extends Thread implements BLConstants {
 
                 case SCAN_FINISHED_WITHOUT_CHANGES:
                     Log.e(TAG, "SCAN_FINISHED_WITHOUT_CHANGES");
+                    mStatus = DISCONNECTED;
                     stopSearch(SCAN_FINISHED_WITHOUT_CHANGES);
                     intervalSearch();
                     break;
@@ -411,11 +410,13 @@ public class BLManager extends Thread implements BLConstants {
 
                 case BLE_ADVERTISE_ERROR:
                     Log.e(TAG, "BLE_ADVERTISE_ERROR");
+                    mStatus = DISCONNECTED;
                     sendRelayMessageToConnectivityManager(BLE_ERROR,null);
                     break;
 
                 case BLE_SCAN_ERROR:
                     Log.e(TAG, "BLE_SCAN_ERROR");
+                    mStatus = DISCONNECTED;
                     sendRelayMessageToConnectivityManager(BLE_ERROR,null);
                     break;
 

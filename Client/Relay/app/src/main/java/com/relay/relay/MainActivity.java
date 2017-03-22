@@ -1,7 +1,21 @@
 package com.relay.relay;
 
+import android.Manifest;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
+import android.annotation.TargetApi;
+import android.app.NotificationManager;
+import android.bluetooth.BluetoothAdapter;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.pm.PackageManager;
+import android.media.RingtoneManager;
+import android.net.Uri;
+import android.net.wifi.WifiManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
@@ -11,17 +25,28 @@ import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.app.NotificationCompat;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
+import com.relay.relay.SubSystem.RelayConnectivityManager;
+
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener ,
         PreferencesConnectionFragment.OnFragmentInteractionListener,
         InboxFragment.OnFragmentInteractionListener{
+
+    private final String TAG = "RELAY_DEBUG: "+ MainActivity.class.getSimpleName();
+
+    public static final String SYSTEM_SETTING = "relay.system_setting";
+    public static final String CHANGE_PRIORITY_F = "relay.change_priority";
+    public static final String MESSAGE_RECEIVED = "relay.BroadcastReceiver.MESSAGE";
+    private static final int PERMISSION_REQUEST_COARSE_LOCATION = 1;
 
     // tool bar and navigator
     private NavigationView navigationView;
@@ -33,6 +58,10 @@ public class MainActivity extends AppCompatActivity
     private View mContentView;
     private View mLoadingView;
     private int mShortAnimationDuration;
+
+    private BroadcastReceiver mBroadcastReceiver;
+    private IntentFilter mFilter;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,6 +89,21 @@ public class MainActivity extends AppCompatActivity
         // start on inbox
         displayFragment(0);
 
+        // check Bluetooth support
+        checkBluetoothAndBleSupport();
+
+        // create BroadcastReceiver for new messages
+        createBroadcastReceiver();
+
+        checkPermissions();
+
+        //    Test t = new Test(this);
+        //    t.startTest();
+
+        startService(new Intent(MainActivity.this,RelayConnectivityManager.class));
+        Toast.makeText(getApplicationContext(),"Start RelayConnectivityManager service",
+                Toast.LENGTH_LONG).show();
+
     }
 
     @Override
@@ -75,6 +119,13 @@ public class MainActivity extends AppCompatActivity
                 navigationView.setCheckedItem(R.id.nav_inbox);
             }
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        killService();
+        unregisterReceiver(this.mBroadcastReceiver);
     }
 
     @Override
@@ -200,8 +251,142 @@ public class MainActivity extends AppCompatActivity
                 });
     }
 
+    private void checkBluetoothAndBleSupport() {
+
+        if (BluetoothAdapter.getDefaultAdapter() == null)
+            createAlertDialog("ERROR","Your device doesn't support bluetooth. you can't use" +
+                    "this application",true);
+        else {
+            if (BluetoothAdapter.getDefaultAdapter().isEnabled())
+                checkAdvertiseSupport();
+        }
+    }
+
+    /**
+     *  Create Exit alert dialog
+     */
+    private void createAlertDialog(String title,String msg,boolean toExit) {
+
+        AlertDialog alertDialog = new AlertDialog.Builder(this).create();
+        alertDialog.setTitle(title);
+        alertDialog.setMessage(msg);
+        if (toExit){
+            alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, "EXIT",
+                    new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                            finish();
+                            System.exit(0);
+                        }
+                    });
+        }
+        else{
+            alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, "OK",
+                    new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    });
+        }
+        alertDialog.show();
+    }
+
+    private void checkAdvertiseSupport(){
+        if (!BluetoothAdapter.getDefaultAdapter().isMultipleAdvertisementSupported())
+            createAlertDialog("NOTICE", "Your device doesn't support Bluetooth Low Energy " +
+                    "advertisement (Beacon Transmission).\n Unfortunately your App's performance ,to get " +
+                    "new messages from other users will be poor.\n To get better results use manual sync button" +
+                    " when you are closes to another user.", false);
+    }
+
+
+    private  void createBroadcastReceiver() {
+
+        mFilter = new IntentFilter();
+        mFilter.addAction(MESSAGE_RECEIVED);
+
+        mBroadcastReceiver = new BroadcastReceiver() {
+
+            @Override
+            public void onReceive(Context context, Intent intent) {
+
+                String action = intent.getAction();
+
+                switch (action){
+                    // When incoming message received
+                    case MESSAGE_RECEIVED:
+                        String relayMessage = intent.getStringExtra("relayMessage");
+                        createAlertDialog("New message",relayMessage,false);
+                        notifyMessageArrived();
+                        break;
+                }
+            }
+        };
+        registerReceiver(mBroadcastReceiver, mFilter);
+    }
+
+    /**
+     *  Notify when new message arrived
+     */
+    public void notifyMessageArrived(){
+
+        Toast.makeText(getApplicationContext(), "Finish handshake",
+                Toast.LENGTH_SHORT).show();
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            //Define Notification Manager
+            NotificationManager notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
+            //Define sound URI
+            Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+            NotificationCompat.Builder mBuilder = (NotificationCompat.Builder) new NotificationCompat.Builder(getApplicationContext())
+                    .setSound(soundUri); //This sets the sound to play
+            //Display notification
+            notificationManager.notify(0, mBuilder.build());
+        }
+    }
+
+    @TargetApi(23)
+    private void checkPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (this.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setTitle("This app needs location access");
+                builder.setMessage("Please grant location access so this app can detect ble devices.");
+                builder.setPositiveButton(android.R.string.ok, null);
+                builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, PERMISSION_REQUEST_COARSE_LOCATION);
+                    }
+                });
+                builder.show();
+            }
+        }
+    }
+
+
+    public void killService() {
+        //  BroadCast to service
+        Intent updateActivity = new Intent(RelayConnectivityManager.KILL_SERVICE);
+        sendBroadcast(updateActivity);
+    }
+
+
+    public void changePriority(){
+        //  BroadCast to service
+        Intent updateActivity = new Intent(RelayConnectivityManager.CHANGE_PRIORITY_B);
+        sendBroadcast(updateActivity);
+    }
+
     @Override
     public void onFragmentInteraction(String string) {
 
+        switch (string){
+            case CHANGE_PRIORITY_F:
+                changePriority();
+                Snackbar.make(this.mContentView, " Changing connection priority " , Snackbar.LENGTH_SHORT)
+                        .setAction("Action", null).show();
+                break;
+        }
     }
 }

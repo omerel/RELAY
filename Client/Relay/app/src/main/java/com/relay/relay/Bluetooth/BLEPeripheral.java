@@ -21,7 +21,7 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
-import com.relay.relay.SubSystem.ConnectivityManager;
+import com.relay.relay.SubSystem.RelayConnectivityManager;
 
 
 public class BLEPeripheral implements BLConstants {
@@ -29,7 +29,7 @@ public class BLEPeripheral implements BLConstants {
     private final String TAG = "RELAY_DEBUG: "+ BLEPeripheral.class.getSimpleName();
 
     private BluetoothGattService mBluetoothGattService;
-    private ConnectivityManager mConnectivityManager;
+    private RelayConnectivityManager mRelayConnectivityManager;
     private BluetoothManager mBluetoothManager;
     private BluetoothAdapter mBluetoothAdapter;
     private BLEService mBLEService;
@@ -78,17 +78,17 @@ public class BLEPeripheral implements BLConstants {
      * BLEPeripheral constructor
      * @param bluetoothAdapter to check if bluetooth enable
      * @param messenger to send result to bluetooth manager
-     * @param connectivityManager needed to create bluetooth gatt
+     * @param relayConnectivityManager needed to create bluetooth gatt
      */
-    BLEPeripheral(BluetoothAdapter bluetoothAdapter, Messenger messenger,ConnectivityManager connectivityManager){
+    BLEPeripheral(BluetoothAdapter bluetoothAdapter, Messenger messenger,RelayConnectivityManager relayConnectivityManager){
 
-        this.mConnectivityManager = connectivityManager;
+        this.mRelayConnectivityManager = relayConnectivityManager;
         this.mBluetoothAdapter = bluetoothAdapter;
         this.mBLEService = new BLEService(mBluetoothAdapter.getAddress());
         this.mBluetoothGattService = mBLEService.getBluetoothGattService();
         this.mBleAdvertising = new BLEAdvertising(mBluetoothAdapter);
         this.mMessenger =messenger;
-        this.mBluetoothManager = (BluetoothManager) mConnectivityManager.getSystemService(Context.BLUETOOTH_SERVICE);
+        this.mBluetoothManager = (BluetoothManager) mRelayConnectivityManager.getSystemService(Context.BLUETOOTH_SERVICE);
 
     }
 
@@ -127,7 +127,7 @@ public class BLEPeripheral implements BLConstants {
             mGattServer.close();
 
         // open GattServer
-        mGattServer = mBluetoothManager.openGattServer(mConnectivityManager, mGattServerCallback);
+        mGattServer = mBluetoothManager.openGattServer(mRelayConnectivityManager, mGattServerCallback);
 
         if (mGattServer == null) {
             Log.e(TAG, "ERROR - didn't open gattServer. returns null");

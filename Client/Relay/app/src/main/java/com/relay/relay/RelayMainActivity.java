@@ -25,7 +25,7 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import com.relay.relay.DB.Test;
-import com.relay.relay.SubSystem.ConnectivityManager;
+import com.relay.relay.SubSystem.RelayConnectivityManager;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -92,8 +92,6 @@ public class RelayMainActivity extends AppCompatActivity implements View.OnClick
         else {
             if (BluetoothAdapter.getDefaultAdapter().isEnabled())
                 checkAdvertiseSupport();
-            else
-                enableBluetooth();
         }
     }
 
@@ -157,7 +155,7 @@ public class RelayMainActivity extends AppCompatActivity implements View.OnClick
                     else{
                         Toast.makeText(getApplicationContext(),"Start service",
                                 Toast.LENGTH_LONG).show();
-                        startService(new Intent(RelayMainActivity.this,ConnectivityManager.class));
+                        startService(new Intent(RelayMainActivity.this,RelayConnectivityManager.class));
                     }
                 }else{
                     Toast.makeText(getApplicationContext(),"Stop service",
@@ -232,13 +230,13 @@ public class RelayMainActivity extends AppCompatActivity implements View.OnClick
 
     public void killService() {
         //  BroadCast to service
-        Intent updateActivity = new Intent(ConnectivityManager.KILL_SERVICE);
+        Intent updateActivity = new Intent(RelayConnectivityManager.KILL_SERVICE);
         sendBroadcast(updateActivity);
     }
 
     public void startManualSync(){
         //  BroadCast to service
-        Intent updateActivity = new Intent(ConnectivityManager.MANUAL_SYNC);
+        Intent updateActivity = new Intent(RelayConnectivityManager.MANUAL_SYNC);
         sendBroadcast(updateActivity);
     }
 
