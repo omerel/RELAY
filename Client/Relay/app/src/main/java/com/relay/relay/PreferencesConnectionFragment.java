@@ -74,6 +74,7 @@ public class PreferencesConnectionFragment extends PreferenceFragmentCompat
 
     private void updateSwitchState(){
 
+        // set up bluetooth switch
         boolean bool = sharedPreferences.getBoolean(getString(R.string.key_enable_bluetooth),false);
         switchPreferenceCompat = (SwitchPreferenceCompat) getPreferenceManager().findPreference(getString(R.string.key_enable_bluetooth));
         // check if bluetooth didn't shot off
@@ -82,19 +83,18 @@ public class PreferencesConnectionFragment extends PreferenceFragmentCompat
         else
             switchPreferenceCompat.setChecked(false);
 
-        // set up bluetooth switch wifi switch
-        bool = sharedPreferences.getBoolean(getString(R.string.key_enable_data),false);
-        switchPreferenceCompat = (SwitchPreferenceCompat)getPreferenceManager().findPreference(getString(R.string.key_enable_data));
+        // set up wifi switch
+        bool = sharedPreferences.getBoolean(getString(R.string.key_enable_wifi),false);
+        switchPreferenceCompat = (SwitchPreferenceCompat)getPreferenceManager().findPreference(getString(R.string.key_enable_wifi));
         // check if wifi didn't shot off
         if ( ((WifiManager)getActivity().getSystemService(Context.WIFI_SERVICE)).isWifiEnabled() )
             switchPreferenceCompat.setChecked(bool);
         else
             switchPreferenceCompat.setChecked(false);
-        switchPreferenceCompat.setChecked(bool);
 
-        // set up bluetooth switch mobile data switch
-        bool = sharedPreferences.getBoolean(getString(R.string.key_enable_wifi),false);
-        switchPreferenceCompat = (SwitchPreferenceCompat)getPreferenceManager().findPreference(getString(R.string.key_enable_wifi));
+        // set up mobile data switch
+        bool = sharedPreferences.getBoolean(getString(R.string.key_enable_data),false);
+        switchPreferenceCompat = (SwitchPreferenceCompat)getPreferenceManager().findPreference(getString(R.string.key_enable_data));
         switchPreferenceCompat.setChecked(bool);
     }
     @Override
@@ -124,10 +124,9 @@ public class PreferencesConnectionFragment extends PreferenceFragmentCompat
         }
         // if Mobile data pressed
         if (key.equals(getString(R.string.key_enable_data))){
-
+            // TODO
         }
 
-        //TODO change
         if (changePririty){
             // saving state into sharedPreferences
             SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -137,10 +136,9 @@ public class PreferencesConnectionFragment extends PreferenceFragmentCompat
             onButtonPressed(MainActivity.CHANGE_PRIORITY_F);
         }
         else{
-            boolean bool = sharedPreferences.getBoolean(key,false);
             switchPreferenceCompat.setChecked(false);
             // Alert user
-            Snackbar.make(this.getView(), " Please Turn on "+mode+" first " , Snackbar.LENGTH_SHORT)
+            Snackbar.make(this.getView(), " Please Turn "+mode+" first " , Snackbar.LENGTH_SHORT)
                     .setAction("Action", null).show();
         }
 
@@ -159,15 +157,6 @@ public class PreferencesConnectionFragment extends PreferenceFragmentCompat
         }
     }
 
-    private boolean isWifiAvailable() {
-
-        ConnectivityManager connMgr = (ConnectivityManager)
-                getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo activeNetworkInfo = connMgr.getActiveNetworkInfo();
-        boolean isWifiConnection =  activeNetworkInfo != null && activeNetworkInfo.isConnected() &&
-                activeNetworkInfo.getType() == ConnectivityManager.TYPE_WIFI;
-        return isWifiConnection;
-    }
 }
 
 

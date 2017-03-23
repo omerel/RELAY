@@ -95,14 +95,17 @@ public class BLEPeripheral implements BLConstants {
     /**
      * close GattServer
      */
-    public void close(){
+    public void close() {
 
-        if (mGattServer != null) {
-           disconnectFromDevices();
-            mGattServer.close();
+        if (mBluetoothAdapter.isEnabled()) {
+            if (mGattServer != null) {
+                disconnectFromDevices();
+                mGattServer.close();
+            }
+            mBleAdvertising.stopAdvertising();
         }
-        mBleAdvertising.stopAdvertising();
     }
+
 
     /**
      * Stop Peripheral - disconnect from all devices and stop advertising
@@ -110,7 +113,7 @@ public class BLEPeripheral implements BLConstants {
     public void stopPeripheral(){
 
         if (mGattServer != null) {
-           disconnectFromDevices(); //TODO do i need it? is there any limit fot it?
+           disconnectFromDevices(); //TODO do i need it? is there any limit for it?
             mGattServer.close();
         }
         mBleAdvertising.stopAdvertising();

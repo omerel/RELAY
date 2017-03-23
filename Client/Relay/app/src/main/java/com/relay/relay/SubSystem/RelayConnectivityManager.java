@@ -9,6 +9,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
 import android.os.Handler;
 import android.os.IBinder;
@@ -20,8 +21,8 @@ import android.util.Log;
 
 import com.relay.relay.Bluetooth.BLConstants;
 import com.relay.relay.Bluetooth.*;
+import com.relay.relay.MainActivity;
 import com.relay.relay.R;
-import com.relay.relay.RelayMainActivity;
 
 /**
  * Created by omer on 13/12/2016.
@@ -40,18 +41,22 @@ public class RelayConnectivityManager extends Service implements BLConstants {
     private static final int BLUETOOTH_MODE = 1;
     private static final int WIFI_MODE = 2;
     private static final int DATA_MODE = 3;
+    private static final int NULL_MODE = -1;
 
+    // General BroadcastReceiver
     private BroadcastReceiver mBroadcastReceiver;
+    // BroadcastReceiver to specific mode
+    private BroadcastReceiver mModeBroadcastReceiver;
     // Power manager to keep service wake when phone locked
     private PowerManager mPowerManager;
     private PowerManager.WakeLock mWakeLock;
     private IntentFilter mFilter;
     // define if mobile data is available to use
-    private boolean mMobileDataUses;
+    private boolean mSwitchMobileDataUses;
     // define if wifi available to use
-    private boolean mWifiConnection;
+    private boolean mSwitchWifiConnection;
     // define if bluetooth available to use
-    private boolean mBluetootConnection;
+    private boolean mSwitchBluetootConnection;
     // saves current mode
     private int mCurrentMode;
 
@@ -68,22 +73,22 @@ public class RelayConnectivityManager extends Service implements BLConstants {
         // get values from sharedPreferences
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         setConnectivityValues();
-        mCurrentMode = 0; // null
+        mCurrentMode = NULL_MODE;
         startConnectivityByPriority();
+        createGeneralBroadcastReceiver();
         setWakeLock();
         return  START_NOT_STICKY;
     }
 
     // setConnectivityValues from sharedPreferences
     private void setConnectivityValues(){
-        mWifiConnection = sharedPreferences.getBoolean(getString(R.string.key_enable_wifi),false);
-        mMobileDataUses = sharedPreferences.getBoolean(getString(R.string.key_enable_data),false);
-        mBluetootConnection = sharedPreferences.getBoolean(getString(R.string.key_enable_bluetooth),false);
+        mSwitchWifiConnection = sharedPreferences.getBoolean(getString(R.string.key_enable_wifi),false);
+        mSwitchMobileDataUses = sharedPreferences.getBoolean(getString(R.string.key_enable_data),false);
+        mSwitchBluetootConnection = sharedPreferences.getBoolean(getString(R.string.key_enable_bluetooth),false);
     }
 
     private void startConnectivityByPriority() {
-        if (mWifiConnection && isWifiAvailable()){
-
+        if (mSwitchWifiConnection && isWifiAvailable() && isWifiConnected()){
             // start Wifi mode
             //TODO initialWifiMode();
             createWifiBroadcastReceiver();
@@ -91,8 +96,7 @@ public class RelayConnectivityManager extends Service implements BLConstants {
             mCurrentMode = WIFI_MODE;
             Log.e(TAG,"Starting WIFI_MODE");
         }
-        else if (mBluetootConnection && BluetoothAdapter.getDefaultAdapter().isEnabled()){
-
+        else if (mSwitchBluetootConnection && BluetoothAdapter.getDefaultAdapter().isEnabled()){
             // start bluetooth mode
             initialBluetoothMode();
             createBluetoothBroadcastReceiver();
@@ -102,6 +106,12 @@ public class RelayConnectivityManager extends Service implements BLConstants {
             mCurrentMode = BLUETOOTH_MODE;
             Log.e(TAG,"Starting BLUETOOTH_MODE");
         }
+        else{
+            // if not of them make sure broadcastreceiver is null
+            mModeBroadcastReceiver = null;
+            mCurrentMode = NULL_MODE;
+        }
+
     }
 
     @Override
@@ -127,10 +137,6 @@ public class RelayConnectivityManager extends Service implements BLConstants {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (mCurrentMode == BLUETOOTH_MODE)
-            stopBluetoothMode();
-        if (mCurrentMode == WIFI_MODE);
-        unregisterReceiver(mBroadcastReceiver);
         mWakeLock.release();
         Log.d(TAG, "Service destroyed");
     }
@@ -153,7 +159,7 @@ public class RelayConnectivityManager extends Service implements BLConstants {
     public void updateActivityNewMessage(String message) {
 
     //  BroadCast relay message to activity
-        Intent updateActivity = new Intent(RelayMainActivity.MESSAGE_RECEIVED);
+        Intent updateActivity = new Intent(MainActivity.MESSAGE_RECEIVED);
         updateActivity.putExtra("relayMessage", message);
         sendBroadcast(updateActivity);
     }
@@ -167,6 +173,10 @@ public class RelayConnectivityManager extends Service implements BLConstants {
     private void stopBluetoothMode(){mBluetoothManager.cancel();}
 
     private boolean isWifiAvailable() {
+        return ((WifiManager)getSystemService(Context.WIFI_SERVICE)).isWifiEnabled();
+    }
+
+    private boolean isWifiConnected() {
 
         ConnectivityManager connMgr = (ConnectivityManager)
                 getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -177,19 +187,17 @@ public class RelayConnectivityManager extends Service implements BLConstants {
         return isWifiConnection;
     }
 
+
     /**
-     * BroadcastReceiver for Bluetooth
+     *  General BroadcastReceiver
      */
-    private  void createBluetoothBroadcastReceiver() {
+    private  void createGeneralBroadcastReceiver() {
 
         mFilter = new IntentFilter();
         mFilter.addAction(KILL_SERVICE);
-        mFilter.addAction(MANUAL_SYNC);
-        mFilter.addAction(CHANGE_PRIORITY_B);
         mFilter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
-        mFilter.addAction(Intent.ACTION_POWER_CONNECTED);
-        mFilter.addAction(Intent.ACTION_POWER_DISCONNECTED);
-        // TODO enter receiver when fail while connecting
+        mFilter.addAction(CHANGE_PRIORITY_B);
+        mFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
 
         mBroadcastReceiver = new BroadcastReceiver() {
 
@@ -201,16 +209,100 @@ public class RelayConnectivityManager extends Service implements BLConstants {
                 switch (action){
                     // When incoming message received
                     case KILL_SERVICE:
-                        stopSelf();
+                        killService();
                         break;
 
                     case CHANGE_PRIORITY_B:
-                        stopBluetoothMode();
-                        unregisterReceiver(mBroadcastReceiver);
+                        if (mCurrentMode == BLUETOOTH_MODE){
+                            stopBluetoothMode();
+                            unregisterReceiver(mModeBroadcastReceiver);
+                            Log.e(TAG, " Bluetooth switch turned off ");
+                        }else if (mCurrentMode == WIFI_MODE){
+                            // TODO stop wifi mode
+                            unregisterReceiver(mModeBroadcastReceiver);
+                            Log.e(TAG, " Wifi turned off ");
+                        }else if (mCurrentMode == DATA_MODE){
+
+                        }
                         setConnectivityValues();
                         startConnectivityByPriority();
                         break;
+                    // When the device in wifi mode and bluetooth is on
+                    case BluetoothAdapter.ACTION_STATE_CHANGED:
+                        final int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
+                        if (state == BluetoothAdapter.STATE_OFF){
+                            // saving state into sharedPreferences
+                            SharedPreferences.Editor editor = sharedPreferences.edit();
+                            editor.putBoolean(getString(R.string.key_enable_bluetooth),false);
+                            editor.commit();
 
+                            // refresh fragment
+                            Intent updateActivity = new Intent(MainActivity.FRESH_FRAGMENT);
+                            sendBroadcast(updateActivity);
+                        }
+                        break;
+                    // When the device in bluetooth and wifi switch in and connected to internet
+                    case ConnectivityManager.CONNECTIVITY_ACTION:
+                        // Check if wifi connected and available
+                        if (mSwitchWifiConnection && isWifiAvailable() && isWifiConnected()){
+
+                            if (mCurrentMode == BLUETOOTH_MODE || mCurrentMode== NULL_MODE){
+                                stopBluetoothMode();
+                                // clear mode;
+                                mCurrentMode = NULL_MODE;
+                                // unregister broadcast
+                                unregisterReceiver(mModeBroadcastReceiver);
+                                // start startConnectivityByPriority
+                                startConnectivityByPriority();
+                                Log.e(TAG, " detect Wifi connected to internet ");
+                            }
+                        }
+                        break;
+                }
+            }
+        };
+        registerReceiver(mBroadcastReceiver, mFilter);
+    }
+
+
+
+    private void killService(){
+        // stop mode
+        if (mCurrentMode == BLUETOOTH_MODE)
+            stopBluetoothMode();
+        if (mCurrentMode == WIFI_MODE);
+        //TODO stop wifi
+        mCurrentMode = NULL_MODE;
+
+        // unregisterReceiver
+        if (mBroadcastReceiver != null)
+            unregisterReceiver(mBroadcastReceiver);
+        if (mModeBroadcastReceiver != null)
+            unregisterReceiver(mModeBroadcastReceiver);
+
+        stopSelf();
+    }
+    /**
+     * BroadcastReceiver for Bluetooth
+     */
+    private  void createBluetoothBroadcastReceiver() {
+
+        mFilter = new IntentFilter();
+        mFilter.addAction(MANUAL_SYNC);
+        mFilter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
+        mFilter.addAction(Intent.ACTION_POWER_CONNECTED);
+        mFilter.addAction(Intent.ACTION_POWER_DISCONNECTED);
+        // TODO enter receiver when fail while connecting
+
+        mModeBroadcastReceiver = new BroadcastReceiver() {
+
+            @Override
+            public void onReceive(Context context, Intent intent) {
+
+                String action = intent.getAction();
+
+                switch (action){
+                    // When incoming message received
                     case MANUAL_SYNC:
                         mBluetoothManager.startManualSync();
                         break;
@@ -221,13 +313,20 @@ public class RelayConnectivityManager extends Service implements BLConstants {
                         switch(state) {
 
                             case BluetoothAdapter.STATE_OFF:
+                                // saving state into sharedPreferences
+                                SharedPreferences.Editor editor = sharedPreferences.edit();
+                                editor.putBoolean(getString(R.string.key_enable_bluetooth),false);
+                                editor.commit();
+                                // refresh fragment
+                                Intent updateActivity = new Intent(MainActivity.FRESH_FRAGMENT);
+                                sendBroadcast(updateActivity);
+                                unregisterReceiver(mModeBroadcastReceiver);
                                 // startConnectivityByPriority
                                 startConnectivityByPriority();
                                 break;
                             case BluetoothAdapter.STATE_TURNING_OFF:
                                 // stop bluetooth mode
                                 stopBluetoothMode();
-                                unregisterReceiver(mBroadcastReceiver);
                                 break;
                             case BluetoothAdapter.STATE_ON:
                                 break;
@@ -252,7 +351,7 @@ public class RelayConnectivityManager extends Service implements BLConstants {
                 }
             }
         };
-        registerReceiver(mBroadcastReceiver, mFilter);
+        registerReceiver(mModeBroadcastReceiver, mFilter);
     }
 
 
@@ -262,48 +361,77 @@ public class RelayConnectivityManager extends Service implements BLConstants {
     private  void createWifiBroadcastReceiver() {
 
         mFilter = new IntentFilter();
-        mFilter.addAction(KILL_SERVICE);
-        mFilter.addAction(CHANGE_PRIORITY_B);
         mFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
 
-        mBroadcastReceiver = new BroadcastReceiver() {
+        mModeBroadcastReceiver = new BroadcastReceiver() {
 
             @Override
             public void onReceive(Context context, Intent intent) {
 
-                // TODO add KILL service like bluetooth receiver or put it in handler
-
                 String action = intent.getAction();
 
                 switch (action) {
-
                     // When incoming message received
-                    case KILL_SERVICE:
-                        stopSelf();
-                        break;
-                    case CHANGE_PRIORITY_B:
-                        stopBluetoothMode();
-                        unregisterReceiver(mBroadcastReceiver);
-                        setConnectivityValues();
-                        startConnectivityByPriority();
-                        break;
+
                     case ConnectivityManager.CONNECTIVITY_ACTION:
                         // Check if wifi connected and available
                         if (!isWifiAvailable()){
+
+                            // saving state into sharedPreferences
+                            SharedPreferences.Editor editor = sharedPreferences.edit();
+                            editor.putBoolean(getString(R.string.key_enable_wifi),false);
+                            editor.commit();
+
                             // stop Wifi mode
                             // TODO stopWifiMode();
-                            unregisterReceiver(mBroadcastReceiver);
+
+                            // clear mode;
+                            mCurrentMode = NULL_MODE;
+                            // unregister broadcast
+                            unregisterReceiver(mModeBroadcastReceiver);
                             // start startConnectivityByPriority
                             startConnectivityByPriority();
-                            Log.e(TAG, " Wifi turn off ");
+                            Log.e(TAG, "Wifi turned off ");
+                            // refresh fragment
+                            Intent updateActivity = new Intent(MainActivity.FRESH_FRAGMENT);
+                            sendBroadcast(updateActivity);
+
+                        }else if (!isWifiConnected()){
+                            // stop Wifi mode
+                            // TODO stopWifiMode();
+
+                            // clear mode;
+                            mCurrentMode = NULL_MODE;
+                            // unregister broadcast
+                            unregisterReceiver(mModeBroadcastReceiver);
+                            // start startConnectivityByPriority
+                            startConnectivityByPriority();
+                            Log.e(TAG, " Wifi not connected ");
                         }
+
+//                        if (mCurrentMode == BLUETOOTH_MODE && isWifiConnected()){
+//
+//                            // stop Wifi mode
+//                            // TODO stopWifiMode();
+//
+//                            // clear mode;
+//                            mCurrentMode = NULL_MODE;
+//                            // unregister broadcast
+//                            unregisterReceiver(mModeBroadcastReceiver);
+//                            // start startConnectivityByPriority
+//                            startConnectivityByPriority();
+//                            Log.e(TAG, " Wifi not connected ");
+//                        }
+
                         break;
                 }
             }
         };
-        registerReceiver(mBroadcastReceiver, mFilter);
+        registerReceiver(mModeBroadcastReceiver, mFilter);
     }
 
+
+    // send mode status to inboxFragment
     /**
      * Handler of incoming messages from Bluetooth Manager
      */
@@ -323,7 +451,6 @@ public class RelayConnectivityManager extends Service implements BLConstants {
                     mBluetoothManager.cancel();
                     // make sure bluetooth enable
                     BluetoothAdapter.getDefaultAdapter().disable();
-                    unregisterReceiver(mBroadcastReceiver);
                     Log.e(TAG,"Received BLE error. stop bluetooth mode");
                     setConnectivityValues();
                     startConnectivityByPriority();

@@ -1,17 +1,22 @@
 package com.relay.relay;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
+import android.widget.TextView;
 
 import com.relay.relay.SubSystem.RelayConnectivityManager;
 
@@ -25,6 +30,8 @@ import com.relay.relay.SubSystem.RelayConnectivityManager;
  * create an instance of this fragment.
  */
 public class InboxFragment extends Fragment {
+
+
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
@@ -33,8 +40,10 @@ public class InboxFragment extends Fragment {
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
+
     private FloatingActionButton fab;
     private View view = null;
+
 
     private OnFragmentInteractionListener mListener;
 
@@ -75,7 +84,6 @@ public class InboxFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-
         view = inflater.inflate(R.layout.fragment_inbox, container, false);
 
         fab = (FloatingActionButton) view.findViewById(R.id.fab);
@@ -146,7 +154,7 @@ public class InboxFragment extends Fragment {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_manual_handshake) {
-            Snackbar.make(view, "Manual handshake", Snackbar.LENGTH_SHORT)
+            Snackbar.make(view, "Manual handshake request", Snackbar.LENGTH_SHORT)
                     .setAction("Action", null).show();
             startManualSync();
             return true;
@@ -165,4 +173,6 @@ public class InboxFragment extends Fragment {
         Intent updateActivity = new Intent(RelayConnectivityManager.MANUAL_SYNC);
         getActivity().sendBroadcast(updateActivity);
     }
+
+
 }

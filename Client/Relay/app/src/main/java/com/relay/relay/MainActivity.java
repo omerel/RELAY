@@ -46,6 +46,7 @@ public class MainActivity extends AppCompatActivity
     public static final String SYSTEM_SETTING = "relay.system_setting";
     public static final String CHANGE_PRIORITY_F = "relay.change_priority";
     public static final String MESSAGE_RECEIVED = "relay.BroadcastReceiver.MESSAGE";
+    public static final String FRESH_FRAGMENT = "relay.BroadcastReceiver.FRESH_FRAGMENT";
     private static final int PERMISSION_REQUEST_COARSE_LOCATION = 1;
 
     // tool bar and navigator
@@ -101,8 +102,8 @@ public class MainActivity extends AppCompatActivity
         //    t.startTest();
 
         startService(new Intent(MainActivity.this,RelayConnectivityManager.class));
-        Toast.makeText(getApplicationContext(),"Start RelayConnectivityManager service",
-                Toast.LENGTH_LONG).show();
+        Snackbar.make(this.mContentView, "Start RelayConnectivityManager service", Snackbar.LENGTH_SHORT)
+                .setAction("Action", null).show();
 
     }
 
@@ -112,9 +113,11 @@ public class MainActivity extends AppCompatActivity
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
-            if (mFragment.getClass().equals(InboxFragment.class))
+            if (mFragment.getClass().equals(InboxFragment.class)) {
+                killService();
+                unregisterReceiver(this.mBroadcastReceiver);
                 super.onBackPressed();
-            else{
+            } else{
                 displayFragment(0);
                 navigationView.setCheckedItem(R.id.nav_inbox);
             }
@@ -124,8 +127,6 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        killService();
-        unregisterReceiver(this.mBroadcastReceiver);
     }
 
     @Override
@@ -214,7 +215,6 @@ public class MainActivity extends AppCompatActivity
             // set the toolbar title
             getSupportActionBar().setTitle(title);
         }
-
         crossfade();
     }
 
@@ -304,6 +304,7 @@ public class MainActivity extends AppCompatActivity
 
         mFilter = new IntentFilter();
         mFilter.addAction(MESSAGE_RECEIVED);
+        mFilter.addAction(FRESH_FRAGMENT);
 
         mBroadcastReceiver = new BroadcastReceiver() {
 
@@ -319,12 +320,22 @@ public class MainActivity extends AppCompatActivity
                         createAlertDialog("New message",relayMessage,false);
                         notifyMessageArrived();
                         break;
+                    case FRESH_FRAGMENT:
+                        refreshFragment(mFragment);
+                        break;
                 }
+
             }
         };
         registerReceiver(mBroadcastReceiver, mFilter);
     }
 
+    private void refreshFragment(Fragment fragment){
+        final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+        ft.detach(fragment);
+        ft.attach(fragment);
+        ft.commit();
+    }
     /**
      *  Notify when new message arrived
      */
@@ -387,6 +398,7 @@ public class MainActivity extends AppCompatActivity
                 Snackbar.make(this.mContentView, " Changing connection priority " , Snackbar.LENGTH_SHORT)
                         .setAction("Action", null).show();
                 break;
+
         }
     }
 }
