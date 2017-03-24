@@ -5,6 +5,7 @@ import android.util.Log;
 
 import com.relay.relay.DB.GraphRelations;
 import com.relay.relay.DB.HandShakeDB;
+import com.relay.relay.DB.InboxDB;
 import com.relay.relay.DB.MessagesDB;
 import com.relay.relay.DB.NodesDB;
 import com.relay.relay.Util.DataTransferred;
@@ -29,6 +30,7 @@ public class DataManager {
     private MessagesDB mMessagesDB;
     private NodesDB mNodesDB;
     private HandShakeDB mHandShakeDB;
+    private InboxDB mInboxDB;
     private Context context;
 
     public DataManager(Context context){
@@ -39,6 +41,7 @@ public class DataManager {
         this.mMessagesDB = new MessagesDB(context);
         this.mHandShakeDB = new HandShakeDB(context);
         this.mGraphRelations.setNodesDB(mNodesDB);
+        this.mInboxDB =  new InboxDB(context,mNodesDB.getMyNodeId());
     }
 
     public GraphRelations getGraphRelations() {
@@ -56,6 +59,8 @@ public class DataManager {
     public HandShakeDB getHandShakeDB() {
         return mHandShakeDB;
     }
+
+    public InboxDB getInboxDB(){return mInboxDB;}
 
 
     /**

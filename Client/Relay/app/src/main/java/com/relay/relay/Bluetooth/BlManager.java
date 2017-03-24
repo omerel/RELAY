@@ -253,7 +253,7 @@ public class BLManager extends Thread implements BLConstants {
      * @param m message
      * @param relayMessage
      */
-    private void sendRelayMessageToConnectivityManager(int m,String relayMessage)  {
+    private void sendMessageToConnectivityManager(int m, String relayMessage)  {
 
         // Send address as a String
         Bundle bundle = new Bundle();
@@ -264,7 +264,7 @@ public class BLManager extends Thread implements BLConstants {
         try {
             mConnectivityMessenger.send(msg);
         } catch (RemoteException e) {
-            Log.e(TAG, "Problem with sendRelayMessageToConnectivityManager ");
+            Log.e(TAG, "Problem with sendMessageToConnectivityManager ");
         }
     }
 
@@ -365,9 +365,14 @@ public class BLManager extends Thread implements BLConstants {
                     Log.e(TAG, "FINISHED_HANDSHAKE");
                     // update status
                     mStatus = DISCONNECTED;
+
+                    // update service finish handshake
+                    sendMessageToConnectivityManager(FINISHED_HANDSHAKE,null);
+
                     address = msg.getData().getString("address");
                     UUID deviceUUID = UUID.fromString(msg.getData().getString("deviceUUID"));
                     addToLastConnectedDevicesList(address);
+
                     // close handShake connection
                     mHandShake.closeConnection();
                     // update metadata
@@ -400,24 +405,24 @@ public class BLManager extends Thread implements BLConstants {
                     mHandShake.getPacket(packet);
                     break;
 
-               case NEW_RELAY_MESSAGE:
-                   Log.e(TAG, "NEW_RELAY_MESSAGE");
-                    // When the message is for this device
-                    Log.d(TAG, "Received  new relay message from Handshake");
-                    String relayMessage = msg.getData().getString("relayMessage");
-                    sendRelayMessageToConnectivityManager(NEW_RELAY_MESSAGE,relayMessage);
-                    break;
+//               case NEW_RELAY_MESSAGE:
+//                   Log.e(TAG, "NEW_RELAY_MESSAGE");
+//                    // When the message is for this device
+//                    Log.d(TAG, "Received  new relay message from Handshake");
+//                    String relayMessage = msg.getData().getString("relayMessage");
+//                    sendMessageToConnectivityManager(NEW_RELAY_MESSAGE,relayMessage);
+//                    break;
 
                 case BLE_ADVERTISE_ERROR:
                     Log.e(TAG, "BLE_ADVERTISE_ERROR");
                     mStatus = DISCONNECTED;
-                    sendRelayMessageToConnectivityManager(BLE_ERROR,null);
+                    sendMessageToConnectivityManager(BLE_ERROR,null);
                     break;
 
                 case BLE_SCAN_ERROR:
                     Log.e(TAG, "BLE_SCAN_ERROR");
                     mStatus = DISCONNECTED;
-                    sendRelayMessageToConnectivityManager(BLE_ERROR,null);
+                    sendMessageToConnectivityManager(BLE_ERROR,null);
                     break;
 
                 case FOUND_MAC_ADDRESS_FROM_BLSCAN:

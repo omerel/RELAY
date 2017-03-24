@@ -41,11 +41,12 @@ public class BluetoothScan implements BLConstants{
         this.mBluetoothAdapter = bluetoothAdapter;
         this.mRelayConnectivityManager = relayConnectivityManager;
         this.isDeviceFound = false;
-        createBroadcastReceiver();
+       // createBroadcastReceiver();
     }
 
     public void startScan(){
-        mRelayConnectivityManager.registerReceiver(mBroadcastReceiver, mFilter);
+
+        createBroadcastReceiver();
 
         if (mBluetoothAdapter != null) {
             mBluetoothName = mBluetoothAdapter.getName();
@@ -68,7 +69,7 @@ public class BluetoothScan implements BLConstants{
         if (mBluetoothAdapter != null)
             mBluetoothAdapter.cancelDiscovery();
         mBluetoothAdapter.setName(mBluetoothName);
-//        mRelayConnectivityManager.unregisterReceiver(mBroadcastReceiver);
+
         Log.e(TAG, "cancel Discovery ");
     }
 
@@ -105,12 +106,12 @@ public class BluetoothScan implements BLConstants{
                                 stopScan();
                                 sendResultToBluetoothManager(FOUND_MAC_ADDRESS_FROM_BLSCAN, device.getAddress());
                             }
-
-
+                            mRelayConnectivityManager.unregisterReceiver(mBroadcastReceiver);
                         break;
                 }
             }
         };
+        mRelayConnectivityManager.registerReceiver(mBroadcastReceiver, mFilter);
     }
 
     /**

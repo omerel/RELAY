@@ -6,19 +6,14 @@ import android.graphics.BitmapFactory;
 import android.util.Log;
 import com.relay.relay.R;
 import com.relay.relay.SubSystem.DataManager;
-import com.relay.relay.Util.DataTransferred;
-import com.relay.relay.Util.TimePerformence;
-import com.relay.relay.system.HandShakeHistory;
+import com.relay.relay.Util.TimePerformance;
 import com.relay.relay.system.Node;
 import com.relay.relay.system.RelayMessage;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -60,7 +55,7 @@ public class Test {
     private Bitmap pic;
     private String[] messages = {"Hi","how are you","Great","what are you doing tonight?",
             "Im feeling fine","do you want to meet us?","Helllllooooo","OMG","Miss u!","Its working!!"};
-    TimePerformence timePerformence = new TimePerformence();
+    TimePerformance timePerformance = new TimePerformance();
 
 
     private Calendar[] dates;
@@ -405,10 +400,10 @@ public class Test {
 
         /////////start
 
-        timePerformence.start();
+        timePerformance.start();
         Log.e(TAG, "Create DB");
         //////////////
-   //     createDB_5();
+        //createDB_1();
         /////////////
         Log.e(TAG, "graphRelations.getMyNumEdges()--->"+ graphRelations.getMyNumEdges());
         Log.e(TAG, "graphRelations.getMyNumNodes()--->"+ graphRelations.getMyNumNodes());
@@ -426,7 +421,7 @@ public class Test {
                 Log.e(TAG, "Node :"+ nodesDB.getNode(arr.get(j)).getFullName());
             }
         }
-        Log.e(TAG,"BFS :"+timePerformence.stop());
+        Log.e(TAG,"BFS :"+ timePerformance.stop());
 
         // add message
         // if Im omer
@@ -485,7 +480,7 @@ public class Test {
            // messagesDB.deleteMessage(uuid);
         }
 
-       // deleteDB();
+        //deleteDB();
         /////////stop
 
 
@@ -505,9 +500,9 @@ public class Test {
 //        myID = nodesDB.getMyNodeId();
 //        Log.e(TAG, "myID = nodesDB.getMyNodeId()--->"+ nodesDB.getMyNodeId());
 //
-//        TimePerformence timePerformence = new TimePerformence();
+//        TimePerformance timePerformance = new TimePerformance();
 //
-//        timePerformence.start();
+//        timePerformance.start();
 //        Log.e(TAG, "Start BFS on myID");
 //        HashMap< Integer, ArrayList<UUID>>  b = graphRelations.bfs(graphRelations,myID);
 //
@@ -519,7 +514,7 @@ public class Test {
 //                Log.e(TAG, "Node :"+arr.get(j));
 //            }
 //        }
-//        Log.e(TAG,"BFS :"+timePerformence.stop());
+//        Log.e(TAG,"BFS :"+timePerformance.stop());
 //
 //
 //        // show messages status

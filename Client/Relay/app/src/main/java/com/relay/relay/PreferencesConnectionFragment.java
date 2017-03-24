@@ -7,15 +7,12 @@ package com.relay.relay;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v7.preference.Preference;
 import android.support.v7.preference.PreferenceFragmentCompat;
 import android.support.v7.preference.SwitchPreferenceCompat;
-import android.util.Log;
 
 public class PreferencesConnectionFragment extends PreferenceFragmentCompat
         implements SharedPreferences.OnSharedPreferenceChangeListener{

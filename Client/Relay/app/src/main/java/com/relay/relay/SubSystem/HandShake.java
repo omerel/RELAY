@@ -10,13 +10,13 @@ import android.util.Log;
 
 import com.relay.relay.Bluetooth.BLConstants;
 import com.relay.relay.Bluetooth.BluetoothConnected;
+import com.relay.relay.DB.InboxDB;
 import com.relay.relay.Util.DataTransferred;
 import com.relay.relay.Util.JsonConvertor;
-import com.relay.relay.Util.TimePerformence;
+import com.relay.relay.Util.TimePerformance;
 import com.relay.relay.system.Node;
 import com.relay.relay.system.RelayMessage;
 
-import java.sql.Time;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,8 +29,12 @@ import java.util.UUID;
 
 public class HandShake implements BLConstants {
 
-
     private final String TAG = "RELAY_DEBUG: "+ HandShake.class.getSimpleName();
+
+    // commands to updat inboxdb
+    private final int ADD_NEW_MESSAGE_TO_INBOX = 1;
+    private final int UPDATE_MESSAGE_STATUS_IN_INBOX = 2;
+
     // commands
     private final int STEP_1_METADATA = 1;
     private final int FINISH_STEP_1 = 2;
@@ -59,7 +63,7 @@ public class HandShake implements BLConstants {
     private ArrayList<RelayMessage> objectMessagesToSend;
     private int finalDegree; // the actual degree for getting data from the other device
     private Map<UUID,Node> newNodeIdList; // store all the  new nodes that sent to the device. used to update messages status
-    private TimePerformence timePerformence = new TimePerformence();
+    private TimePerformance timePerformance = new TimePerformance();
 
 
 
@@ -82,14 +86,45 @@ public class HandShake implements BLConstants {
         startHandshake();
     }
 
+    private boolean updateInboxDB(UUID msgId, int command){
+
+        InboxDB inboxDB = mDataManager.getInboxDB();
+        RelayMessage relayMessage = mDataManager.getMessagesDB().getMessage(msgId);
+        UUID destinationId = relayMessage.getDestinationId();
+        UUID senderId = relayMessage.getSenderId();
+        UUID contact = null;
+
+        /// check first if I'm the sender or the destination
+        if ( mMyNode.getId().equals(destinationId) || mMyNode.getId().equals(senderId) ){
+
+            if (!mMyNode.getId().equals(destinationId))
+                contact = destinationId;
+            else
+                contact = senderId;
+
+            switch (command){
+                case ADD_NEW_MESSAGE_TO_INBOX:
+                    // add contact to inboxDB( if already exist, inboxDB deal with it)
+                    inboxDB.addContactItem(contact);
+                    // add message to inboxDB( if already exist, inboxDB deal with it)
+                    inboxDB.addMessageItem(msgId,contact);
+                    break;
+                case UPDATE_MESSAGE_STATUS_IN_INBOX:
+                    inboxDB.updateMessageItem(msgId);
+                    break;
+            }
+        }
+        return false;
+    }
+
     /**
      * Start handshake process
      */
     private void startHandshake() {
 
-        timePerformence.start();
+        timePerformance.start();
         this.metadata = mDataTransferred.createMetaData();
-        Log.e(TAG,"TIME TO : "+"createMetaData"+" "+timePerformence.stop());
+        Log.e(TAG,"TIME TO : "+"createMetaData"+" "+ timePerformance.stop());
         this.knownRelations = metadata.getKnownRelationsList();
         if(mInitiator){
             sendPacket(STEP_1_METADATA,JsonConvertor.convertToJson(metadata));
@@ -108,13 +143,13 @@ public class HandShake implements BLConstants {
                 receivedMetadata = JsonConvertor.getMetadataFromJsonContent(jsonPacket);
                 receivedKnownMessage = receivedMetadata.getKnownMessagesList();
                 receivedKnownRelations = receivedMetadata.getKnownRelationsList();
-                timePerformence.start();
+                timePerformance.start();
                 checkRankBeforeHandShake(receivedMetadata);
-                Log.e(TAG,"TIME TO : "+"checkRankBeforeHandShake"+" "+timePerformence.stop());
+                Log.e(TAG,"TIME TO : "+"checkRankBeforeHandShake"+" "+ timePerformance.stop());
                 finalDegree = CalculateFinalRank();
-                timePerformence.start();
+                timePerformance.start();
                 updateNodeAndRelations = createUpdateNodeAndRelations(finalDegree);
-                Log.e(TAG,"TIME TO : "+"createUpdateNodeAndRelations"+" "+timePerformence.stop());
+                Log.e(TAG,"TIME TO : "+"createUpdateNodeAndRelations"+" "+ timePerformance.stop());
                 if(!mInitiator){
                     sendPacket(STEP_1_METADATA,JsonConvertor.convertToJson(metadata));
                 }
@@ -125,12 +160,12 @@ public class HandShake implements BLConstants {
             case STEP_2_UPDATE_NODES_AND_RELATIONS:
                 receivedUpdateNodeAndRelations =
                         JsonConvertor.getUpdateNodeAndRelationsFromJsonContent(jsonPacket);
-                timePerformence.start();
+                timePerformance.start();
                 updateNodeAndRelations(receivedUpdateNodeAndRelations);
-                Log.e(TAG,"TIME TO : "+"updateNodeAndRelations"+" "+timePerformence.stop());
-                timePerformence.start();
+                Log.e(TAG,"TIME TO : "+"updateNodeAndRelations"+" "+ timePerformance.stop());
+                timePerformance.start();
                 updateMessagesAndCreateMessagesListToSend();
-                Log.e(TAG,"TIME TO : "+"updateMessagesAndCreateMessagesListToSend"+" "+timePerformence.stop());
+                Log.e(TAG,"TIME TO : "+"updateMessagesAndCreateMessagesListToSend"+" "+ timePerformance.stop());
 
                 if(!mInitiator){
                     sendPacket(STEP_2_UPDATE_NODES_AND_RELATIONS,JsonConvertor.convertToJson(updateNodeAndRelations));
@@ -143,25 +178,26 @@ public class HandShake implements BLConstants {
 
                 ArrayList<RelayMessage> relayMessages =
                          JsonConvertor.getRelayMessageListFromJsonContent(jsonPacket);
-                timePerformence.start();
+                timePerformance.start();
                 for (RelayMessage relayMessage : relayMessages){
                     updateReceivedMessage(relayMessage);
                     mDataManager.getMessagesDB().addMessage(relayMessage);
+                    updateInboxDB(relayMessage.getId(),ADD_NEW_MESSAGE_TO_INBOX);
                 }
-                Log.e(TAG,"TIME TO : "+"updateReceivedMessage"+" "+timePerformence.stop());
+                Log.e(TAG,"TIME TO : "+"updateReceivedMessage"+" "+ timePerformance.stop());
 
                 if(!mInitiator){
                     sendPacket(STEP_3_TEXT_MESSAGES,JsonConvertor.convertToJson(textMessagesToSend));
                 }
                 else{
-                    timePerformence.start();
+                    timePerformance.start();
                     updateSentTextMessages();
-                    Log.e(TAG,"TIME TO : "+"updateSentTextMessages"+" "+timePerformence.stop());
-                    timePerformence.start();
+                    Log.e(TAG,"TIME TO : "+"updateSentTextMessages"+" "+ timePerformance.stop());
+                    timePerformance.start();
                     for(int i = 0; i < objectMessagesToSend.size();i++){
                         sendPacket(STEP_4_OBJECT_MESSAGE,JsonConvertor.convertToJson(objectMessagesToSend.get(i)));
                     }
-                    Log.e(TAG,"TIME TO : "+"objectMessagesToSend"+" "+timePerformence.stop());
+                    Log.e(TAG,"TIME TO : "+"objectMessagesToSend"+" "+ timePerformance.stop());
                     sendPacket(FINISH_STEP_4,new String("DUMMY"));
                 }
                 break;
@@ -170,6 +206,7 @@ public class HandShake implements BLConstants {
                 RelayMessage relayMessage = JsonConvertor.getRelayMessageFromJsonContent(jsonPacket);
                 updateReceivedMessage(relayMessage);
                 mDataManager.getMessagesDB().addMessage(relayMessage);
+                updateInboxDB(relayMessage.getId(),ADD_NEW_MESSAGE_TO_INBOX);
                 break;
 
             case FINISH_STEP_4:
@@ -231,11 +268,13 @@ public class HandShake implements BLConstants {
                         newNodeIdList.containsKey(destinationId) ||
                         newNodeIdList.containsKey(senderId)){
                     msg.setStatus(RelayMessage.STATUS_MESSAGE_SENT);
+                    updateInboxDB(msg.getId(),UPDATE_MESSAGE_STATUS_IN_INBOX);
                 }
             }
 
             if (receivedMetadata.getMyNode().getId().equals(destinationId)) {
                 msg.setStatus(RelayMessage.STATUS_MESSAGE_DELIVERED);
+                updateInboxDB(msg.getId(),UPDATE_MESSAGE_STATUS_IN_INBOX);
                 if (!mMyNode.getId().equals(msg.getSenderId()))
                     msg.deleteContent();
             }
@@ -257,10 +296,12 @@ public class HandShake implements BLConstants {
                         newNodeIdList.containsKey(destinationId) ||
                         newNodeIdList.containsKey(senderId)){
                     msg.setStatus(RelayMessage.STATUS_MESSAGE_SENT);
+                    updateInboxDB(msg.getId(),UPDATE_MESSAGE_STATUS_IN_INBOX);
                 }
             }
             if (receivedMetadata.getMyNode().getId().equals(destinationId)) {
                 msg.setStatus(RelayMessage.STATUS_MESSAGE_DELIVERED);
+                updateInboxDB(msg.getId(),UPDATE_MESSAGE_STATUS_IN_INBOX);
                 if (!mMyNode.getId().equals(msg.getSenderId()))
                     msg.deleteAttachments();
             }
@@ -313,6 +354,7 @@ public class HandShake implements BLConstants {
                             msg.deleteAttachments();
                             msg.deleteContent();
                         }
+                        updateInboxDB(msg.getId(),UPDATE_MESSAGE_STATUS_IN_INBOX);
                     }
                     // update msg status and content
                     mDataManager.getMessagesDB().addMessage(msg);
@@ -441,8 +483,8 @@ public class HandShake implements BLConstants {
                 receivedMetadata.getMyNode().getId());
         // TODO change
         // send finish handshake to Log
-        sendRelayMessageToManager(NEW_RELAY_MESSAGE,"finish handshake with:\n"+
-                mBluetoothSocket.getRemoteDevice().getAddress());
+//        sendRelayMessageToManager(NEW_RELAY_MESSAGE,"finish handshake with:\n"+
+//                mBluetoothSocket.getRemoteDevice().getAddress());
         // Send message back to the bluetooth manager - bluetooth address
         sendMessageToManager(FINISHED_HANDSHAKE, mBluetoothSocket.getRemoteDevice().getAddress());
         Log.d(TAG, "FINISHED_HANDSHAKE");

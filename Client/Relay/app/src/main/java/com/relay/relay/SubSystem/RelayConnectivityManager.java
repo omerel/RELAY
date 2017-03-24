@@ -80,13 +80,18 @@ public class RelayConnectivityManager extends Service implements BLConstants {
         return  START_NOT_STICKY;
     }
 
-    // setConnectivityValues from sharedPreferences
+    /**
+     * setConnectivityValues from sharedPreferences
+     */
     private void setConnectivityValues(){
         mSwitchWifiConnection = sharedPreferences.getBoolean(getString(R.string.key_enable_wifi),false);
         mSwitchMobileDataUses = sharedPreferences.getBoolean(getString(R.string.key_enable_data),false);
         mSwitchBluetootConnection = sharedPreferences.getBoolean(getString(R.string.key_enable_bluetooth),false);
     }
 
+    /**
+     * start Connectivity By Priority
+     */
     private void startConnectivityByPriority() {
         if (mSwitchWifiConnection && isWifiAvailable() && isWifiConnected()){
             // start Wifi mode
@@ -141,12 +146,20 @@ public class RelayConnectivityManager extends Service implements BLConstants {
         Log.d(TAG, "Service destroyed");
     }
 
+    /**
+     * makes service works when device is lock
+     */
     private void setWakeLock() {
         mPowerManager = (PowerManager) getSystemService(POWER_SERVICE);
         mWakeLock = mPowerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
                 "MyWakelockTag");
         mWakeLock.acquire();
     }
+
+    /**
+     * check if devices connected to power
+     * @return
+     */
     private boolean isConnectedToPower() {
         IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
         Intent batteryStatus = this.registerReceiver(null, ifilter);
@@ -156,6 +169,10 @@ public class RelayConnectivityManager extends Service implements BLConstants {
         return isConnected;
     }
 
+    /**
+     * updateActivityNewMessage TODO change to just notify when finish hand shake
+     * @param message
+     */
     public void updateActivityNewMessage(String message) {
 
     //  BroadCast relay message to activity
@@ -265,7 +282,9 @@ public class RelayConnectivityManager extends Service implements BLConstants {
     }
 
 
-
+    /**
+     * Kill service
+     */
     private void killService(){
         // stop mode
         if (mCurrentMode == BLUETOOTH_MODE)
@@ -279,7 +298,6 @@ public class RelayConnectivityManager extends Service implements BLConstants {
             unregisterReceiver(mBroadcastReceiver);
         if (mModeBroadcastReceiver != null)
             unregisterReceiver(mModeBroadcastReceiver);
-
         stopSelf();
     }
     /**
@@ -408,21 +426,6 @@ public class RelayConnectivityManager extends Service implements BLConstants {
                             startConnectivityByPriority();
                             Log.e(TAG, " Wifi not connected ");
                         }
-
-//                        if (mCurrentMode == BLUETOOTH_MODE && isWifiConnected()){
-//
-//                            // stop Wifi mode
-//                            // TODO stopWifiMode();
-//
-//                            // clear mode;
-//                            mCurrentMode = NULL_MODE;
-//                            // unregister broadcast
-//                            unregisterReceiver(mModeBroadcastReceiver);
-//                            // start startConnectivityByPriority
-//                            startConnectivityByPriority();
-//                            Log.e(TAG, " Wifi not connected ");
-//                        }
-
                         break;
                 }
             }

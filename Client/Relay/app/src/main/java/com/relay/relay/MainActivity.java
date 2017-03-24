@@ -34,6 +34,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
+import com.relay.relay.DB.Test;
 import com.relay.relay.SubSystem.RelayConnectivityManager;
 
 public class MainActivity extends AppCompatActivity
@@ -98,8 +99,8 @@ public class MainActivity extends AppCompatActivity
 
         checkPermissions();
 
-        //    Test t = new Test(this);
-        //    t.startTest();
+        Test t = new Test(this);
+        t.startTest();
 
         startService(new Intent(MainActivity.this,RelayConnectivityManager.class));
         Snackbar.make(this.mContentView, "Start RelayConnectivityManager service", Snackbar.LENGTH_SHORT)
@@ -110,14 +111,17 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onBackPressed() {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        // close menu
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
+            // if on home screen -> exit
             if (mFragment.getClass().equals(InboxFragment.class)) {
                 killService();
                 unregisterReceiver(this.mBroadcastReceiver);
                 super.onBackPressed();
             } else{
+                //go back to home screen - inbox
                 displayFragment(0);
                 navigationView.setCheckedItem(R.id.nav_inbox);
             }
@@ -146,13 +150,11 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        // TODO  change
-        if (id == R.id.action_search) {
-           // navigationView.setCheckedItem(R.id.nav_connection_setting);
-            return super.onOptionsItemSelected(item);
-        }
-
-
+//        // TODO  change
+//        if (id == R.id.action_search) {
+//           // navigationView.setCheckedItem(R.id.nav_connection_setting);
+//            return super.onOptionsItemSelected(item);
+//        }
         return super.onOptionsItemSelected(item);
     }
 
@@ -218,7 +220,10 @@ public class MainActivity extends AppCompatActivity
         crossfade();
     }
 
-    // Animation between two views
+
+    /**
+     * Animation between two views
+     */
     private void crossfade() {
 
         // setup progress bar
@@ -251,6 +256,9 @@ public class MainActivity extends AppCompatActivity
                 });
     }
 
+    /**
+     * checkBluetoothAndBleSupport
+     */
     private void checkBluetoothAndBleSupport() {
 
         if (BluetoothAdapter.getDefaultAdapter() == null)
@@ -291,6 +299,9 @@ public class MainActivity extends AppCompatActivity
         alertDialog.show();
     }
 
+    /**
+     * checkAdvertiseSupport
+     */
     private void checkAdvertiseSupport(){
         if (!BluetoothAdapter.getDefaultAdapter().isMultipleAdvertisementSupported())
             createAlertDialog("NOTICE", "Your device doesn't support Bluetooth Low Energy " +
@@ -300,8 +311,10 @@ public class MainActivity extends AppCompatActivity
     }
 
 
+    /**
+     * BroadcastReceiver
+     */
     private  void createBroadcastReceiver() {
-
         mFilter = new IntentFilter();
         mFilter.addAction(MESSAGE_RECEIVED);
         mFilter.addAction(FRESH_FRAGMENT);
@@ -318,7 +331,7 @@ public class MainActivity extends AppCompatActivity
                     case MESSAGE_RECEIVED:
                         String relayMessage = intent.getStringExtra("relayMessage");
                         createAlertDialog("New message",relayMessage,false);
-                        notifyMessageArrived();
+                        notifyMessageArrived(); //create ssound
                         break;
                     case FRESH_FRAGMENT:
                         refreshFragment(mFragment);
@@ -340,9 +353,6 @@ public class MainActivity extends AppCompatActivity
      *  Notify when new message arrived
      */
     public void notifyMessageArrived(){
-
-        Toast.makeText(getApplicationContext(), "Finish handshake",
-                Toast.LENGTH_SHORT).show();
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             //Define Notification Manager

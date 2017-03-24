@@ -6,13 +6,13 @@ import java.util.concurrent.TimeUnit;
  * Created by omer on 10/03/2017.
  */
 
-public class TimePerformence {
+public class TimePerformance {
 
 
     private Long start;
     private Long stop;
 
-    public TimePerformence(){}
+    public TimePerformance(){}
 
     public void start(){
         this.start = System.currentTimeMillis();
