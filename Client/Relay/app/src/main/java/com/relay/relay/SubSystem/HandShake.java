@@ -31,9 +31,6 @@ public class HandShake implements BLConstants {
 
     private final String TAG = "RELAY_DEBUG: "+ HandShake.class.getSimpleName();
 
-    // commands to updat inboxdb
-    private final int ADD_NEW_MESSAGE_TO_INBOX = 1;
-    private final int UPDATE_MESSAGE_STATUS_IN_INBOX = 2;
 
     // commands
     private final int STEP_1_METADATA = 1;
@@ -86,36 +83,8 @@ public class HandShake implements BLConstants {
         startHandshake();
     }
 
-    private boolean updateInboxDB(UUID msgId, int command){
 
-        InboxDB inboxDB = mDataManager.getInboxDB();
-        RelayMessage relayMessage = mDataManager.getMessagesDB().getMessage(msgId);
-        UUID destinationId = relayMessage.getDestinationId();
-        UUID senderId = relayMessage.getSenderId();
-        UUID contact = null;
 
-        /// check first if I'm the sender or the destination
-        if ( mMyNode.getId().equals(destinationId) || mMyNode.getId().equals(senderId) ){
-
-            if (!mMyNode.getId().equals(destinationId))
-                contact = destinationId;
-            else
-                contact = senderId;
-
-            switch (command){
-                case ADD_NEW_MESSAGE_TO_INBOX:
-                    // add contact to inboxDB( if already exist, inboxDB deal with it)
-                    inboxDB.addContactItem(contact);
-                    // add message to inboxDB( if already exist, inboxDB deal with it)
-                    inboxDB.addMessageItem(msgId,contact);
-                    break;
-                case UPDATE_MESSAGE_STATUS_IN_INBOX:
-                    inboxDB.updateMessageItem(msgId);
-                    break;
-            }
-        }
-        return false;
-    }
 
     /**
      * Start handshake process
@@ -182,7 +151,6 @@ public class HandShake implements BLConstants {
                 for (RelayMessage relayMessage : relayMessages){
                     updateReceivedMessage(relayMessage);
                     mDataManager.getMessagesDB().addMessage(relayMessage);
-                    updateInboxDB(relayMessage.getId(),ADD_NEW_MESSAGE_TO_INBOX);
                 }
                 Log.e(TAG,"TIME TO : "+"updateReceivedMessage"+" "+ timePerformance.stop());
 
@@ -206,7 +174,6 @@ public class HandShake implements BLConstants {
                 RelayMessage relayMessage = JsonConvertor.getRelayMessageFromJsonContent(jsonPacket);
                 updateReceivedMessage(relayMessage);
                 mDataManager.getMessagesDB().addMessage(relayMessage);
-                updateInboxDB(relayMessage.getId(),ADD_NEW_MESSAGE_TO_INBOX);
                 break;
 
             case FINISH_STEP_4:
@@ -268,13 +235,11 @@ public class HandShake implements BLConstants {
                         newNodeIdList.containsKey(destinationId) ||
                         newNodeIdList.containsKey(senderId)){
                     msg.setStatus(RelayMessage.STATUS_MESSAGE_SENT);
-                    updateInboxDB(msg.getId(),UPDATE_MESSAGE_STATUS_IN_INBOX);
                 }
             }
 
             if (receivedMetadata.getMyNode().getId().equals(destinationId)) {
                 msg.setStatus(RelayMessage.STATUS_MESSAGE_DELIVERED);
-                updateInboxDB(msg.getId(),UPDATE_MESSAGE_STATUS_IN_INBOX);
                 if (!mMyNode.getId().equals(msg.getSenderId()))
                     msg.deleteContent();
             }
@@ -296,12 +261,10 @@ public class HandShake implements BLConstants {
                         newNodeIdList.containsKey(destinationId) ||
                         newNodeIdList.containsKey(senderId)){
                     msg.setStatus(RelayMessage.STATUS_MESSAGE_SENT);
-                    updateInboxDB(msg.getId(),UPDATE_MESSAGE_STATUS_IN_INBOX);
                 }
             }
             if (receivedMetadata.getMyNode().getId().equals(destinationId)) {
                 msg.setStatus(RelayMessage.STATUS_MESSAGE_DELIVERED);
-                updateInboxDB(msg.getId(),UPDATE_MESSAGE_STATUS_IN_INBOX);
                 if (!mMyNode.getId().equals(msg.getSenderId()))
                     msg.deleteAttachments();
             }
@@ -335,14 +298,26 @@ public class HandShake implements BLConstants {
                         receivedKnownRelations.containsKey(senderId)||
                         newNodeIdList.containsKey(destinationId) ||
                         newNodeIdList.containsKey(senderId)) {
-                    // add message according to its type
-                    if ( relayMessage.getType() == RelayMessage.TYPE_MESSAGE_TEXT )
-                        textMessagesToSend.add(relayMessage);
-                    else
-                        objectMessagesToSend.add(relayMessage);
+
+                    // if the sender of the msg is the sync device but he doesn't have the msg,
+                    // it's means that he delete it, therefor don't pass the msg and update it as
+                    // a delivered msg
+                    if (senderId.equals(receivedMetadata.getMyNode().getId())) {
+                        RelayMessage msg = mDataManager.getMessagesDB().getMessage(uuid);
+                        msg.setStatus(RelayMessage.STATUS_MESSAGE_DELIVERED);
+                        msg.deleteAttachments();
+                        msg.deleteContent();
+                    }// continue normally
+                    else {
+                        // add message according to its type
+                        if (relayMessage.getType() == RelayMessage.TYPE_MESSAGE_TEXT)
+                            textMessagesToSend.add(relayMessage);
+                        else
+                            objectMessagesToSend.add(relayMessage);
+                    }
                 }
             }
-            else{// my device recognise this msg
+            else{// my device recognize this msg
                 // update message status if needed
                 int status = receivedKnownMessage.get(uuid).getStatus();
                 RelayMessage msg = mDataManager.getMessagesDB().getMessage(uuid);
@@ -354,7 +329,6 @@ public class HandShake implements BLConstants {
                             msg.deleteAttachments();
                             msg.deleteContent();
                         }
-                        updateInboxDB(msg.getId(),UPDATE_MESSAGE_STATUS_IN_INBOX);
                     }
                     // update msg status and content
                     mDataManager.getMessagesDB().addMessage(msg);

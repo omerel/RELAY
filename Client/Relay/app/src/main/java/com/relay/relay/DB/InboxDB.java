@@ -1,6 +1,11 @@
 package com.relay.relay.DB;
 
 import android.content.Context;
+import android.os.Bundle;
+import android.os.Message;
+import android.os.Messenger;
+import android.os.RemoteException;
+import android.util.Log;
 
 import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.Database;
@@ -8,6 +13,7 @@ import com.couchbase.lite.Document;
 import com.couchbase.lite.Manager;
 import com.couchbase.lite.SavedRevision;
 import com.couchbase.lite.android.AndroidContext;
+import com.relay.relay.system.RelayMessage;
 
 import java.io.IOException;
 import java.text.DateFormat;
@@ -29,20 +35,60 @@ public class InboxDB {
     final String CONTACT_ID = "contact_";
     final String MESSAGE_ID = "message_";
 
+    // commands to update inboxDB
+    public final int ADD_NEW_MESSAGE_TO_INBOX = 1;
+    public final int UPDATE_MESSAGE_STATUS_IN_INBOX = 2;
+    public final int DELETE_MESSAGE_FROM_INBOX = 3; // when msg deleted from messageDB
+    public static final int DELETE_MESSAGE_CONTENT_FROM_MESSAGE_DB = 4; // when msg deleted from inbox view
+
     private Database mDatabase = null;
     private Manager mManager = null;
     private UUID mMyId;
-    private MessagesDB messagesDB;
+    private Messenger mMessengerToDataManager;
 
 
-    public InboxDB(Context context,UUID myId){
+    public InboxDB(Context context, UUID myId, Messenger messenger){
         try {
             this.mMyId = myId;
+            this.mMessengerToDataManager = messenger;
             mManager = new Manager(new AndroidContext(context), Manager.DEFAULT_OPTIONS);
         } catch (IOException e) {
             e.printStackTrace();
         }
         openDB();
+    }
+
+
+
+    public boolean updateInboxDB(RelayMessage relayMessage ,int command){
+
+        UUID destinationId = relayMessage.getDestinationId();
+        UUID senderId = relayMessage.getSenderId();
+        UUID contact = null;
+
+        /// check first if I'm the sender or the destination . in other words, if to to put the msg in the inbox
+        if ( mMyId.equals(destinationId) || mMyId.equals(senderId) ){
+
+            if (!mMyId.equals(destinationId))
+                contact = destinationId;
+            else
+                contact = senderId;
+
+            switch (command){
+                case ADD_NEW_MESSAGE_TO_INBOX:
+                    boolean isMyMessage = senderId.equals(mMyId);
+                    // add message to inboxDB( if already exist return false )
+                    addMessageItem(relayMessage.getId(),contact, relayMessage.getTimeCreated(),isMyMessage);
+                    break;
+                case UPDATE_MESSAGE_STATUS_IN_INBOX:
+                    updateMessageItem(relayMessage.getId());
+                    break;
+                case DELETE_MESSAGE_FROM_INBOX:
+                    deleteMessageFromDB(relayMessage.getId());
+                    break;
+            }
+        }
+        return false;
     }
 
     /**
@@ -60,7 +106,9 @@ public class InboxDB {
     }
 
 
-    public SavedRevision addMessageItem(UUID messageUUID,UUID contactParentUUID) {
+    private UUID getMyId(){return mMyId;}
+
+    private SavedRevision addMessageItem(UUID messageUUID,UUID contactParentUUID,Calendar time,boolean isMyMessage) {
 
         if (!isMessageExist(messageUUID)){
 
@@ -68,16 +116,25 @@ public class InboxDB {
             properties.put("type", "message");
             properties.put("uuid", messageUUID.toString());
             properties.put("contact_parent", contactParentUUID.toString());
-            properties.put("is_new_message", true);
-            properties.put("update", true);
+
+            if (isMyMessage){
+                properties.put("is_new_message", false);
+                properties.put("update", false);
+                // update parent item with the changes
+                updateContactItem(contactParentUUID,false,true);
+            }
+            else{
+                properties.put("is_new_message", true);
+                properties.put("update", true);
+                // update parent item with the changes
+                updateContactItem(contactParentUUID,true,true);
+            }
+
             properties.put("disappear", false);
-            properties.put("time", convertCalendarToFormattedString(messagesDB.getMessage(messageUUID).getTimeCreated()));
+            properties.put("time", convertCalendarToFormattedString(time));
 
             String docId = UUID.randomUUID().toString();
             Document document = mDatabase.getDocument(docId);
-
-            // update parent item with the changes
-            updateContactItem(contactParentUUID,true);
 
             try {
                 return document.putProperties(properties);
@@ -89,13 +146,13 @@ public class InboxDB {
     }
 
 
-    public SavedRevision addContactItem(UUID contactUUID){
+    private SavedRevision addContactItem(UUID contactUUID){
 
         if (!isContactExist(contactUUID)){
             Map<String, Object> properties = new HashMap<String, Object>();
             properties.put("type", "contact");
             properties.put("uuid", contactUUID.toString());
-            properties.put("new_messages", true);
+            properties.put("new_messages", false);
             properties.put("updates", true);
             properties.put("time", convertCalendarToFormattedString(Calendar.getInstance()));
 
@@ -137,7 +194,7 @@ public class InboxDB {
             return true;
     }
 
-    public boolean updateContactItem(UUID contactUUID, boolean withNewMessage){
+    private boolean updateContactItem(UUID contactUUID, boolean withNewMessage,boolean jumpItem){
 
         if (isContactExist(contactUUID)){
             Document doc = mDatabase.getDocument(CONTACT_ID+contactUUID.toString());
@@ -145,7 +202,8 @@ public class InboxDB {
             if (withNewMessage)
                 properties.put("new_messages", true);
             properties.put("updates", true);
-            properties.put("time", convertCalendarToFormattedString(Calendar.getInstance()));
+            if (jumpItem)
+                properties.put("time", convertCalendarToFormattedString(Calendar.getInstance()));
 
             try {
                 doc.putProperties(properties);
@@ -157,7 +215,7 @@ public class InboxDB {
         return false;
     }
 
-    public boolean setContactSeenByUser(UUID contactUUID){
+    private boolean setContactSeenByUser(UUID contactUUID){
 
         if (isContactExist(contactUUID)){
             Document doc = mDatabase.getDocument(CONTACT_ID+contactUUID.toString());
@@ -176,7 +234,7 @@ public class InboxDB {
     }
 
 
-    public boolean updateMessageItem(UUID messageUUID){
+    private boolean updateMessageItem(UUID messageUUID){
 
         if(isMessageExist(messageUUID)){
             Document doc = mDatabase.getDocument(MESSAGE_ID+messageUUID.toString());
@@ -193,7 +251,38 @@ public class InboxDB {
         return false;
     }
 
-    public boolean setMessageSeenByUser(UUID messageUUID){
+
+    // when message was deleted from messageDB
+    private boolean deleteMessageFromDB(UUID messageUUID){
+        if (isMessageExist(messageUUID)){
+            try {
+                // delete from inbox
+                mDatabase.getDocument(MESSAGE_ID+messageUUID.toString()).delete();
+            } catch (CouchbaseLiteException e) {
+                e.printStackTrace();
+            }
+            return true;
+        }
+        return false;
+    }
+
+    // when message deleted from user on click view
+    private boolean deleteMessageFromInbox(UUID messageUUID){
+        if (isMessageExist(messageUUID)){
+            try {
+                // delete from inbox
+                mDatabase.getDocument(MESSAGE_ID+messageUUID.toString()).delete();
+                //delete message content from messageDB
+                sendCommandToDataManager(DELETE_MESSAGE_CONTENT_FROM_MESSAGE_DB,messageUUID.toString());
+            } catch (CouchbaseLiteException e) {
+                e.printStackTrace();
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private boolean setMessageSeenByUser(UUID messageUUID){
 
         if(isMessageExist(messageUUID)){
             Document doc = mDatabase.getDocument(MESSAGE_ID+messageUUID.toString());
@@ -233,6 +322,20 @@ public class InboxDB {
             return false;
         }
         return true;
+    }
+
+
+    public void sendCommandToDataManager(int command, String uuid){
+        // Send data
+        Bundle bundle = new Bundle();
+        bundle.putString("uuid", uuid);
+        Message msg = Message.obtain(null, command);
+        msg.setData(bundle);
+        try {
+            mMessengerToDataManager.send(msg);
+        } catch (RemoteException e) {
+            Log.e(TAG, "Error -  sendResultToManager ");
+        }
     }
 
 }

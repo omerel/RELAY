@@ -1,20 +1,22 @@
 package com.relay.relay.SubSystem;
 
 import android.content.Context;
-import android.util.Log;
+import android.os.Handler;
+import android.os.Message;
+import android.os.Messenger;
 
 import com.relay.relay.DB.GraphRelations;
 import com.relay.relay.DB.HandShakeDB;
 import com.relay.relay.DB.InboxDB;
 import com.relay.relay.DB.MessagesDB;
 import com.relay.relay.DB.NodesDB;
-import com.relay.relay.Util.DataTransferred;
 import com.relay.relay.system.HandShakeHistory;
-import com.relay.relay.system.Node;
 import com.relay.relay.system.RelayMessage;
 
 import java.util.ArrayList;
 import java.util.UUID;
+
+import static com.relay.relay.DB.InboxDB.DELETE_MESSAGE_CONTENT_FROM_MESSAGE_DB;
 
 /**
  * Created by omer on 05/03/2017.
@@ -32,16 +34,19 @@ public class DataManager {
     private HandShakeDB mHandShakeDB;
     private InboxDB mInboxDB;
     private Context context;
+    // Handler for incoming messages from inboxDB
+    private final Messenger mMessengerFromDB = new Messenger(new IncomingHandler());
 
     public DataManager(Context context){
 
         this.context = context;
+        this.mInboxDB =  new InboxDB(context,mNodesDB.getMyNodeId(), mMessengerFromDB);
         this.mGraphRelations = new GraphRelations(context);
-        this.mNodesDB = new NodesDB(context,mGraphRelations);
-        this.mMessagesDB = new MessagesDB(context);
+        this.mNodesDB = new NodesDB(context,mGraphRelations,mInboxDB);
+        this.mMessagesDB = new MessagesDB(context,mInboxDB);
         this.mHandShakeDB = new HandShakeDB(context);
         this.mGraphRelations.setNodesDB(mNodesDB);
-        this.mInboxDB =  new InboxDB(context,mNodesDB.getMyNodeId());
+
     }
 
     public GraphRelations getGraphRelations() {
@@ -137,6 +142,30 @@ public class DataManager {
             if (!mNodesDB.isNodeExist(msg.getDestinationId()) &&
                     !mNodesDB.isNodeExist(msg.getSenderId()) ){
                 mMessagesDB.deleteMessage(uuid);
+            }
+        }
+    }
+
+    /**
+     * Handler of incoming messages from inboxDB
+     */
+    class IncomingHandler extends Handler {
+
+        UUID messageUUID;
+
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+
+                case DELETE_MESSAGE_CONTENT_FROM_MESSAGE_DB:
+                    messageUUID = UUID.fromString( msg.getData().getString("uuid") );
+                    RelayMessage message = getMessagesDB().getMessage(messageUUID);
+                    message.deleteAttachments();
+                    message.deleteContent();
+                    break;
+
+                default:
+                    super.handleMessage(msg);
             }
         }
     }

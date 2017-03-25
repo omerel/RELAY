@@ -15,18 +15,22 @@ import java.util.UUID;
 public class MessagesDB {
     final String TAG = "RELAY_DEBUG: "+ MessagesDB.class.getSimpleName();
     final UUID NUM_OF_MESSAGES = UUID.fromString("3add4bd4-836f-4ee9-a728-a815c534b515");
+
     private DBManager dbManager;
     final String DB = "messages_db";
+    private InboxDB mInboxDB;
 
     /**
      * Constructor. gets Context. and open the database.
      * @param context
      */
-    public MessagesDB(Context context){
+    public MessagesDB(Context context,InboxDB inboxDB){
         dbManager = new DBManager(DB,context);
         dbManager.openDB();
         dbManager.putJsonObject(NUM_OF_MESSAGES, JsonConvertor.convertToJson(0));
+        this.mInboxDB = inboxDB;
     }
+
 
     /**
      * Add message to data base
@@ -34,13 +38,15 @@ public class MessagesDB {
      * @return true if success
      */
     public boolean addMessage(RelayMessage message){
-        if (!dbManager.isKeyExist(message.getId())) {
+        if (!isMessageExist(message.getId())) {
             dbManager.putJsonObject(message.getId(), JsonConvertor.convertToJson(message));
             addNumMessages();
+            mInboxDB.updateInboxDB(message, mInboxDB.ADD_NEW_MESSAGE_TO_INBOX);
             return true;
         }
         else{
             dbManager.putJsonObject(message.getId(), JsonConvertor.convertToJson(message));
+            mInboxDB.updateInboxDB(message, mInboxDB.UPDATE_MESSAGE_STATUS_IN_INBOX);
             return true;
         }
     }
@@ -71,6 +77,7 @@ public class MessagesDB {
         if (dbManager.isKeyExist(uuid)){
             dbManager.deleteJsonObject(uuid);
             reduceNumNodes();
+            mInboxDB.updateInboxDB(getMessage(uuid), mInboxDB.DELETE_MESSAGE_FROM_INBOX);
             return true;
         }
         else

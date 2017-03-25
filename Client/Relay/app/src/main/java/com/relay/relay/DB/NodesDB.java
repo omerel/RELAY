@@ -21,18 +21,22 @@ public class NodesDB {
     private DBManager dbManager;
     private GraphRelations graphRelations;
     final String DB = "nodes_db";
+    private InboxDB mInboxDB;
+
+    // TODO add NODE for server
 
     /**
      * Constructor
      * @param context
      * @param graphRelations
      */
-    public NodesDB(Context context,GraphRelations graphRelations){
+    public NodesDB(Context context,GraphRelations graphRelations,InboxDB inboxDB){
         dbManager = new DBManager(DB,context);
         dbManager.openDB();
         if (!dbManager.isKeyExist(NUM_OF_NODES))
             dbManager.putJsonObject(NUM_OF_NODES, JsonConvertor.convertToJson(0));
         this.graphRelations = graphRelations;
+        this.mInboxDB = inboxDB;
     }
 
     /**
