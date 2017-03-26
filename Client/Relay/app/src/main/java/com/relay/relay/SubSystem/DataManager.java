@@ -14,6 +14,7 @@ import com.relay.relay.system.HandShakeHistory;
 import com.relay.relay.system.RelayMessage;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.UUID;
 
 import static com.relay.relay.DB.InboxDB.DELETE_MESSAGE_CONTENT_FROM_MESSAGE_DB;
@@ -69,13 +70,12 @@ public class DataManager {
 
 
     /**
-     * transfer all the events that happened before weeks to history log. if there is an empty node
-     * without events delete it.
+     * transfer all the events that happened before X weeks to history log.
+     * history log exist for delivering the log data to the server
      * @param weeks
      * @return
      */
     public boolean cleanHandShakeHistory(int weeks){
-    // TODO add delete all the messages that not relevant
         ArrayList<UUID> nodesId = mHandShakeDB.getNodesIdList();
         HandShakeHistory temp;
         for (UUID nodeId : nodesId){
@@ -87,7 +87,8 @@ public class DataManager {
     }
 
     /**
-     * Clear handshake history log
+     * Clear handshake history log.
+     * do it after handshake with the sever
      * @return
      */
     public boolean clearHandShakeHistoryLog(){
@@ -96,13 +97,81 @@ public class DataManager {
         for (UUID nodeId : nodesId){
             temp = mHandShakeDB.getHandShakeHistoryWith(nodeId);
             temp.clearHandShakeEventLog();
-            // if
+            // if handshakeCounter is empty delete node from handshakdb;
             if(temp.getmHandShakeCounter() == 0)
                 mHandShakeDB.deleteNodeId(nodeId);
             else
                 mHandShakeDB.updateHandShakeHistoryWith(nodeId,temp);
         }
         return true;
+    }
+
+    /**
+     * go over all nodes in graph and delete all the relations with my node that the handshake
+     * counter is 0 or not exist.
+     * @return
+     */
+    public boolean clearOldRelation(){
+
+        HashMap< Integer, ArrayList<UUID>> graphBFS =
+                mGraphRelations.bfs(mGraphRelations,mNodesDB.getMyNodeId());
+        ArrayList<UUID> uuidFirstDegree = graphBFS.get(1);
+
+        for(UUID uuid : uuidFirstDegree){
+            HandShakeHistory handShakeHistory = mHandShakeDB.getHandShakeHistoryWith(uuid);
+            // if handshake not exist delete relation with myNode
+            if ( handShakeHistory == null ){
+                mGraphRelations.deleteRelation(mNodesDB.getMyNodeId(),uuid);
+            }else
+            // if handshake counter equal to 0 delete relation and delete the node from
+            if (handShakeHistory.getmHandShakeCounter() == 0 ){
+                mGraphRelations.deleteRelation(mNodesDB.getMyNodeId(),uuid);
+            }
+        }
+        return true;
+    }
+
+
+    /**
+     * remove all the nodes in graph relation that not connected to the node when doing bfs max
+     */
+    public void removeAllSeparateNodesFromGraphRelation(){
+
+        HashMap< Integer, ArrayList<UUID>> graphBFS =
+                mGraphRelations.bfs(mGraphRelations,mNodesDB.getMyNodeId());
+
+        // build arraylist of graph bfs
+        ArrayList<UUID> uuidbfs = new ArrayList<>();
+        for (int i = 1; i<graphBFS.size(); i++)
+            uuidbfs.addAll(graphBFS.get(i));
+
+        // build arrayList of all node in graph relations
+        ArrayList<UUID> uuidInGraphRelations = mGraphRelations.getNodesIdList();
+
+
+        for(UUID uuid : uuidInGraphRelations){
+
+            // if the arrayBfs not contain this node. delete it.
+            if( !uuidbfs.contains(uuid) )
+                mGraphRelations.deleteNode(uuid);
+        }
+    }
+
+
+    /**
+     * go over all messages.
+     * if the sender id or destination id are not in this node graph relation
+     */
+    public void deleteAllMessagesNotInGraphRelation(){
+
+        ArrayList<UUID> uuidArrayList = mMessagesDB.getMessagesIdList();
+        for (UUID uuid : uuidArrayList){
+            RelayMessage msg = mMessagesDB.getMessage(uuid);
+            if (!mGraphRelations.hasNode(msg.getDestinationId()) &&
+                    !mGraphRelations.hasNode(msg.getSenderId()) ){
+                mMessagesDB.deleteMessage(uuid);
+            }
+        }
     }
 
     /**
@@ -131,20 +200,6 @@ public class DataManager {
         return handShakeHistory.getmHandShakeRank();
     }
 
-    /**
-     * go over all messages. if the sender id or destination id not in node graph. delete msg
-     */
-    public void deleteAllMessagesOfUnkownNodes(){
-
-        ArrayList<UUID> uuidArrayList = mMessagesDB.getMessagesIdList();
-        for (UUID uuid : uuidArrayList){
-            RelayMessage msg = mMessagesDB.getMessage(uuid);
-            if (!mNodesDB.isNodeExist(msg.getDestinationId()) &&
-                    !mNodesDB.isNodeExist(msg.getSenderId()) ){
-                mMessagesDB.deleteMessage(uuid);
-            }
-        }
-    }
 
     /**
      * Handler of incoming messages from inboxDB

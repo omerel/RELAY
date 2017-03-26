@@ -46,7 +46,7 @@ public class MessagesDB {
         }
         else{
             dbManager.putJsonObject(message.getId(), JsonConvertor.convertToJson(message));
-            mInboxDB.updateInboxDB(message, mInboxDB.UPDATE_MESSAGE_STATUS_IN_INBOX);
+            mInboxDB.updateMessageItem(message.getId());
             return true;
         }
     }
@@ -77,7 +77,7 @@ public class MessagesDB {
         if (dbManager.isKeyExist(uuid)){
             dbManager.deleteJsonObject(uuid);
             reduceNumNodes();
-            mInboxDB.updateInboxDB(getMessage(uuid), mInboxDB.DELETE_MESSAGE_FROM_INBOX);
+            mInboxDB.deleteMessageFromDB(uuid);
             return true;
         }
         else

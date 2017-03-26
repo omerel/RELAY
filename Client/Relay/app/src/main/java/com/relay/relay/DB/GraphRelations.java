@@ -118,6 +118,20 @@ public class GraphRelations {
         return JsonConvertor.JsonToUUIDArrayList(dbManager.getJsonObject(uuid));
     }
 
+
+    /**
+     * Get nodes list
+     * @return arraylist
+     */
+    public ArrayList<UUID> getNodesIdList(){
+
+        ArrayList<UUID> temp = dbManager.getKyes();
+        temp.remove(NUM_OF_NODES);
+        temp.remove(NUM_OF_NODES);
+        return temp;
+
+    }
+
     /**
      * Add  1 to Nodes Counter
      */

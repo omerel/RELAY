@@ -80,12 +80,6 @@ public class InboxDB {
                     // add message to inboxDB( if already exist return false )
                     addMessageItem(relayMessage.getId(),contact, relayMessage.getTimeCreated(),isMyMessage);
                     break;
-                case UPDATE_MESSAGE_STATUS_IN_INBOX:
-                    updateMessageItem(relayMessage.getId());
-                    break;
-                case DELETE_MESSAGE_FROM_INBOX:
-                    deleteMessageFromDB(relayMessage.getId());
-                    break;
             }
         }
         return false;
@@ -129,7 +123,6 @@ public class InboxDB {
                 // update parent item with the changes
                 updateContactItem(contactParentUUID,true,true);
             }
-
             properties.put("disappear", false);
             properties.put("time", convertCalendarToFormattedString(time));
 
@@ -146,7 +139,7 @@ public class InboxDB {
     }
 
 
-    private SavedRevision addContactItem(UUID contactUUID){
+    public SavedRevision addContactItem(UUID contactUUID){
 
         if (!isContactExist(contactUUID)){
             Map<String, Object> properties = new HashMap<String, Object>();
@@ -154,6 +147,7 @@ public class InboxDB {
             properties.put("uuid", contactUUID.toString());
             properties.put("new_messages", false);
             properties.put("updates", true);
+            properties.put("disappear", true);
             properties.put("time", convertCalendarToFormattedString(Calendar.getInstance()));
 
             String docId = CONTACT_ID+UUID.randomUUID();
@@ -194,17 +188,34 @@ public class InboxDB {
             return true;
     }
 
-    private boolean updateContactItem(UUID contactUUID, boolean withNewMessage,boolean jumpItem){
+    private boolean setContactDisappear(UUID contactUUID, boolean disappear){
+        if (isContactExist(contactUUID)) {
+            Document doc = mDatabase.getDocument(CONTACT_ID + contactUUID.toString());
+            Map<String, Object> properties = doc.getProperties();
+            properties.put("disappear", disappear);
+            try {
+                doc.putProperties(properties);
+            } catch (CouchbaseLiteException e) {
+                e.printStackTrace();
+            }
+            return true;
+        }
+        return false;
+    }
+
+    public boolean updateContactItem(UUID contactUUID, boolean withNewMessage,boolean jumpItem){
 
         if (isContactExist(contactUUID)){
             Document doc = mDatabase.getDocument(CONTACT_ID+contactUUID.toString());
             Map<String, Object> properties = doc.getProperties();
             if (withNewMessage)
-                properties.put("new_messages", true);
+                setContactDisappear(contactUUID,false);
+            properties.put("new_messages", withNewMessage);
             properties.put("updates", true);
-            if (jumpItem)
+            if (jumpItem) {
                 properties.put("time", convertCalendarToFormattedString(Calendar.getInstance()));
-
+                setContactDisappear(contactUUID,false);
+            }
             try {
                 doc.putProperties(properties);
             } catch (CouchbaseLiteException e) {
@@ -234,7 +245,7 @@ public class InboxDB {
     }
 
 
-    private boolean updateMessageItem(UUID messageUUID){
+    public boolean updateMessageItem(UUID messageUUID){
 
         if(isMessageExist(messageUUID)){
             Document doc = mDatabase.getDocument(MESSAGE_ID+messageUUID.toString());
@@ -253,11 +264,26 @@ public class InboxDB {
 
 
     // when message was deleted from messageDB
-    private boolean deleteMessageFromDB(UUID messageUUID){
+    public boolean deleteMessageFromDB(UUID messageUUID){
         if (isMessageExist(messageUUID)){
             try {
                 // delete from inbox
                 mDatabase.getDocument(MESSAGE_ID+messageUUID.toString()).delete();
+            } catch (CouchbaseLiteException e) {
+                e.printStackTrace();
+            }
+            return true;
+        }
+        return false;
+    }
+
+
+    // when node was deleted from nodeDB
+    public boolean deleteContactFromDB(UUID contactUUID){
+        if (isContactExist(contactUUID)){
+            try {
+                // delete from inbox
+                mDatabase.getDocument(CONTACT_ID+contactUUID.toString()).delete();
             } catch (CouchbaseLiteException e) {
                 e.printStackTrace();
             }
@@ -301,6 +327,13 @@ public class InboxDB {
     }
 
 
+    public boolean deleteConversation(UUID contactUUID){
+        if (isContactExist(contactUUID)){
+            // TODO complete with query
+            return true;
+        }
+        return false;
+    }
 
     private String convertCalendarToFormattedString(Calendar cal){
 

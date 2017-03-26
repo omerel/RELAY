@@ -49,10 +49,12 @@ public class NodesDB {
             dbManager.putJsonObject(node.getId(),JsonConvertor.convertToJson(node));
             graphRelations.addNode(node.getId());
             addNumNodes();
+            mInboxDB.addContactItem(node.getId());
             return true;
         }
         else{
             dbManager.putJsonObject(node.getId(), JsonConvertor.convertToJson(node));
+            mInboxDB.updateContactItem(node.getId(),false,false);
             return true;
         }
     }
@@ -84,6 +86,7 @@ public class NodesDB {
             dbManager.deleteJsonObject(uuid);
             graphRelations.deleteNode(uuid);
             reduceNumNodes();
+            mInboxDB.deleteContactFromDB(uuid);
             return true;
         }
         else
