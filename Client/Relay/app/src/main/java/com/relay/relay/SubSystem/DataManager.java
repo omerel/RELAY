@@ -41,12 +41,13 @@ public class DataManager {
     public DataManager(Context context){
 
         this.context = context;
-        this.mInboxDB =  new InboxDB(context,mNodesDB.getMyNodeId(), mMessengerFromDB);
+        this.mInboxDB =  new InboxDB(context,mMessengerFromDB);
         this.mGraphRelations = new GraphRelations(context);
         this.mNodesDB = new NodesDB(context,mGraphRelations,mInboxDB);
         this.mMessagesDB = new MessagesDB(context,mInboxDB);
         this.mHandShakeDB = new HandShakeDB(context);
         this.mGraphRelations.setNodesDB(mNodesDB);
+        this.mInboxDB.getMyNodeIdFromNodesDB(mNodesDB);
 
     }
 

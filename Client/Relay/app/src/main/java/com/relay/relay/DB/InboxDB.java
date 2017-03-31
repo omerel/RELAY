@@ -43,13 +43,12 @@ public class InboxDB {
 
     private Database mDatabase = null;
     private Manager mManager = null;
-    private UUID mMyId;
+    private UUID mMyId = UUID.randomUUID(); // only for initilaize
     private Messenger mMessengerToDataManager;
 
 
-    public InboxDB(Context context, UUID myId, Messenger messenger){
+    public InboxDB(Context context,Messenger messenger){
         try {
-            this.mMyId = myId;
             this.mMessengerToDataManager = messenger;
             mManager = new Manager(new AndroidContext(context), Manager.DEFAULT_OPTIONS);
         } catch (IOException e) {
@@ -58,7 +57,9 @@ public class InboxDB {
         openDB();
     }
 
-
+    public void getMyNodeIdFromNodesDB(NodesDB nodesDB){
+        mMyId = nodesDB.getMyNodeId();
+    }
 
     public boolean updateInboxDB(RelayMessage relayMessage ,int command){
 

@@ -9,7 +9,7 @@ import java.io.ByteArrayOutputStream;
  * Created by omer on 05/03/2017.
  */
 
-public class BitmapConvertor {
+public class BitmapConverter {
 
     final static int QUALITY = 70;
 

@@ -7,6 +7,7 @@ import android.util.Log;
 import com.relay.relay.R;
 import com.relay.relay.SubSystem.DataManager;
 import com.relay.relay.Util.TimePerformance;
+import com.relay.relay.Util.UuidGenerator;
 import com.relay.relay.system.Node;
 import com.relay.relay.system.RelayMessage;
 
@@ -244,6 +245,7 @@ public class Test {
 
         Log.e(TAG, "Creating full graphRelations");
 //        graphRelations.addEdge(uuids[0],uuids[i]);
+
     }
 
     /**
@@ -453,7 +455,6 @@ public class Test {
 //            messagesDB.addMessage( new RelayMessage(uuids[6],uuids[7],
 //                    RelayMessage.TYPE_MESSAGE_TEXT,"this will not be sent"));
         }
-
         ///
         Log.e(TAG, "Show all messages");
         ArrayList<UUID> arrayList = messagesDB.getMessagesIdList();
@@ -480,137 +481,14 @@ public class Test {
            // messagesDB.deleteMessage(uuid);
         }
 
-        //deleteDB();
-        /////////stop
+        UuidGenerator generator = new UuidGenerator();
 
-
-
-//
-//
-//        createDB();
-//        nodesDB.setMyNodeId(uuids[0]);
-//
-//        Log.e(TAG, "graphRelations.getMyNumEdges()--->"+ graphRelations.getMyNumEdges());
-//        Log.e(TAG, "graphRelations.getMyNumNodes()--->"+ graphRelations.getMyNumNodes());
-//
-//
-//        ArrayList<UUID> t;
-//        // When creating DB at start
-//
-//        myID = nodesDB.getMyNodeId();
-//        Log.e(TAG, "myID = nodesDB.getMyNodeId()--->"+ nodesDB.getMyNodeId());
-//
-//        TimePerformance timePerformance = new TimePerformance();
-//
-//        timePerformance.start();
-//        Log.e(TAG, "Start BFS on myID");
-//        HashMap< Integer, ArrayList<UUID>>  b = graphRelations.bfs(graphRelations,myID);
-//
-//        Log.e(TAG, "Degrees :"+b.size());
-//        for (int i = 0; i< b.size();i++){
-//            Log.e(TAG, "Degree :"+i);
-//            ArrayList<UUID> arr = b.get(i);
-//            for (int j = 0; j < arr.size(); j++ ){
-//                Log.e(TAG, "Node :"+arr.get(j));
-//            }
-//        }
-//        Log.e(TAG,"BFS :"+timePerformance.stop());
-//
-//
-//        // show messages status
-//        ArrayList<UUID> arrayList = dataManager.getMessagesDB().getMessagesIdList();
-//        for (UUID msgID : arrayList){
-//            RelayMessage msg =messagesDB.getMessage(msgID);
-//            Log.e(TAG,"FROM: "+msg.getSenderId()+ " TO: "+msg.getDestinationId()+" STATUS: "+msg.getStatus());
-//        }
-        ///////////////////////////////////////////////////////////
-
-//        Log.e(TAG, "Creating dataTransferredManager");
-//        DataTransferred dataTransferredManager = new DataTransferred(
-//                                                        graphRelations,nodesDB,messagesDB);
-//        Log.e(TAG, "Creating createMetaData()");
-//        DataTransferred.Metadata metadata = dataTransferredManager.createMetaData();
-//
-//        Log.e(TAG, "My node id is: "+metadata.getMyNode().getId().toString());
-//        Log.e(TAG, "My name is is: "+metadata.getMyNode().getFullName());
-//
-//
-//        Log.e(TAG, "checking metadata - KnownRelations ");
-//        Map<UUID,DataTransferred.KnownRelations> map1 = metadata.getKnownRelationsList();
-//        Set<UUID> set1 = map1.keySet();
-//        for (UUID uuid : set1){
-//            Log.e(TAG, "id: "+uuid+", degree: "+map1.get(uuid).getNodeDegree()+
-//                    " , tmsp: "+map1.get(uuid).getTimeStampNodeDetails().getTime());
-//        }
-//
-//        Log.e(TAG, "checking metadata - KnownMessage ");
-//
-//        Map<UUID,DataTransferred.KnownMessage> map2 = metadata.getKnownMessagesList();
-//        Set<UUID> set2 = map2.keySet();
-//        for (UUID uuid : set2){
-//            Log.e(TAG, "id: "+uuid+", status: "+map2.get(uuid).getStatus());
-//        }
-
-//        Log.e(TAG, "checking Handshake History DB - adding  random handshakes ");
-//        ArrayList<UUID> nodeList = nodesDB.getNodesIdList();
-//        for(int i = 0; i < 50; i++){
-//            UUID tempid = nodeList.get(randomIndex(1,nodeList.size()-1));
-//            handShakeDB.addEventToHandShakeHistoryWith(tempid);
-//            Log.e(TAG, "hand shake with "+tempid);
-//        }
-
-//
-//        Log.e(TAG, "checking Handshake History - picking one for example ");
-//         HandShakeHistory handShakeHistory =
-//                 handShakeDB.getHandShakeHistoryWith(UUID.fromString("ace7bea9-02a6-4add-b5a3-fe5fa0ca2dc2"));
-//
-//        Log.e(TAG, "handShakeHistory.getmHandShakeCounter()-->"+handShakeHistory.getmHandShakeCounter());
-//        Log.e(TAG, "handShakeHistory.getmHandShakeRank()-->"+handShakeHistory.getmHandShakeRank());
-//        Log.e(TAG, "adding events to arise the rank");
-//        handShakeHistory.addEvent();
-//        handShakeHistory.addEvent();
-//        handShakeHistory.addEvent();
-//        handShakeHistory.addEvent();
-//        handShakeHistory.addEvent();
-//        handShakeHistory.addEvent();
-//        handShakeHistory.addEvent();
-//        handShakeHistory.addEvent();
-//        Log.e(TAG, "handShakeHistory.getmHandShakeCounter()-->"+handShakeHistory.getmHandShakeCounter());
-//        Log.e(TAG, "handShakeHistory.getmHandShakeRank()-->"+handShakeHistory.getmHandShakeRank());
-
-//        Log.e(TAG, "get handshake events:");
-//        ArrayList<HandShakeHistory.HandShakeEvent> handShakeEvents = handShakeHistory.getmHandShakeEvents();
-//        for (HandShakeHistory.HandShakeEvent h : handShakeEvents){
-//            Log.e(TAG, "geo: "+h.getGeoLocation()+" ,  time:"+h.getTimeStamp().getTime());
-//        }
-//
-//        Log.e(TAG, "cleaning hand shake events before this moment");
-//        handShakeHistory.cleanHandShakeEvents(0);
-//
-//        Log.e(TAG, "handshake events size: "+handShakeEvents.size());
-//
-//        Log.e(TAG, "get handshake events: need to be empty");
-//        handShakeEvents = handShakeHistory.getmHandShakeEvents();
-//        for (HandShakeHistory.HandShakeEvent h : handShakeEvents){
-//            Log.e(TAG, "geo: "+h.getGeoLocation()+" ,  time:"+h.getTimeStamp().getTime());
-//        }
-//
-//        Log.e(TAG, "HandShakeEventLog size: "+handShakeHistory.getmHandShakeEventLog().size());
-//        Log.e(TAG, "clean HandShakeEventLog: "+handShakeHistory.clearHandShakeEventLog());
-//        Log.e(TAG, "HandShakeEventLog size: "+handShakeHistory.getmHandShakeEventLog().size());
-//
-//
-//        Log.e(TAG, "Update handShak history DB with  random node - "+
-//        handShakeDB.updateHandShakeHistoryWith(UUID.fromString(
-//                "bed3b22f-b65f-48a7-97d5-67b6a9e4a9f3"),handShakeHistory));
-//
-//        Log.e(TAG, "cleanHandShakeHistory: "+ dataManager.cleanHandShakeHistory(0));
-//        Log.e(TAG, "clearHandShakeHistoryLog: "+ dataManager.clearHandShakeHistoryLog());
-//
-//        handShakeDB.deleteHandShakeDB();
-
-//        deleteDB();
+        try {
+            UUID uuid = generator.GenerateUUIDFromEmail("rachael83vasd@gmail.com");
+            generator.GenerateEmailFromUUID(uuid);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
     }
-
 }

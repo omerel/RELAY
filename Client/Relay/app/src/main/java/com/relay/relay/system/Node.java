@@ -2,10 +2,9 @@ package com.relay.relay.system;
 
 import android.graphics.Bitmap;
 
-import com.relay.relay.Util.BitmapConvertor;
+import com.relay.relay.Util.BitmapConverter;
 
 import java.util.Calendar;
-import java.util.Date;
 import java.util.UUID;
 
 /**
@@ -50,7 +49,7 @@ public class Node {
         this.mPhoneNumber = mPhoneNumber;
         this.mUserName = mUserName;
         this.mFullName = mFullName;
-        this.mProfilePicture = BitmapConvertor.ConvertBitmapToBytes(mProfilePicture);
+        this.mProfilePicture = BitmapConverter.ConvertBitmapToBytes(mProfilePicture);
         this.mResidenceCode = mResidenceCode;
     }
 
@@ -167,7 +166,7 @@ public class Node {
      * @return
      */
     public Bitmap getProfilePicture() {
-        return BitmapConvertor.convertBytesToBitmap(mProfilePicture);
+        return BitmapConverter.convertBytesToBitmap(mProfilePicture);
     }
 
     /**
@@ -175,7 +174,7 @@ public class Node {
      * @param mProfilePicture
      */
     public void setProfilePicture(Bitmap mProfilePicture) {
-        this.mProfilePicture = BitmapConvertor.ConvertBitmapToBytes(mProfilePicture);
+        this.mProfilePicture = BitmapConverter.ConvertBitmapToBytes(mProfilePicture);
         setTimeStampNodeDetails(Calendar.getInstance());
     }
 

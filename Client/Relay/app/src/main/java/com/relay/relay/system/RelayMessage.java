@@ -2,10 +2,9 @@ package com.relay.relay.system;
 
 import android.graphics.Bitmap;
 
-import com.relay.relay.Util.BitmapConvertor;
+import com.relay.relay.Util.BitmapConverter;
 
 import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -155,7 +154,7 @@ public class RelayMessage {
 
         if ( type == TYPE_ATTACHMENT_BITMAP){
             Attachment tempAttachment =
-                    new Attachment(BitmapConvertor.ConvertBitmapToBytes((Bitmap)content),type);
+                    new Attachment(BitmapConverter.ConvertBitmapToBytes((Bitmap)content),type);
             mAttachments.put(tempAttachment.getId(),tempAttachment);
             return true;
         }
@@ -193,7 +192,7 @@ public class RelayMessage {
         public Bitmap getContent() {
 
             if ( mType == TYPE_ATTACHMENT_BITMAP)
-                return (Bitmap) BitmapConvertor.convertBytesToBitmap((byte[])mContent);
+                return (Bitmap) BitmapConverter.convertBytesToBitmap((byte[])mContent);
 
             return null;
         }
