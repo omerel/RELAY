@@ -57,6 +57,9 @@ public class InboxDB {
         openDB();
     }
 
+
+    public Database getDatabase(){return mDatabase;}
+
     public void getMyNodeIdFromNodesDB(NodesDB nodesDB){
         mMyId = nodesDB.getMyNodeId();
     }
@@ -100,8 +103,6 @@ public class InboxDB {
         return true;
     }
 
-
-    private UUID getMyId(){return mMyId;}
 
     private SavedRevision addMessageItem(UUID messageUUID,UUID contactParentUUID,Calendar time,boolean isMyMessage) {
 
@@ -148,7 +149,7 @@ public class InboxDB {
             properties.put("uuid", contactUUID.toString());
             properties.put("new_messages", false);
             properties.put("updates", true);
-            properties.put("disappear", true);
+            properties.put("disappear", false);
             properties.put("time", convertCalendarToFormattedString(Calendar.getInstance()));
 
             String docId = CONTACT_ID+UUID.randomUUID();
@@ -222,6 +223,7 @@ public class InboxDB {
             } catch (CouchbaseLiteException e) {
                 e.printStackTrace();
             }
+            Log.e(TAG,"new contact added to inboxDB");
             return true;
         }
         return false;
@@ -339,7 +341,7 @@ public class InboxDB {
     private String convertCalendarToFormattedString(Calendar cal){
 
         DateFormat date = new SimpleDateFormat(FORMATTER_DATE);
-        return (date.format(cal));
+        return (date.format(cal.getTime()));
     }
 
 

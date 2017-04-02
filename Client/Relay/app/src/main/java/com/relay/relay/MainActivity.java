@@ -11,6 +11,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.media.RingtoneManager;
 import android.net.Uri;
@@ -36,6 +37,11 @@ import android.widget.Toast;
 
 import com.relay.relay.DB.Test;
 import com.relay.relay.SubSystem.RelayConnectivityManager;
+import com.relay.relay.Util.UuidGenerator;
+
+import java.util.UUID;
+
+import static android.preference.PreferenceManager.getDefaultSharedPreferences;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener ,
@@ -50,6 +56,7 @@ public class MainActivity extends AppCompatActivity
     public static final String FRESH_FRAGMENT = "relay.BroadcastReceiver.FRESH_FRAGMENT";
     private static final int PERMISSION_REQUEST_COARSE_LOCATION = 1;
 
+
     // tool bar and navigator
     private NavigationView navigationView;
 
@@ -63,6 +70,8 @@ public class MainActivity extends AppCompatActivity
 
     private BroadcastReceiver mBroadcastReceiver;
     private IntentFilter mFilter;
+
+    private  UUID mMyuuid;
 
 
     @Override
@@ -87,6 +96,20 @@ public class MainActivity extends AppCompatActivity
         // Retrieve and cache the system's default "short" animation time.
         mShortAnimationDuration = getResources().getInteger(
                 android.R.integer.config_longAnimTime);
+
+        // get my uuid from login and put it in sharedPreferences
+        //TODO delete uuidGenerator when creating login
+        UuidGenerator uuidGenerator = new UuidGenerator();
+        try {
+            mMyuuid = uuidGenerator.GenerateUUIDFromEmail("Omer@gmail.com");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        SharedPreferences sharedPreferences =  getSharedPreferences(SYSTEM_SETTING,0);
+        // saving myuuid into sharedPreferences
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString("my_uuid",mMyuuid.toString());
+        editor.commit();
 
         // start on inbox
         displayFragment(0);

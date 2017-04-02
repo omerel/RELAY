@@ -27,9 +27,8 @@
     <string name="preference_bluetooth_summary">Allow connecting and sharing data between devices automatically (recommended)</string>
     <string name="preference_data_title">Mobile data enable</string>
     <string name="preference_data_summary">When there\'s no wifi available, connect and sync with relay server using mobile data</string>
-
-
-
+    <string name="action_user_info">User info</string>
+    <string name="action_delete_conversation">Delete conversation</string>
 
 
 </resources>

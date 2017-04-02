@@ -1,9 +1,12 @@
 package com.relay.relay.DB;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Log;
+
+import com.relay.relay.MainActivity;
 import com.relay.relay.R;
 import com.relay.relay.SubSystem.DataManager;
 import com.relay.relay.Util.TimePerformance;
@@ -35,18 +38,18 @@ public class Test {
     private DataManager dataManager;
     private HandShakeDB handShakeDB;
 
-    private UUID[] uuids = {UUID.fromString("5d14e165-514e-4989-8e32-ae4aaa7f9d72"),
-            UUID.fromString("3ab38ece-e5fa-4fff-95bf-9b9d36e8e3ad"),
-            UUID.fromString("61f5d9c1-10aa-46d9-9990-c098dee99e98"),
-            UUID.fromString("41560e8f-62d7-40bd-bbe8-87332984e22d"),
-            UUID.fromString("fa68c55f-e658-4e61-8f00-c5834054fa8f"),
-            UUID.fromString("def4b3cc-7da0-4992-8e2b-2fc4ef4bac32"),
-            UUID.fromString("84b23841-663e-45cf-9068-3302e2ea823a"),
-            UUID.fromString("b4141a2c-9827-49f8-a749-dc43ca648a72"),
-            UUID.fromString("0425fa29-86e7-42c3-a7ef-8fcb854be927"),
-            UUID.fromString("b25fe2f8-b9f7-4762-a7e9-3fc8c16c82ac"),
-            UUID.fromString("46707906-7dd2-4eec-9bb7-061722671143"),
-            UUID.fromString("54cbd62e-faad-4ae4-9998-d8de0b4ef710")};
+    private UUID[] uuids;// = {UUID.fromString("5d14e165-514e-4989-8e32-ae4aaa7f9d72"),
+//            UUID.fromString("3ab38ece-e5fa-4fff-95bf-9b9d36e8e3ad"),
+//            UUID.fromString("61f5d9c1-10aa-46d9-9990-c098dee99e98"),
+//            UUID.fromString("41560e8f-62d7-40bd-bbe8-87332984e22d"),
+//            UUID.fromString("fa68c55f-e658-4e61-8f00-c5834054fa8f"),
+//            UUID.fromString("def4b3cc-7da0-4992-8e2b-2fc4ef4bac32"),
+//            UUID.fromString("84b23841-663e-45cf-9068-3302e2ea823a"),
+//            UUID.fromString("b4141a2c-9827-49f8-a749-dc43ca648a72"),
+//            UUID.fromString("0425fa29-86e7-42c3-a7ef-8fcb854be927"),
+//            UUID.fromString("b25fe2f8-b9f7-4762-a7e9-3fc8c16c82ac"),
+//            UUID.fromString("46707906-7dd2-4eec-9bb7-061722671143"),
+//            UUID.fromString("54cbd62e-faad-4ae4-9998-d8de0b4ef710")};
 
     private String[] fullNAme =  {"Omer","Barr","Rachael","Adi","Stav","Ido","Eric","Rinat","Dana",
             "Michal","Shlomit","Shir"};
@@ -69,7 +72,15 @@ public class Test {
         nodesDB = dataManager.getNodesDB();
         messagesDB = dataManager.getMessagesDB();
         handShakeDB = dataManager.getHandShakeDB();
+
+        // get uuid
+        SharedPreferences sharedPreferences = context.getSharedPreferences(MainActivity.SYSTEM_SETTING,0);
+        String uuidString =  sharedPreferences.getString("my_uuid",null);
+        myID = UUID.fromString(uuidString);
+
     }
+
+
     // not include max
     public int randomIndex(int min,int max){
         return min + (int)(Math.random() * ((max - min)));
@@ -105,6 +116,7 @@ public class Test {
         for(int i=0;i<email.length;i++){
             email[i] = fullNAme[i]+"@gmail.com";
         }
+
 
         // creates phone numbers
         String[] phoneNumber = new String[15];
@@ -197,6 +209,20 @@ public class Test {
             email[i] = fullNAme[i]+"@gmail.com";
         }
 
+        UuidGenerator uuidGenerator = new UuidGenerator();
+        // create uuids
+        uuids = new UUID[email.length];
+        for(int i=0;i<uuids.length;i++){
+
+            try {
+                UUID uuid = uuidGenerator.GenerateUUIDFromEmail(email[i]);
+                uuids[i]= uuid;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+        }
+
         // creates phone numbers
         phoneNumber = new String[fullNAme.length];
         for(int i=0;i<phoneNumber.length;i++){
@@ -225,11 +251,8 @@ public class Test {
 
         int numOFNodes = 1;
 
-        // choose  what is the device
-        this.myID = uuids[0];
-        nodesDB.setMyNodeId(uuids[0]);
+        // choose  what is the device - set omer@gmail.com in ,in  main activity uuid
 
-        baseDB();
 
         Log.e(TAG, "add Nodes to nodeDB");
         for (int i = 0; i < numOFNodes; i++) {
@@ -255,11 +278,8 @@ public class Test {
 
         int numOFNodes = 1;
 
-        // choose  what is the device
-        this.myID = uuids[1];
-        nodesDB.setMyNodeId(uuids[1]);
+        // choose  what is the device - set barr@gmail.com in ,in  main activity uuid
 
-        baseDB();
 
         Log.e(TAG, "add Nodes to nodeDB");
             nodesDB.addNode(new Node(uuids[1],dates[randomIndex(0,MAX)],dates[randomIndex(0,MAX)],
@@ -285,11 +305,8 @@ public class Test {
 
         int numOFNodes = 3;
 
-        // choose  what is the device
-        this.myID = uuids[0];
-        nodesDB.setMyNodeId(uuids[0]);
+        // choose  what is the device - set omer@gmail.com in ,in  main activity uuid
 
-        baseDB();
 
         Log.e(TAG, "add Nodes to nodeDB");
         // add omer
@@ -325,13 +342,12 @@ public class Test {
      */
     public void createDB_4(){
 
+
         int numOFNodes = 6;
 
-        // choose  what is the device
-        this.myID = uuids[0];
-        nodesDB.setMyNodeId(uuids[0]);
+        // choose  what is the device - set omer@gmail.com in ,in  main activity uuid
 
-        baseDB();
+
 
         Log.e(TAG, "add Nodes to nodeDB");
         for (int i = 0; i < numOFNodes; i++) {
@@ -362,11 +378,9 @@ public class Test {
 
         int numOFNodes = 3;
 
-        // choose  what is the device
-        this.myID = uuids[1];
-        nodesDB.setMyNodeId(uuids[1]);
+        // choose  what is the device - set barr@gmail.com in ,in  main activity uuid
 
-        baseDB();
+
 
         Log.e(TAG, "add Nodes to nodeDB");
         // add bar
@@ -392,24 +406,23 @@ public class Test {
     }
 
     public void deleteDB(){
-        graphRelations.deleteGraph();
-        nodesDB.deleteNodedb();
-        messagesDB.deleteMessageDB();
+        dataManager.deleteAlldataManager();
     }
 
 
     public void startTest(){
 
         /////////start
+        baseDB();
 
         timePerformance.start();
         Log.e(TAG, "Create DB");
         //////////////
-        //createDB_1();
+       // createDB_4();
         /////////////
         Log.e(TAG, "graphRelations.getMyNumEdges()--->"+ graphRelations.getMyNumEdges());
         Log.e(TAG, "graphRelations.getMyNumNodes()--->"+ graphRelations.getMyNumNodes());
-        myID = nodesDB.getMyNodeId();
+
         Log.e(TAG, "myID = nodesDB.getMyNodeId()--->"+ nodesDB.getMyNodeId());
 
         Log.e(TAG, "Start BFS on myID");
@@ -431,12 +444,12 @@ public class Test {
         RelayMessage m = new RelayMessage(uuids[0],uuids[1],
                 RelayMessage.TYPE_MESSAGE_INCLUDE_ATTACHMENT,"this msg with img");
         m.addAttachment(pic,RelayMessage.TYPE_ATTACHMENT_BITMAP);
-        RelayMessage m1 = new RelayMessage(uuids[0],uuids[1],
-                RelayMessage.TYPE_MESSAGE_INCLUDE_ATTACHMENT,"this msg with img");
-        m.addAttachment(pic,RelayMessage.TYPE_ATTACHMENT_BITMAP);
+//        RelayMessage m1 = new RelayMessage(uuids[0],uuids[1],
+//                RelayMessage.TYPE_MESSAGE_INCLUDE_ATTACHMENT,"this msg with img");
+//        m.addAttachment(pic,RelayMessage.TYPE_ATTACHMENT_BITMAP);
 
        if (myID.equals(uuids[0])){
-//           messagesDB.addMessage(m);
+          // messagesDB.addMessage(m);
 //           messagesDB.addMessage(m1);
 //            messagesDB.addMessage( new RelayMessage(uuids[0],uuids[6],
 //                    RelayMessage.TYPE_MESSAGE_TEXT,"this msg will be sent"));
@@ -480,15 +493,6 @@ public class Test {
 
            // messagesDB.deleteMessage(uuid);
         }
-
-        UuidGenerator generator = new UuidGenerator();
-
-        try {
-            UUID uuid = generator.GenerateUUIDFromEmail("rachael83vasd@gmail.com");
-            generator.GenerateEmailFromUUID(uuid);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
+       // deleteDB();
     }
 }

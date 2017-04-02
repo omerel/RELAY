@@ -1,15 +1,18 @@
 package com.relay.relay.SubSystem;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Messenger;
+import android.util.Log;
 
 import com.relay.relay.DB.GraphRelations;
 import com.relay.relay.DB.HandShakeDB;
 import com.relay.relay.DB.InboxDB;
 import com.relay.relay.DB.MessagesDB;
 import com.relay.relay.DB.NodesDB;
+import com.relay.relay.MainActivity;
 import com.relay.relay.system.HandShakeHistory;
 import com.relay.relay.system.RelayMessage;
 
@@ -46,6 +49,12 @@ public class DataManager {
         this.mNodesDB = new NodesDB(context,mGraphRelations,mInboxDB);
         this.mMessagesDB = new MessagesDB(context,mInboxDB);
         this.mHandShakeDB = new HandShakeDB(context);
+
+        SharedPreferences sharedPreferences = context.getSharedPreferences(MainActivity.SYSTEM_SETTING,0);
+        UUID myUuid = UUID.fromString(sharedPreferences.getString("my_uuid",null));
+        if ( myUuid == null )
+            Log.e(TAG,"Error!, uuid not found");
+        this.mNodesDB.setMyNodeId(myUuid);
         this.mGraphRelations.setNodesDB(mNodesDB);
         this.mInboxDB.getMyNodeIdFromNodesDB(mNodesDB);
 
@@ -69,6 +78,15 @@ public class DataManager {
 
     public InboxDB getInboxDB(){return mInboxDB;}
 
+
+    public boolean deleteAlldataManager(){
+        mNodesDB.deleteNodedb();
+        mInboxDB.deleteDB();
+        mHandShakeDB.deleteHandShakeDB();
+        mGraphRelations.deleteGraph();
+
+        return true;
+    }
 
     /**
      * transfer all the events that happened before X weeks to history log.

@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+
+    <!-- A CardView that contains a TextView -->
+    <android.support.v7.widget.CardView
+        xmlns:card_view="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/contact_card_view"
+        android:layout_gravity="center"
+        android:layout_width="match_parent"
+        android:layout_height="75dp"
+        card_view:cardCornerRadius="1dp">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <de.hdodenhof.circleimageview.CircleImageView
+                xmlns:app="http://schemas.android.com/apk/res-auto"
+                android:id="@+id/profile_image"
+                android:layout_marginLeft="6dp"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_centerInParent="true"
+                android:layout_alignParentLeft="true"
+                android:src="@drawable/pic_unknown_user"
+                app:civ_border_width="1dp"
+                app:civ_border_color="@color/colorPrimary"/>
+
+            <ImageView
+                android:id="@+id/imageView_setting_contact"
+                android:layout_width="10dp"
+                android:layout_height="50dp"
+                android:layout_centerInParent="true"
+                android:layout_alignParentRight="true"
+                android:scaleType="centerCrop"
+                android:layout_marginEnd="10dp"
+                android:src="@drawable/ic_dots" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Omel (elomer@gmail.com)"
+                android:layout_marginTop="6dp"
+                android:layout_marginLeft="10dp"
+                android:textStyle="bold|normal"
+                android:textColor="@android:color/black"
+                android:layout_toEndOf="@+id/profile_image"
+                android:id="@+id/textView_item_contact_name" />
+
+            <TextView
+                android:layout_width="250dp"
+                android:layout_height="wrap_content"
+                android:text="last message from contact, shows only two lines."
+                android:layout_toEndOf="@+id/profile_image"
+                android:layout_below="@id/textView_item_contact_name"
+                android:layout_marginTop="6dp"
+                android:layout_marginLeft="10dp"
+                android:maxLines="2"
+                android:id="@+id/textView_item_contact_last_message" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="13:00 12/08/2016"
+                android:textSize="10sp"
+                android:layout_toLeftOf="@id/imageView_setting_contact"
+                android:layout_below="@id/textView_item_contact_last_message"
+                android:layout_marginRight="6dp"
+                android:layout_marginTop="1dp"
+                android:id="@+id/textView_item_contact_last_time" />
+
+            <ImageView
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:src="@drawable/ic_star"
+                android:layout_marginTop="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_toLeftOf="@id/imageView_setting_contact"
+                android:id="@+id/imageView_item_contact_updates"/>
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_new"
+                android:layout_toLeftOf="@id/imageView_setting_contact"
+                android:layout_below="@id/imageView_item_contact_updates"
+                android:layout_marginTop="5dp"
+                android:layout_marginRight="10dp"
+                android:id="@+id/imageView_item_contact_new_messages"/>
+
+        </RelativeLayout>
+        </android.support.v7.widget.CardView>
+
+
+</LinearLayout>
