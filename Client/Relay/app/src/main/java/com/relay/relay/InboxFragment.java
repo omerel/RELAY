@@ -1,6 +1,7 @@
 package com.relay.relay;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -13,6 +14,7 @@ import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.PopupMenu;
@@ -46,6 +48,7 @@ import com.relay.relay.system.RelayMessage;
 import java.util.Map;
 import java.util.UUID;
 
+import static android.R.attr.bitmap;
 import static com.couchbase.lite.replicator.RemoteRequestRetry.TAG;
 
 
@@ -296,7 +299,7 @@ public class InboxFragment extends Fragment {
             String time = (String) properties.get("time");
 
             // get node from nodeDB
-            Node node = mDataManager.getNodesDB().getNode(UUID.fromString(uuidString));
+            final Node node = mDataManager.getNodesDB().getNode(UUID.fromString(uuidString));
             // if user not exist in my mesh(nodeDB) put the mail and unknown user picture profile
             if (node == null){
                 holder.circleImageView.setImageResource(R.drawable.pic_unknown_user);
@@ -305,7 +308,7 @@ public class InboxFragment extends Fragment {
                 holder.userName.setText(email);
             }
             else{
-                holder.userName.setText("@"+node.getUserName()+" ,"+node.getFullName());
+                holder.userName.setText("@"+node.getUserName()+", "+node.getFullName());
                 holder.circleImageView.setImageBitmap(node.getProfilePicture());
             }
 
@@ -340,6 +343,24 @@ public class InboxFragment extends Fragment {
                 @Override
                 public void onClick(View view) {
                     goToContactConversationActivity(UUID.fromString(uuidString));
+                }
+            });
+            holder.userName.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    goToContactConversationActivity(UUID.fromString(uuidString));
+                }
+            });
+
+            // listener to profile picture
+            holder.circleImageView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if ( node == null)
+                        showProfilePictureInDialog(null);
+                    else
+                        showProfilePictureInDialog(node.getProfilePicture());
+
                 }
             });
 
@@ -507,5 +528,42 @@ public class InboxFragment extends Fragment {
         if(view.getParent()!=null) {
             ((ViewGroup) view.getParent()).removeView(view);
         }
+    }
+
+    private void showProfilePictureInDialog(Bitmap pic){
+
+        // Get the layout inflater
+        LayoutInflater inflater = getActivity().getLayoutInflater();
+
+        View view = inflater.inflate(R.layout.dialog_profile_picture, null);
+
+        de.hdodenhof.circleimageview.CircleImageView circleImageView = (de.hdodenhof.circleimageview.CircleImageView)
+                view.findViewById(R.id.profile_image);
+
+        if (pic != null)
+            circleImageView.setImageBitmap(pic);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+
+
+        // Inflate and set the layout for the dialog
+        // Pass null as the parent view because its going in the dialog layout
+        builder.setView(view);
+
+
+        // Add action buttons
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int id) {
+                        // sign in the user ...
+                    }
+                });
+
+//        builder.setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
+//                    public void onClick(DialogInterface dialog, int id) {
+//                        /// do something
+//                    }
+//                });
+        builder.create().show();
     }
 }

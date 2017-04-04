@@ -44,7 +44,7 @@
                 android:src="@drawable/ic_dots" />
 
             <TextView
-                android:layout_width="wrap_content"
+                android:layout_width="250dp"
                 android:layout_height="wrap_content"
                 android:text="\@omel ,Omer Elgrably"
                 android:layout_marginTop="6dp"

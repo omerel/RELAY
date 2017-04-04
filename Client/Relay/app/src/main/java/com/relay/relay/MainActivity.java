@@ -18,11 +18,13 @@ import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.design.widget.NavigationView;
+import android.support.v4.app.TaskStackBuilder;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -33,9 +35,11 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.relay.relay.DB.Test;
+import com.relay.relay.SubSystem.DataManager;
 import com.relay.relay.SubSystem.RelayConnectivityManager;
 import com.relay.relay.Util.UuidGenerator;
 
@@ -59,6 +63,7 @@ public class MainActivity extends AppCompatActivity
 
     // tool bar and navigator
     private NavigationView navigationView;
+    private View navHeaderView;
 
     // current fragment
     private Fragment mFragment;
@@ -67,6 +72,8 @@ public class MainActivity extends AppCompatActivity
     private View mContentView;
     private View mLoadingView;
     private int mShortAnimationDuration;
+    private TextView textViewUserName;
+    private TextView textViewUserEmail;
 
     private BroadcastReceiver mBroadcastReceiver;
     private IntentFilter mFilter;
@@ -93,6 +100,7 @@ public class MainActivity extends AppCompatActivity
         mContentView = findViewById(R.id.content_body);
         mLoadingView = findViewById(R.id.loading_spinner);
 
+
         // Retrieve and cache the system's default "short" animation time.
         mShortAnimationDuration = getResources().getInteger(
                 android.R.integer.config_longAnimTime);
@@ -109,7 +117,18 @@ public class MainActivity extends AppCompatActivity
         // saving myuuid into sharedPreferences
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString("my_uuid",mMyuuid.toString());
-        editor.commit();
+
+
+        navHeaderView= navigationView.getHeaderView(0);
+
+        textViewUserName = (TextView) navHeaderView.findViewById(R.id.textView_menu_userName);
+        textViewUserEmail = (TextView) navHeaderView.findViewById(R.id.textView_menu_user_mail);
+        // Update navigator with name and email
+        DataManager mDataManager = new DataManager(this);
+        textViewUserEmail.setText(mDataManager.getNodesDB().getNode(mMyuuid).getEmail());
+        String userName = mDataManager.getNodesDB().getNode(mMyuuid).getUserName();
+        String fullName = mDataManager.getNodesDB().getNode(mMyuuid).getFullName();
+        textViewUserName.setText("@"+userName+", "+fullName);
 
         // start on inbox
         displayFragment(0);
