@@ -33,10 +33,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.couchbase.lite.Database;
+import com.couchbase.lite.Document;
 import com.couchbase.lite.Emitter;
 import com.couchbase.lite.LiveQuery;
 import com.couchbase.lite.Mapper;
 import com.couchbase.lite.Query;
+import com.couchbase.lite.QueryEnumerator;
+import com.couchbase.lite.QueryRow;
 import com.relay.relay.SubSystem.DataManager;
 import com.relay.relay.SubSystem.RelayConnectivityManager;
 import com.relay.relay.Util.GridSpacingItemDecoration;
@@ -275,6 +278,7 @@ public class InboxFragment extends Fragment {
 
     private class ListAdapter extends LiveQueryAdapter {
 
+
         public ListAdapter(Context context, LiveQuery query) {
             super(context, query);
         }
@@ -471,17 +475,17 @@ public class InboxFragment extends Fragment {
                 int position = viewHolder.getAdapterPosition();
 
                 if (direction == ItemTouchHelper.LEFT){
-                    //mAdapter.removeItem(position);
-                    mAdapter.notifyDataSetChanged();
-                    Toast.makeText(getContext(), "delete", Toast.LENGTH_SHORT).show();
+                    Document doc =  mAdapter.getItem(position);
+                    if(doc != null) {
+                        Map<String, Object> properties = doc.getProperties();
+                        String uuidString = (String) properties.get("uuid");
+                        mDataManager.getInboxDB().deleteUserAndConversation(UUID.fromString(uuidString), mDataManager, mDataBase);
+                        Toast.makeText(getContext(), "user was deleted", Toast.LENGTH_SHORT).show();
+                    }
                 } else {
                     Toast.makeText(getContext(), "info", Toast.LENGTH_SHORT).show();
+                    //TODO show info
                     mAdapter.notifyDataSetChanged();
-//                    removeView();
-//                    edit_position = position;
-//                    alertDialog.setTitle("Edit Country");
-//                    et_country.setText(countries.get(position));
-//                    alertDialog.show();
                 }
             }
 

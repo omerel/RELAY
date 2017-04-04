@@ -10,10 +10,17 @@ import android.util.Log;
 import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.Database;
 import com.couchbase.lite.Document;
+import com.couchbase.lite.Emitter;
 import com.couchbase.lite.Manager;
+import com.couchbase.lite.Mapper;
+import com.couchbase.lite.Query;
+import com.couchbase.lite.QueryEnumerator;
+import com.couchbase.lite.QueryRow;
 import com.couchbase.lite.SavedRevision;
 import com.couchbase.lite.UnsavedRevision;
+import com.couchbase.lite.View;
 import com.couchbase.lite.android.AndroidContext;
+import com.relay.relay.SubSystem.DataManager;
 import com.relay.relay.system.RelayMessage;
 
 import java.io.IOException;
@@ -21,18 +28,24 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
+import static com.couchbase.lite.replicator.RemoteRequestRetry.TAG;
 
 /**
  * Created by omer on 23/03/2017.
  */
 
+
 public class InboxDB {
 
     final String TAG = "RELAY_DEBUG: "+ InboxDB.class.getSimpleName();
     final String DB_NAME = "inbox_db";
-    final String FORMATTER_DATE = "yyyyMMddhhmmss";
+    final String FORMATTER_DATE = "yyyyMMddHHmmss";
     final String CONTACT_ID = "contact_";
     final String MESSAGE_ID = "message_";
 
@@ -120,14 +133,14 @@ public class InboxDB {
                 properties.put("is_new_message", false);
                 properties.put("update", false);
                 // update parent item with the changes
-                updateContactItem(contactParentUUID,false,true,false);
+                updateContactItem(contactParentUUID,false,true,false,false);
             }
             else{
                 Log.e(TAG,"The msg for me");
                 properties.put("is_new_message", true);
                 properties.put("update", true);
                 // update parent item with the changes
-                updateContactItem(contactParentUUID,true,true,true);
+                updateContactItem(contactParentUUID,true,true,true,false);
             }
             properties.put("disappear", false);
             properties.put("time", convertCalendarToFormattedString(time));
@@ -194,23 +207,9 @@ public class InboxDB {
             return true;
     }
 
-//    private boolean setContactDisappear(UUID contactUUID, boolean disappear){
-//        if (isContactExist(contactUUID)) {
-//            Document doc = mDatabase.getDocument(CONTACT_ID + contactUUID.toString());
-//            Map<String, Object> properties = new HashMap<>(doc.getProperties());
-//            properties.put("disappear", disappear);
-//            try {
-//                doc.putProperties(properties);
-//            } catch (CouchbaseLiteException e) {
-//                e.printStackTrace();
-//            }
-//            return true;
-//        }
-//        return false;
-//    }
 
     public boolean updateContactItem(final UUID contactUUID, final boolean withNewMessage,
-                                     final boolean jumpItem, final boolean toUpdate){
+                                     final boolean jumpItem, final boolean toUpdate,final boolean disappear){
 
         if (isContactExist(contactUUID)){
             Log.e(TAG,"Found contact to update");
@@ -221,13 +220,8 @@ public class InboxDB {
                     public boolean update(UnsavedRevision newRevision) {
                         Map<String, Object> properties = newRevision.getUserProperties();
                         properties.put("new_messages", withNewMessage);
-
-//                        if (withNewMessage) {
-//                            properties.put("new_messages", true);
-//                        }else{
-//                            properties.put("new_messages", false);
-//                        }
                         properties.put("updates", toUpdate);
+                        properties.put("disappear", disappear);
                         if (jumpItem) {
                             properties.put("time", convertCalendarToFormattedString(Calendar.getInstance()));
                             properties.put("disappear", false);
@@ -244,7 +238,7 @@ public class InboxDB {
         else{
             Log.e(TAG,"New msg from user that not in my mesh");
             addContactItem(contactUUID);
-            updateContactItem(contactUUID,withNewMessage,jumpItem,toUpdate);
+            updateContactItem(contactUUID,withNewMessage,jumpItem,toUpdate,disappear);
         }
         return false;
     }
@@ -288,7 +282,7 @@ public class InboxDB {
     }
 
 
-    // when message was deleted from messageDB
+    // Use it when message was deleted from messageDB
     public boolean deleteMessageFromDB(UUID messageUUID){
         if (isMessageExist(messageUUID)){
             try {
@@ -303,7 +297,7 @@ public class InboxDB {
     }
 
 
-    // when node was deleted from nodeDB
+    // Use it when node was deleted from nodeDB
     public boolean deleteContactFromDB(UUID contactUUID){
         if (isContactExist(contactUUID)){
             try {
@@ -317,7 +311,7 @@ public class InboxDB {
         return false;
     }
 
-    // when message deleted from user on click view
+    // Use it when message deleted from user on click view
     public boolean deleteMessageFromInbox(UUID messageUUID){
         if (isMessageExist(messageUUID)){
             try {
@@ -352,13 +346,42 @@ public class InboxDB {
         return false;
     }
 
-
-    public boolean deleteConversation(UUID contactUUID){
+    // Use it when click delete in contact - piratically only make contact disappear and messages deleted
+    public void deleteUserAndConversation(final UUID contactUUID, DataManager dataManager, Database database){
         if (isContactExist(contactUUID)){
             // TODO complete with query
-            return true;
+
+            // Create a view and register its map function:
+            View messagesView = database.getView("messagesToDelete");
+            messagesView.setMap(new Mapper() {
+                @Override
+                public void map(Map<String, Object> document, Emitter emitter) {
+                    String type = (String) document.get("type");
+                    String contactParent = (String) document.get("contact_parent");
+                    if ("message".equals(type) && contactParent.equals(contactUUID.toString())) {
+                        emitter.emit(document.get("time"), document.get("uuid"));
+                    }
+                }
+            }, "1");
+
+            Query query = messagesView.createQuery();
+            query.setMapOnly(true);
+            QueryEnumerator result = null;
+            try {
+                result = query.run();
+            } catch (CouchbaseLiteException e) {
+                e.printStackTrace();
+            }
+            for (Iterator<QueryRow> it = result; it.hasNext(); ) {
+                QueryRow row = it.next();
+                dataManager.getInboxDB().deleteMessageFromInbox(UUID.fromString((String)row.getValue()));
+            }
+
+            // disappear user
+            updateContactItem(contactUUID,false,false,false,true);
+
         }
-        return false;
+        return;
     }
 
     private String convertCalendarToFormattedString(Calendar cal){

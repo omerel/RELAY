@@ -10,6 +10,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.couchbase.lite.Document;
 import com.couchbase.lite.LiveQuery;
 import com.couchbase.lite.QueryEnumerator;
 import com.relay.relay.InboxFragment;
@@ -57,5 +58,9 @@ public class LiveQueryAdapter extends RecyclerView.Adapter<InboxFragment.Contact
     @Override
     public int getItemCount() {
         return enumerator != null ? enumerator.getCount() : 0;
+    }
+
+    public Document getItem(int position) {
+        return enumerator != null ? enumerator.getRow(position).getDocument(): null;
     }
 }

@@ -142,7 +142,7 @@ public class MainActivity extends AppCompatActivity
         checkPermissions();
 
         Test t = new Test(this);
-         t.startTest();
+       //  t.startTest();
 
         startService(new Intent(MainActivity.this,RelayConnectivityManager.class));
         Snackbar.make(this.mContentView, "Start RelayConnectivityManager service", Snackbar.LENGTH_SHORT)

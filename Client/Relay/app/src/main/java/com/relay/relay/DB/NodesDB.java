@@ -54,7 +54,7 @@ public class NodesDB {
         }
         else{
             dbManager.putJsonObject(node.getId(), JsonConvertor.convertToJson(node));
-            mInboxDB.updateContactItem(node.getId(),false,false,false);
+            mInboxDB.updateContactItem(node.getId(),false,false,false,false);
             return true;
         }
     }
