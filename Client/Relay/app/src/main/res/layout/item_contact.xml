@@ -28,26 +28,28 @@
                 android:layout_centerInParent="true"
                 android:layout_alignParentLeft="true"
                 android:src="@drawable/pic_unknown_user"
-                app:civ_border_width="1dp"
+                app:civ_border_width="0dp"
                 app:civ_border_color="@color/colorPrimary"/>
 
             <ImageView
                 android:id="@+id/imageView_setting_contact"
-                android:layout_width="10dp"
-                android:layout_height="50dp"
+                android:layout_width="30dp"
+                android:layout_height="match_parent"
                 android:layout_centerInParent="true"
                 android:layout_alignParentRight="true"
                 android:scaleType="centerCrop"
-                android:layout_marginEnd="10dp"
+                android:paddingRight="10dp"
+                android:paddingTop="5dp"
+                android:paddingBottom="5dp"
                 android:src="@drawable/ic_dots" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Omel (elomer@gmail.com)"
+                android:text="\@omel ,Omer Elgrably"
                 android:layout_marginTop="6dp"
                 android:layout_marginLeft="10dp"
-                android:textStyle="bold|normal"
+                android:textStyle="normal"
                 android:textColor="@android:color/black"
                 android:layout_toEndOf="@+id/profile_image"
                 android:id="@+id/textView_item_contact_name" />
@@ -93,8 +95,11 @@
                 android:layout_marginRight="10dp"
                 android:id="@+id/imageView_item_contact_new_messages"/>
 
+
+
         </RelativeLayout>
         </android.support.v7.widget.CardView>
+
 
 
 </LinearLayout>

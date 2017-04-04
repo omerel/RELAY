@@ -3,36 +3,46 @@ package com.relay.relay;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
-import android.graphics.Rect;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.RectF;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.DefaultItemAnimator;
-import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.helper.ItemTouchHelper;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.couchbase.lite.Database;
-import com.couchbase.lite.Document;
 import com.couchbase.lite.Emitter;
 import com.couchbase.lite.LiveQuery;
 import com.couchbase.lite.Mapper;
+import com.couchbase.lite.Query;
 import com.relay.relay.SubSystem.DataManager;
 import com.relay.relay.SubSystem.RelayConnectivityManager;
+import com.relay.relay.Util.GridSpacingItemDecoration;
 import com.relay.relay.Util.LiveQueryAdapter;
+import com.relay.relay.Util.UuidGenerator;
 import com.relay.relay.system.Node;
+import com.relay.relay.system.RelayMessage;
 
-import java.util.Calendar;
 import java.util.Map;
 import java.util.UUID;
 
@@ -59,7 +69,6 @@ public class InboxFragment extends Fragment {
 
     // views in fragments
     private FloatingActionButton fab;
-    private RecyclerView recyclerViewContacts;
 
     // feagment view
     private View view = null;
@@ -69,7 +78,7 @@ public class InboxFragment extends Fragment {
 
     // database
     DataManager mDataManager;
-    Database mInboxDataBase;
+    Database mDataBase;
 
 
     private RecyclerView contactRecyclerView;
@@ -103,6 +112,7 @@ public class InboxFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         Log.e(TAG,"On create");
 //        if (getArguments() != null) {
 //            mParam1 = getArguments().getString(ARG_PARAM1);
@@ -111,7 +121,7 @@ public class InboxFragment extends Fragment {
         // To enable editing the tool bar from fragment
         setHasOptionsMenu(true);
         mDataManager = new DataManager(getContext());
-        mInboxDataBase = mDataManager.getInboxDB().getDatabase();
+        mDataBase = mDataManager.getInboxDB().getDatabase();
         setupLiveQuery();
         mAdapter = new ListAdapter(getContext(), listsLiveQuery);
 
@@ -132,6 +142,16 @@ public class InboxFragment extends Fragment {
             public void onClick(View view) {
                 Snackbar.make(view, "Creating new mail message", Snackbar.LENGTH_SHORT)
                         .setAction("Action", null).show();
+                UuidGenerator uuidG= new UuidGenerator();
+                RelayMessage m = null;
+                try {
+                    m = new RelayMessage(uuidG.GenerateUUIDFromEmail("rachael@gmail.com"),mDataManager.getNodesDB().getMyNodeId(),
+                            RelayMessage.TYPE_MESSAGE_TEXT,"this msg with txt");
+                    mDataManager.getMessagesDB().addMessage(m);
+                //    mDataManager.getInboxDB().updateContactItem(uuidG.GenerateUUIDFromEmail("Rachael@gmail.com"),true,true);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         });
 
@@ -139,6 +159,7 @@ public class InboxFragment extends Fragment {
         contactRecyclerView.addItemDecoration(new GridSpacingItemDecoration(1, dpToPx(1), true));
         contactRecyclerView.setItemAnimator(new DefaultItemAnimator());
         contactRecyclerView.setAdapter(mAdapter);
+        initSwipe();
 
         return view;
     }
@@ -226,24 +247,27 @@ public class InboxFragment extends Fragment {
 
 
     private void setupLiveQuery() {
-        if (mInboxDataBase == null) {
-            Log.e(TAG,"Error, mInboxDataBase is null!");
+        if (mDataBase == null) {
+            Log.e(TAG,"Error, mDataBase is null!");
             return;
         }
-        com.couchbase.lite.View listsView = mInboxDataBase.getView("list/contactList");
+        com.couchbase.lite.View listsView = mDataBase.getView("list/contactList");
         if (listsView.getMap() == null) {
             listsView.setMap(new Mapper() {
                 @Override
                 public void map(Map<String, Object> document, Emitter emitter) {
                     String type = (String) document.get("type");
-                    if ("contact".equals(type)) {
-                        emitter.emit(document, null);
+                    boolean disappear = (boolean) document.get("disappear");
+                    if ("contact".equals(type) && !disappear) {
+                        emitter.emit(document.get("time"), null);
                     }
                 }
             }, "1.0");
         }
         Log.e(TAG,"how many rows : "+listsView.getCurrentTotalRows());
-        listsLiveQuery = listsView.createQuery().toLiveQuery();
+        Query query = listsView.createQuery();
+        query.setDescending(true);
+        listsLiveQuery = query.toLiveQuery();
     }
 
     private class ListAdapter extends LiveQueryAdapter {
@@ -256,33 +280,35 @@ public class InboxFragment extends Fragment {
         public InboxFragment.ContactViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             View view = LayoutInflater.from(parent.getContext())
                     .inflate(R.layout.item_contact, parent, false);
+
             return new ContactViewHolder(view);
         }
 
         @Override
-        public void onBindViewHolder(InboxFragment.ContactViewHolder holder, int position) {
+        public void onBindViewHolder(final InboxFragment.ContactViewHolder holder, int position) {
 
             Map<String,Object> properties = enumerator.getRow(position).getDocument().getProperties();
 
             final String uuidString = (String) properties.get("uuid");
             boolean newMessages = (boolean) properties.get("new_messages");
             boolean updates = (boolean) properties.get("updates");
-            boolean disappear = (boolean) properties.get("disappear");
+            //boolean disappear = (boolean) properties.get("disappear");
             String time = (String) properties.get("time");
 
             // get node from nodeDB
             Node node = mDataManager.getNodesDB().getNode(UUID.fromString(uuidString));
-            // if user name is null put email on user title, otherwise put user name and full name
-            if (node.getUserName() == null)
-                holder.userName.setText(node.getEmail());
-            else
-                holder.userName.setText(node.getUserName()+" ("+node.getFullName()+")");
-
-            // set profile picture
-            if (node.getProfilePicture() != null)
-                holder.circleImageView.setImageBitmap(node.getProfilePicture());
-            else
+            // if user not exist in my mesh(nodeDB) put the mail and unknown user picture profile
+            if (node == null){
                 holder.circleImageView.setImageResource(R.drawable.pic_unknown_user);
+                UuidGenerator uuidGenerator = new UuidGenerator();
+                String email =uuidGenerator.GenerateEmailFromUUID(UUID.fromString(uuidString));
+                holder.userName.setText(email);
+            }
+            else{
+                holder.userName.setText("@"+node.getUserName()+" ,"+node.getFullName());
+                holder.circleImageView.setImageBitmap(node.getProfilePicture());
+            }
+
 
             // set updates and new messages icon
             if (newMessages)
@@ -295,16 +321,39 @@ public class InboxFragment extends Fragment {
                 holder.updates.setVisibility(View.INVISIBLE);
 
             // set time
-            time = convertTimeToReadbleString(time);
+            time = convertTimeToReadableString(time);
             holder.time.setText(time);
 
             // set last msg
             holder.lastMsg.setText("need to finish");
 
+            // listener to contact setting
+            holder.settingContact.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    showPopupMenu(holder.settingContact,holder.userName.getText().toString());
+                }
+            });
+
+            // listener to contact click area
+            holder.lastMsg.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    goToContactConversationActivity(UUID.fromString(uuidString));
+                }
+            });
+
         }
     }
 
-    private String convertTimeToReadbleString(String time){
+    private void goToContactConversationActivity(UUID uuid) {
+        //TODO go to activity
+        Toast.makeText(getContext(), "goToContactConversationActivity: "+
+                mDataManager.getInboxDB().setContactSeenByUser(uuid), Toast.LENGTH_SHORT).show();
+
+    }
+
+    private String convertTimeToReadableString(String time){
         String year = time.substring(0,4);
         String month = time.substring(4,6);
         String day = time.substring(6,8);
@@ -326,6 +375,7 @@ public class InboxFragment extends Fragment {
 
         public ContactViewHolder(View view) {
             super(view);
+
             userName = (TextView) view.findViewById(R.id.textView_item_contact_name);
             lastMsg = (TextView) view.findViewById(R.id.textView_item_contact_last_message);
             time = (TextView) view.findViewById(R.id.textView_item_contact_last_time);
@@ -337,43 +387,6 @@ public class InboxFragment extends Fragment {
         }
 
     }
-    /**
-     * RecyclerView item decoration - give equal margin around grid item
-     */
-    public class GridSpacingItemDecoration extends RecyclerView.ItemDecoration {
-
-        private int spanCount;
-        private int spacing;
-        private boolean includeEdge;
-
-        public GridSpacingItemDecoration(int spanCount, int spacing, boolean includeEdge) {
-            this.spanCount = spanCount;
-            this.spacing = spacing;
-            this.includeEdge = includeEdge;
-        }
-
-        @Override
-        public void getItemOffsets(Rect outRect, View view, RecyclerView parent, RecyclerView.State state) {
-            int position = parent.getChildAdapterPosition(view); // item position
-            int column = position % spanCount; // item column
-
-            if (includeEdge) {
-                outRect.left = spacing - column * spacing / spanCount; // spacing - column * ((1f / spanCount) * spacing)
-                outRect.right = (column + 1) * spacing / spanCount; // (column + 1) * ((1f / spanCount) * spacing)
-
-                if (position < spanCount) { // top edge
-                    outRect.top = spacing;
-                }
-                outRect.bottom = spacing; // item bottom
-            } else {
-                outRect.left = column * spacing / spanCount; // column * ((1f / spanCount) * spacing)
-                outRect.right = spacing - (column + 1) * spacing / spanCount; // spacing - (column + 1) * ((1f /    spanCount) * spacing)
-                if (position >= spanCount) {
-                    outRect.top = spacing; // item top
-                }
-            }
-        }
-    }
 
     /**
      * Converting dp to pixel
@@ -381,5 +394,118 @@ public class InboxFragment extends Fragment {
     private int dpToPx(int dp) {
         Resources r = getResources();
         return Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, r.getDisplayMetrics()));
+    }
+
+    /**
+     * Showing popup menu when tapping on 3 dots
+     */
+    private void showPopupMenu(View view,String name) {
+        // inflate menu
+        PopupMenu popup = new PopupMenu(getContext(), view);
+        MenuInflater inflater = popup.getMenuInflater();
+        inflater.inflate(R.menu.contact_menu, popup.getMenu());
+        popup.setOnMenuItemClickListener(new MyMenuItemClickListener(name));
+        popup.show();
+    }
+
+    /**
+     * Click listener for popup menu items
+     */
+    class MyMenuItemClickListener implements PopupMenu.OnMenuItemClickListener {
+
+        String name;
+        public MyMenuItemClickListener(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public boolean onMenuItemClick(MenuItem menuItem) {
+            switch (menuItem.getItemId()) {
+                case R.id.action_user_info:
+                    Toast.makeText(getContext(), "User "+name+" info ", Toast.LENGTH_SHORT).show();
+                    return true;
+                case R.id.action_delete_conversation:
+                    Toast.makeText(getContext(), "Delete "+name+" conversation", Toast.LENGTH_SHORT).show();
+                    return true;
+                default:
+            }
+            return false;
+        }
+    }
+
+
+    private void initSwipe(){
+
+         final Paint p = new Paint();
+
+        ItemTouchHelper.SimpleCallback simpleItemTouchCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
+
+            @Override
+            public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+                return true;
+            }
+
+            @Override
+            public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
+                int position = viewHolder.getAdapterPosition();
+
+                if (direction == ItemTouchHelper.LEFT){
+                    //mAdapter.removeItem(position);
+                    mAdapter.notifyDataSetChanged();
+                    Toast.makeText(getContext(), "delete", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(getContext(), "info", Toast.LENGTH_SHORT).show();
+                    mAdapter.notifyDataSetChanged();
+//                    removeView();
+//                    edit_position = position;
+//                    alertDialog.setTitle("Edit Country");
+//                    et_country.setText(countries.get(position));
+//                    alertDialog.show();
+                }
+            }
+
+            @Override
+            public void onChildDraw(Canvas c, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
+                Bitmap icon;
+                if(actionState == ItemTouchHelper.ACTION_STATE_SWIPE){
+
+                    View itemView = viewHolder.itemView;
+                    float height = (float) itemView.getBottom() - (float) itemView.getTop();
+                    float width = height / 3;
+                    float widthText = height/2;
+
+                    if(dX > 0){
+                        p.setColor(Color.parseColor("#1388ab"));
+                        RectF background = new RectF((float) itemView.getLeft(), (float) itemView.getTop(), dX,(float) itemView.getBottom());
+                        c.drawRect(background,p);
+                        icon = BitmapFactory.decodeResource(getResources(), R.drawable.ic_user_information);
+                        RectF icon_dest = new RectF((float) itemView.getLeft() + width ,(float) itemView.getTop() + width,(float) itemView.getLeft()+ 2*width,(float)itemView.getBottom() - width);
+                        c.drawBitmap(icon,null,icon_dest,p);
+                        p.setColor(Color.parseColor("#FFFFFF"));
+                        p.setTextSize(30);
+                        c.drawText("User info",(float) itemView.getLeft() + widthText/3,(float)itemView.getBottom()-widthText/4,p);
+                    } else {
+                        p.setColor(Color.parseColor("#D32F2F"));
+                        RectF background = new RectF((float) itemView.getRight() + dX, (float) itemView.getTop(),(float) itemView.getRight(), (float) itemView.getBottom());
+                        c.drawRect(background,p);
+                        icon = BitmapFactory.decodeResource(getResources(), R.drawable.ic_trash_can);
+                        RectF icon_dest = new RectF((float) itemView.getRight() - 2*width ,(float) itemView.getTop() + width,(float) itemView.getRight() - width,(float)itemView.getBottom() - width);
+                        c.drawBitmap(icon,null,icon_dest,p);
+                        p.setColor(Color.parseColor("#FFFFFF"));
+                        p.setTextSize(30);
+                        c.drawText("Delete",(float) itemView.getRight() - widthText*6/4,(float)itemView.getBottom()-widthText/4,p);
+                    }
+                }
+                super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
+            }
+        };
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleItemTouchCallback);
+        itemTouchHelper.attachToRecyclerView(contactRecyclerView);
+    }
+
+    private void removeView(){
+        if(view.getParent()!=null) {
+            ((ViewGroup) view.getParent()).removeView(view);
+        }
     }
 }

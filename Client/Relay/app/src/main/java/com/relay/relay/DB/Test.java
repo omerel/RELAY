@@ -348,7 +348,6 @@ public class Test {
         // choose  what is the device - set omer@gmail.com in ,in  main activity uuid
 
 
-
         Log.e(TAG, "add Nodes to nodeDB");
         for (int i = 0; i < numOFNodes; i++) {
             nodesDB.addNode(new Node(uuids[i],dates[randomIndex(0,MAX)],dates[randomIndex(0,MAX)],
@@ -418,7 +417,7 @@ public class Test {
         timePerformance.start();
         Log.e(TAG, "Create DB");
         //////////////
-       // createDB_4();
+      //  createDB_4();
         /////////////
         Log.e(TAG, "graphRelations.getMyNumEdges()--->"+ graphRelations.getMyNumEdges());
         Log.e(TAG, "graphRelations.getMyNumNodes()--->"+ graphRelations.getMyNumNodes());
@@ -441,15 +440,15 @@ public class Test {
         // add message
         // if Im omer
 
-        RelayMessage m = new RelayMessage(uuids[0],uuids[1],
-                RelayMessage.TYPE_MESSAGE_INCLUDE_ATTACHMENT,"this msg with img");
-        m.addAttachment(pic,RelayMessage.TYPE_ATTACHMENT_BITMAP);
+//        RelayMessage m = new RelayMessage(uuids[0],uuids[1],
+//                RelayMessage.TYPE_MESSAGE_INCLUDE_ATTACHMENT,"this msg with img");
+//        m.addAttachment(pic,RelayMessage.TYPE_ATTACHMENT_BITMAP);
 //        RelayMessage m1 = new RelayMessage(uuids[0],uuids[1],
 //                RelayMessage.TYPE_MESSAGE_INCLUDE_ATTACHMENT,"this msg with img");
 //        m.addAttachment(pic,RelayMessage.TYPE_ATTACHMENT_BITMAP);
 
        if (myID.equals(uuids[0])){
-          // messagesDB.addMessage(m);
+         //  messagesDB.addMessage(m);
 //           messagesDB.addMessage(m1);
 //            messagesDB.addMessage( new RelayMessage(uuids[0],uuids[6],
 //                    RelayMessage.TYPE_MESSAGE_TEXT,"this msg will be sent"));
@@ -493,6 +492,6 @@ public class Test {
 
            // messagesDB.deleteMessage(uuid);
         }
-       // deleteDB();
+     // deleteDB();
     }
 }

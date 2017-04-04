@@ -84,6 +84,7 @@ public class DataManager {
         mInboxDB.deleteDB();
         mHandShakeDB.deleteHandShakeDB();
         mGraphRelations.deleteGraph();
+        mMessagesDB.deleteMessageDB();
 
         return true;
     }

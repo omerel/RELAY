@@ -12,6 +12,7 @@ import com.couchbase.lite.Database;
 import com.couchbase.lite.Document;
 import com.couchbase.lite.Manager;
 import com.couchbase.lite.SavedRevision;
+import com.couchbase.lite.UnsavedRevision;
 import com.couchbase.lite.android.AndroidContext;
 import com.relay.relay.system.RelayMessage;
 
@@ -108,27 +109,30 @@ public class InboxDB {
 
         if (!isMessageExist(messageUUID)){
 
+            Log.e(TAG,"add new msg item");
             Map<String, Object> properties = new HashMap<String, Object>();
             properties.put("type", "message");
             properties.put("uuid", messageUUID.toString());
             properties.put("contact_parent", contactParentUUID.toString());
 
             if (isMyMessage){
+                Log.e(TAG,"I wrote the msg");
                 properties.put("is_new_message", false);
                 properties.put("update", false);
                 // update parent item with the changes
-                updateContactItem(contactParentUUID,false,true);
+                updateContactItem(contactParentUUID,false,true,false);
             }
             else{
+                Log.e(TAG,"The msg for me");
                 properties.put("is_new_message", true);
                 properties.put("update", true);
                 // update parent item with the changes
-                updateContactItem(contactParentUUID,true,true);
+                updateContactItem(contactParentUUID,true,true,true);
             }
             properties.put("disappear", false);
             properties.put("time", convertCalendarToFormattedString(time));
 
-            String docId = UUID.randomUUID().toString();
+            String docId = MESSAGE_ID+messageUUID;
             Document document = mDatabase.getDocument(docId);
 
             try {
@@ -149,10 +153,10 @@ public class InboxDB {
             properties.put("uuid", contactUUID.toString());
             properties.put("new_messages", false);
             properties.put("updates", true);
-            properties.put("disappear", false);
+            properties.put("disappear", true);
             properties.put("time", convertCalendarToFormattedString(Calendar.getInstance()));
 
-            String docId = CONTACT_ID+UUID.randomUUID();
+            String docId = CONTACT_ID+contactUUID;
             Document document = mDatabase.getDocument(docId);
 
             try {
@@ -183,60 +187,77 @@ public class InboxDB {
      * @return
      */
     private boolean isContactExist(UUID contactUUID){
-        Document doc = mDatabase.getExistingDocument(CONTACT_ID+contactUUID.toString());
+        Document doc = mDatabase.getExistingDocument(CONTACT_ID + contactUUID.toString());
         if (doc == null)
             return false;
         else
             return true;
     }
 
-    private boolean setContactDisappear(UUID contactUUID, boolean disappear){
-        if (isContactExist(contactUUID)) {
+//    private boolean setContactDisappear(UUID contactUUID, boolean disappear){
+//        if (isContactExist(contactUUID)) {
+//            Document doc = mDatabase.getDocument(CONTACT_ID + contactUUID.toString());
+//            Map<String, Object> properties = new HashMap<>(doc.getProperties());
+//            properties.put("disappear", disappear);
+//            try {
+//                doc.putProperties(properties);
+//            } catch (CouchbaseLiteException e) {
+//                e.printStackTrace();
+//            }
+//            return true;
+//        }
+//        return false;
+//    }
+
+    public boolean updateContactItem(final UUID contactUUID, final boolean withNewMessage,
+                                     final boolean jumpItem, final boolean toUpdate){
+
+        if (isContactExist(contactUUID)){
+            Log.e(TAG,"Found contact to update");
             Document doc = mDatabase.getDocument(CONTACT_ID + contactUUID.toString());
-            Map<String, Object> properties = doc.getProperties();
-            properties.put("disappear", disappear);
             try {
-                doc.putProperties(properties);
+                doc.update(new Document.DocumentUpdater() {
+                    @Override
+                    public boolean update(UnsavedRevision newRevision) {
+                        Map<String, Object> properties = newRevision.getUserProperties();
+                        properties.put("new_messages", withNewMessage);
+
+//                        if (withNewMessage) {
+//                            properties.put("new_messages", true);
+//                        }else{
+//                            properties.put("new_messages", false);
+//                        }
+                        properties.put("updates", toUpdate);
+                        if (jumpItem) {
+                            properties.put("time", convertCalendarToFormattedString(Calendar.getInstance()));
+                            properties.put("disappear", false);
+                        }
+                        newRevision.setUserProperties(properties);
+                        Log.e(TAG," contact added to inboxDB");
+                        return true;
+                    }
+                });
             } catch (CouchbaseLiteException e) {
                 e.printStackTrace();
             }
-            return true;
+        }
+        else{
+            Log.e(TAG,"New msg from user that not in my mesh");
+            addContactItem(contactUUID);
+            updateContactItem(contactUUID,withNewMessage,jumpItem,toUpdate);
         }
         return false;
     }
 
-    public boolean updateContactItem(UUID contactUUID, boolean withNewMessage,boolean jumpItem){
+    public boolean setContactSeenByUser(UUID contactUUID){
 
         if (isContactExist(contactUUID)){
             Document doc = mDatabase.getDocument(CONTACT_ID+contactUUID.toString());
-            Map<String, Object> properties = doc.getProperties();
-            if (withNewMessage)
-                setContactDisappear(contactUUID,false);
-            properties.put("new_messages", withNewMessage);
-            properties.put("updates", true);
-            if (jumpItem) {
-                properties.put("time", convertCalendarToFormattedString(Calendar.getInstance()));
-                setContactDisappear(contactUUID,false);
-            }
-            try {
-                doc.putProperties(properties);
-            } catch (CouchbaseLiteException e) {
-                e.printStackTrace();
-            }
-            Log.e(TAG,"new contact added to inboxDB");
-            return true;
-        }
-        return false;
-    }
-
-    private boolean setContactSeenByUser(UUID contactUUID){
-
-        if (isContactExist(contactUUID)){
-            Document doc = mDatabase.getDocument(CONTACT_ID+contactUUID.toString());
-            Map<String, Object> properties = doc.getProperties();
+            Map<String, Object> properties = new HashMap<>(doc.getProperties());
+            // set off new messages
             properties.put("new_messages", false);
+            // set off new updates
             properties.put("updates", false);
-
             try {
                 doc.putProperties(properties);
             } catch (CouchbaseLiteException e) {
@@ -252,7 +273,8 @@ public class InboxDB {
 
         if(isMessageExist(messageUUID)){
             Document doc = mDatabase.getDocument(MESSAGE_ID+messageUUID.toString());
-            Map<String, Object> properties = doc.getProperties();
+            Map<String, Object> properties = new HashMap<>();
+            properties.putAll(doc.getProperties());
             properties.put("update", true);
 
             try {
@@ -296,7 +318,7 @@ public class InboxDB {
     }
 
     // when message deleted from user on click view
-    private boolean deleteMessageFromInbox(UUID messageUUID){
+    public boolean deleteMessageFromInbox(UUID messageUUID){
         if (isMessageExist(messageUUID)){
             try {
                 // delete from inbox
@@ -311,11 +333,12 @@ public class InboxDB {
         return false;
     }
 
-    private boolean setMessageSeenByUser(UUID messageUUID){
+    public boolean setMessageSeenByUser(UUID messageUUID){
 
         if(isMessageExist(messageUUID)){
             Document doc = mDatabase.getDocument(MESSAGE_ID+messageUUID.toString());
-            Map<String, Object> properties = doc.getProperties();
+            Map<String, Object> properties = new HashMap<>();
+            properties.putAll(doc.getProperties());
             properties.put("update", false);
             properties.put("is_new_message", false);
 

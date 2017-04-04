@@ -136,7 +136,9 @@ public class UuidGenerator {
         String[] temp = email.split("@");
 
         emailUser = temp[0];
+        emailUser = emailUser.toLowerCase();
         domain = temp[1];
+        domain = domain.toLowerCase();
 
         Log.i(TAG,"start compress email "+email);
         Log.i(TAG,"email size without compress is: "+convertStringToHex(email).length());
