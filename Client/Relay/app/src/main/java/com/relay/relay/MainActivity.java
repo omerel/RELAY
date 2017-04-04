@@ -105,6 +105,9 @@ public class MainActivity extends AppCompatActivity
         mShortAnimationDuration = getResources().getInteger(
                 android.R.integer.config_longAnimTime);
 
+
+
+
         // get my uuid from login and put it in sharedPreferences
         //TODO delete uuidGenerator when creating login
         UuidGenerator uuidGenerator = new UuidGenerator();
@@ -115,8 +118,10 @@ public class MainActivity extends AppCompatActivity
         }
         SharedPreferences sharedPreferences =  getSharedPreferences(SYSTEM_SETTING,0);
         // saving myuuid into sharedPreferences
+
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString("my_uuid",mMyuuid.toString());
+        editor.commit();
 
 
         navHeaderView= navigationView.getHeaderView(0);
@@ -130,6 +135,11 @@ public class MainActivity extends AppCompatActivity
         String fullName = mDataManager.getNodesDB().getNode(mMyuuid).getFullName();
         textViewUserName.setText("@"+userName+", "+fullName);
 
+
+        startService(new Intent(MainActivity.this,RelayConnectivityManager.class));
+        Snackbar.make(this.mContentView, "Start RelayConnectivityManager service", Snackbar.LENGTH_SHORT)
+                .setAction("Action", null).show();
+
         // start on inbox
         displayFragment(0);
 
@@ -141,12 +151,8 @@ public class MainActivity extends AppCompatActivity
 
         checkPermissions();
 
-        Test t = new Test(this);
-       //  t.startTest();
-
-        startService(new Intent(MainActivity.this,RelayConnectivityManager.class));
-        Snackbar.make(this.mContentView, "Start RelayConnectivityManager service", Snackbar.LENGTH_SHORT)
-                .setAction("Action", null).show();
+//        Test t = new Test(this);
+//        t.startTest();
 
     }
 
