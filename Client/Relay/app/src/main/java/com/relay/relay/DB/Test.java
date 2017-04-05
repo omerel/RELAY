@@ -351,7 +351,7 @@ public class Test {
         Log.e(TAG, "add Nodes to nodeDB");
         for (int i = 0; i < numOFNodes; i++) {
             nodesDB.addNode(new Node(uuids[i],dates[randomIndex(0,MAX)],dates[randomIndex(0,MAX)],
-                    1,email[i],phoneNumber[i], userName[i], fullNAme[i], pic,i));
+                    1,email[i],phoneNumber[i], userName[i], fullNAme[i], null,i));
         }
 
 //        Log.e(TAG, "add Messages to messagesDB");
@@ -417,25 +417,25 @@ public class Test {
         timePerformance.start();
         Log.e(TAG, "Create DB");
         //////////////
-    //    createDB_4();
+        createDB_4();
         /////////////
-        Log.e(TAG, "graphRelations.getMyNumEdges()--->"+ graphRelations.getMyNumEdges());
-        Log.e(TAG, "graphRelations.getMyNumNodes()--->"+ graphRelations.getMyNumNodes());
-
-        Log.e(TAG, "myID = nodesDB.getMyNodeId()--->"+ nodesDB.getMyNodeId());
-
-        Log.e(TAG, "Start BFS on myID");
-        HashMap< Integer, ArrayList<UUID>>  b = graphRelations.bfs(graphRelations,myID);
-
-        Log.e(TAG, " Sum Of Degrees :"+b.size());
-        for (int i = 0; i< b.size();i++){
-            Log.e(TAG, " On Degree :"+i);
-            ArrayList<UUID> arr = b.get(i);
-            for (int j = 0; j < arr.size(); j++ ){
-                Log.e(TAG, "Node :"+ nodesDB.getNode(arr.get(j)).getFullName());
-            }
-        }
-        Log.e(TAG,"BFS :"+ timePerformance.stop());
+//        Log.e(TAG, "graphRelations.getMyNumEdges()--->"+ graphRelations.getMyNumEdges());
+//        Log.e(TAG, "graphRelations.getMyNumNodes()--->"+ graphRelations.getMyNumNodes());
+//
+//        Log.e(TAG, "myID = nodesDB.getMyNodeId()--->"+ nodesDB.getMyNodeId());
+//
+//        Log.e(TAG, "Start BFS on myID");
+//        HashMap< Integer, ArrayList<UUID>>  b = graphRelations.bfs(graphRelations,myID);
+//
+//        Log.e(TAG, " Sum Of Degrees :"+b.size());
+//        for (int i = 0; i< b.size();i++){
+//            Log.e(TAG, " On Degree :"+i);
+//            ArrayList<UUID> arr = b.get(i);
+//            for (int j = 0; j < arr.size(); j++ ){
+//                Log.e(TAG, "Node :"+ nodesDB.getNode(arr.get(j)).getFullName());
+//            }
+//        }
+//        Log.e(TAG,"BFS :"+ timePerformance.stop());
 
         // add message
         // if Im omer
@@ -468,30 +468,30 @@ public class Test {
 //                    RelayMessage.TYPE_MESSAGE_TEXT,"this will not be sent"));
         }
         ///
-        Log.e(TAG, "Show all messages");
-        ArrayList<UUID> arrayList = messagesDB.getMessagesIdList();
-        for (UUID uuid : arrayList){
-            RelayMessage relayMessage = messagesDB.getMessage(uuid);
-
-            String senderName = "";
-            Node sender = nodesDB.getNode(relayMessage.getSenderId());
-            if (sender == null)
-                senderName = relayMessage.getSenderId().toString();
-            else
-                senderName =nodesDB.getNode(relayMessage.getSenderId()).getFullName();
-            String destinationName="";
-            Node destination = nodesDB.getNode(relayMessage.getDestinationId());
-            if (destination == null)
-                destinationName = relayMessage.getSenderId().toString();
-            else
-                destinationName = nodesDB.getNode(relayMessage.getDestinationId()).getFullName();
-
-            Log.e(TAG, "FROM: "+senderName+
-                    " TO : "+destinationName+
-                    " STATUS: "+relayMessage.getStatus()+" CONTENT: "+relayMessage.getContent());
-
-           // messagesDB.deleteMessage(uuid);
-        }
+//        Log.e(TAG, "Show all messages");
+//        ArrayList<UUID> arrayList = messagesDB.getMessagesIdList();
+//        for (UUID uuid : arrayList){
+//            RelayMessage relayMessage = messagesDB.getMessage(uuid);
+//
+//            String senderName = "";
+//            Node sender = nodesDB.getNode(relayMessage.getSenderId());
+//            if (sender == null)
+//                senderName = relayMessage.getSenderId().toString();
+//            else
+//                senderName =nodesDB.getNode(relayMessage.getSenderId()).getFullName();
+//            String destinationName="";
+//            Node destination = nodesDB.getNode(relayMessage.getDestinationId());
+//            if (destination == null)
+//                destinationName = relayMessage.getSenderId().toString();
+//            else
+//                destinationName = nodesDB.getNode(relayMessage.getDestinationId()).getFullName();
+//
+//            Log.e(TAG, "FROM: "+senderName+
+//                    " TO : "+destinationName+
+//                    " STATUS: "+relayMessage.getStatus()+" CONTENT: "+relayMessage.getContent());
+//
+//            messagesDB.deleteMessage(uuid);
+//        }
      // deleteDB();
     }
 }

@@ -14,11 +14,13 @@ import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.helper.ItemTouchHelper;
 import android.util.Log;
 import android.util.TypedValue;
@@ -38,20 +40,21 @@ import com.couchbase.lite.Emitter;
 import com.couchbase.lite.LiveQuery;
 import com.couchbase.lite.Mapper;
 import com.couchbase.lite.Query;
-import com.couchbase.lite.QueryEnumerator;
-import com.couchbase.lite.QueryRow;
 import com.relay.relay.SubSystem.DataManager;
 import com.relay.relay.SubSystem.RelayConnectivityManager;
 import com.relay.relay.Util.GridSpacingItemDecoration;
 import com.relay.relay.Util.LiveQueryAdapter;
+import com.relay.relay.Util.SearchContactAdapter;
+import com.relay.relay.Util.SearchUser;
 import com.relay.relay.Util.UuidGenerator;
 import com.relay.relay.system.Node;
 import com.relay.relay.system.RelayMessage;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.UUID;
 
-import static android.R.attr.bitmap;
 import static com.couchbase.lite.replicator.RemoteRequestRetry.TAG;
 
 
@@ -60,7 +63,6 @@ import static com.couchbase.lite.replicator.RemoteRequestRetry.TAG;
  * Activities that contain this fragment must implement the
  * {@link InboxFragment.OnFragmentInteractionListener} interface
  * to handle interaction events.
- * Use the {@link InboxFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
 public class InboxFragment extends Fragment {
@@ -86,44 +88,28 @@ public class InboxFragment extends Fragment {
     DataManager mDataManager;
     Database mDataBase;
 
-
-    private RecyclerView contactRecyclerView;
+    //contacts view and adapter
+    private RecyclerView mContactRecyclerView;
     // contact list adapter
     private LiveQuery listsLiveQuery = null;
     private ListAdapter mAdapter;
+
+    // search view and adapter
+    private RecyclerView mSearchContactRecyclerView;
+    private ArrayList<SearchUser> mSearchContactArrayList;
+    private SearchContactAdapter mSearchContactAdapter;
 
 
     public InboxFragment() {
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment InboxFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static InboxFragment newInstance(String param1, String param2) {
-        InboxFragment fragment = new InboxFragment();
-        Bundle args = new Bundle();
-//        args.putString(ARG_PARAM1, param1);
-//        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         Log.e(TAG,"On create");
-//        if (getArguments() != null) {
-//            mParam1 = getArguments().getString(ARG_PARAM1);
-//            mParam2 = getArguments().getString(ARG_PARAM2);
-//        }
         // To enable editing the tool bar from fragment
         setHasOptionsMenu(true);
 
@@ -141,9 +127,8 @@ public class InboxFragment extends Fragment {
         // Inflate the layout for this fragment
         view = inflater.inflate(R.layout.fragment_inbox, container, false);
 
+        // init fab view
         fab = (FloatingActionButton) view.findViewById(R.id.fab);
-        contactRecyclerView = (RecyclerView) view.findViewById(R.id.recycler_view_contacts);
-
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(final View view) {
@@ -161,29 +146,35 @@ public class InboxFragment extends Fragment {
                 getActivity().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-
                         UuidGenerator uuidG= new UuidGenerator();
                         RelayMessage m = null;
                         try {
-                            m = new RelayMessage(uuidG.GenerateUUIDFromEmail("rachael@gmail.com"),mDataManager.getNodesDB().getMyNodeId(),
+                            m = new RelayMessage(uuidG.GenerateUUIDFromEmail("yolo@gmail.com"),mDataManager.getNodesDB().getMyNodeId(),
                                     RelayMessage.TYPE_MESSAGE_TEXT,"this msg with txt");
                             mDataManager.getMessagesDB().addMessage(m);
                             //    mDataManager.getInboxDB().updateContactItem(uuidG.GenerateUUIDFromEmail("Rachael@gmail.com"),true,true);
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
-
                     }
                 });
-
             }
         });
 
-        contactRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-        contactRecyclerView.addItemDecoration(new GridSpacingItemDecoration(1, dpToPx(1), true));
-        contactRecyclerView.setItemAnimator(new DefaultItemAnimator());
-        contactRecyclerView.setAdapter(mAdapter);
+        // init contacts view
+        mContactRecyclerView = (RecyclerView) view.findViewById(R.id.recycler_view_contacts);
+        mContactRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+        mContactRecyclerView.addItemDecoration(new GridSpacingItemDecoration(1, dpToPx(1), true));
+        mContactRecyclerView.setItemAnimator(new DefaultItemAnimator());
+        mContactRecyclerView.setAdapter(mAdapter);
         initSwipe();
+
+        // init search contacts view
+        mSearchContactRecyclerView = (RecyclerView) view.findViewById(R.id.recycler_view_search_contacts);
+        mSearchContactRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+        mSearchContactRecyclerView.addItemDecoration(new GridSpacingItemDecoration(1, dpToPx(1), true));
+        mSearchContactRecyclerView.setItemAnimator(new DefaultItemAnimator());
+        mSearchContactRecyclerView.setVisibility(View.GONE);
 
         return view;
     }
@@ -239,6 +230,31 @@ public class InboxFragment extends Fragment {
         super.onPrepareOptionsMenu(menu);
         menu.findItem(R.id.action_manual_handshake).setVisible(true);
         menu.findItem(R.id.action_search).setVisible(true);
+
+        MenuItem search = menu.findItem(R.id.action_search);
+        final SearchView searchView = (SearchView) MenuItemCompat.getActionView(search);
+
+        MenuItemCompat.setOnActionExpandListener(search, new MenuItemCompat.OnActionExpandListener() {
+            @Override
+            public boolean onMenuItemActionExpand(MenuItem item) {
+
+                mSearchContactArrayList = mDataManager.getInboxDB().getUserList(mDataManager);
+                mSearchContactAdapter = new SearchContactAdapter(mSearchContactArrayList);
+                mSearchContactRecyclerView.setAdapter(mSearchContactAdapter);
+
+                mSearchContactRecyclerView.setVisibility(View.VISIBLE);
+                mContactRecyclerView.setVisibility(View.GONE);
+                search(searchView);
+                return true;
+            }
+
+            @Override
+            public boolean onMenuItemActionCollapse(MenuItem item) {
+                mSearchContactRecyclerView.setVisibility(View.GONE);
+                mContactRecyclerView.setVisibility(View.VISIBLE);
+                return true;
+            }
+        });
     }
 
     @Override
@@ -255,10 +271,9 @@ public class InboxFragment extends Fragment {
             startManualSync();
             return true;
         }
-        if (id == R.id.action_search) {
-            Snackbar.make(view, "Search", Snackbar.LENGTH_SHORT)
-                    .setAction("Action", null).show();
-            return true;
+
+        if (id == R.id.home) {
+
         }
 
         return super.onOptionsItemSelected(item);
@@ -497,7 +512,7 @@ public class InboxFragment extends Fragment {
                     if(doc != null) {
                         Map<String, Object> properties = doc.getProperties();
                         String uuidString = (String) properties.get("uuid");
-                        mDataManager.getInboxDB().deleteUserAndConversation(UUID.fromString(uuidString), mDataManager, mDataBase);
+                        mDataManager.getInboxDB().deleteUserAndConversation(UUID.fromString(uuidString));
                         Toast.makeText(getContext(), "user was deleted", Toast.LENGTH_SHORT).show();
                     }
                 } else {
@@ -543,7 +558,7 @@ public class InboxFragment extends Fragment {
             }
         };
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleItemTouchCallback);
-        itemTouchHelper.attachToRecyclerView(contactRecyclerView);
+        itemTouchHelper.attachToRecyclerView(mContactRecyclerView);
     }
 
     private void removeView(){
@@ -567,11 +582,9 @@ public class InboxFragment extends Fragment {
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 
-
         // Inflate and set the layout for the dialog
         // Pass null as the parent view because its going in the dialog layout
         builder.setView(view);
-
 
         // Add action buttons
         builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
@@ -581,11 +594,25 @@ public class InboxFragment extends Fragment {
                     }
                 });
 
-//        builder.setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
-//                    public void onClick(DialogInterface dialog, int id) {
-//                        /// do something
-//                    }
-//                });
         builder.create().show();
+    }
+
+    // search for user  or name or email
+    private void search(final SearchView searchView) {
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+//                searchView.clearFocus();
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                mSearchContactAdapter.getFilter().filter(newText);
+                return true;
+            }
+
+        });
     }
 }

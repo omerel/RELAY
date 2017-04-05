@@ -20,12 +20,17 @@ import com.couchbase.lite.SavedRevision;
 import com.couchbase.lite.UnsavedRevision;
 import com.couchbase.lite.View;
 import com.couchbase.lite.android.AndroidContext;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.relay.relay.SubSystem.DataManager;
+import com.relay.relay.Util.SearchUser;
+import com.relay.relay.Util.UuidGenerator;
+import com.relay.relay.system.Node;
 import com.relay.relay.system.RelayMessage;
 
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -347,12 +352,11 @@ public class InboxDB {
     }
 
     // Use it when click delete in contact - piratically only make contact disappear and messages deleted
-    public void deleteUserAndConversation(final UUID contactUUID, DataManager dataManager, Database database){
+    public void deleteUserAndConversation(final UUID contactUUID){
         if (isContactExist(contactUUID)){
-            // TODO complete with query
 
             // Create a view and register its map function:
-            View messagesView = database.getView("messagesToDelete");
+            View messagesView = mDatabase.getView("messagesToDelete");
             messagesView.setMap(new Mapper() {
                 @Override
                 public void map(Map<String, Object> document, Emitter emitter) {
@@ -374,7 +378,7 @@ public class InboxDB {
             }
             for (Iterator<QueryRow> it = result; it.hasNext(); ) {
                 QueryRow row = it.next();
-                dataManager.getInboxDB().deleteMessageFromInbox(UUID.fromString((String)row.getValue()));
+                deleteMessageFromInbox(UUID.fromString((String)row.getValue()));
             }
 
             // disappear user
@@ -382,6 +386,52 @@ public class InboxDB {
 
         }
         return;
+    }
+
+    public ArrayList<SearchUser> getUserList(DataManager dataManager){
+
+        ArrayList<SearchUser> arrayList = new ArrayList<>();
+        String email;
+        UUID uuid;
+        // Create a view and register its map function:
+        View messagesView = mDatabase.getView("userList");
+
+            messagesView.setMap(new Mapper() {
+                @Override
+                public void map(Map<String, Object> document, Emitter emitter) {
+                    String type = (String) document.get("type");
+                    if ("contact".equals(type)) {
+                        emitter.emit(document.get("time"), document.get("uuid"));
+                    }
+                }
+            }, "1");
+
+            Query query = messagesView.createQuery();
+            query.setMapOnly(true);
+            QueryEnumerator result = null;
+            try {
+                result = query.run();
+            } catch (CouchbaseLiteException e) {
+                e.printStackTrace();
+            }
+            for (Iterator<QueryRow> it = result; it.hasNext(); ) {
+                QueryRow row = it.next();
+                if (dataManager.getNodesDB().isNodeExist(UUID.fromString((String) row.getValue()))) {
+                    Node node = dataManager.getNodesDB().getNode(UUID.fromString((String) row.getValue()));
+                    String userName = node.getUserName();
+                    String fullName = node.getFullName();
+                    email = node.getEmail();
+                    uuid = node.getId();
+                    arrayList.add(new SearchUser(fullName, email, userName, uuid));
+                } else {
+                    UuidGenerator uuidGenerator = new UuidGenerator();
+                    uuid = UUID.fromString((String) row.getValue());
+                    email = uuidGenerator.GenerateEmailFromUUID(uuid);
+                    arrayList.add(new SearchUser("", email, "", uuid));
+                }
+            }
+
+        return arrayList;
     }
 
     private String convertCalendarToFormattedString(Calendar cal){

@@ -35,6 +35,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
+import com.relay.relay.DB.Test;
 import com.relay.relay.SubSystem.DataManager;
 import com.relay.relay.SubSystem.RelayConnectivityManager;
 import com.relay.relay.Util.UuidGenerator;
@@ -263,7 +264,6 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-
     /**
      * Animation between two views
      */
@@ -458,7 +458,6 @@ public class MainActivity extends AppCompatActivity
 
     private class UplaodInboxAsyncTask extends AsyncTask<String, String, String>{
 
-
         public UplaodInboxAsyncTask() {
             super();
         }
@@ -471,7 +470,7 @@ public class MainActivity extends AppCompatActivity
         @Override
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
-            crossfade(2500);
+            crossfade(500);
         }
 
         @Override
