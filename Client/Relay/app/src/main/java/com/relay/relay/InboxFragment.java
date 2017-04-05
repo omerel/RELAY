@@ -126,6 +126,7 @@ public class InboxFragment extends Fragment {
 //        }
         // To enable editing the tool bar from fragment
         setHasOptionsMenu(true);
+
         mDataManager = new DataManager(getContext());
         mDataBase = mDataManager.getInboxDB().getDatabase();
         setupLiveQuery();
@@ -145,19 +146,36 @@ public class InboxFragment extends Fragment {
 
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Creating new mail message", Snackbar.LENGTH_SHORT)
-                        .setAction("Action", null).show();
-                UuidGenerator uuidG= new UuidGenerator();
-                RelayMessage m = null;
-                try {
-                    m = new RelayMessage(uuidG.GenerateUUIDFromEmail("rachael@gmail.com"),mDataManager.getNodesDB().getMyNodeId(),
-                            RelayMessage.TYPE_MESSAGE_TEXT,"this msg with txt");
-                    mDataManager.getMessagesDB().addMessage(m);
-                //    mDataManager.getInboxDB().updateContactItem(uuidG.GenerateUUIDFromEmail("Rachael@gmail.com"),true,true);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+            public void onClick(final View view) {
+
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        Snackbar.make(view, "Creating new mail message", Snackbar.LENGTH_SHORT)
+                                .setAction("Action", null).show();
+
+                    }
+                });
+
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        UuidGenerator uuidG= new UuidGenerator();
+                        RelayMessage m = null;
+                        try {
+                            m = new RelayMessage(uuidG.GenerateUUIDFromEmail("rachael@gmail.com"),mDataManager.getNodesDB().getMyNodeId(),
+                                    RelayMessage.TYPE_MESSAGE_TEXT,"this msg with txt");
+                            mDataManager.getMessagesDB().addMessage(m);
+                            //    mDataManager.getInboxDB().updateContactItem(uuidG.GenerateUUIDFromEmail("Rachael@gmail.com"),true,true);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+
+                    }
+                });
+
             }
         });
 
@@ -176,6 +194,7 @@ public class InboxFragment extends Fragment {
             mListener.onFragmentInteraction(string);
         }
     }
+
 
     @Override
     public void onAttach(Context context) {
@@ -346,13 +365,14 @@ public class InboxFragment extends Fragment {
             holder.lastMsg.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    goToContactConversationActivity(UUID.fromString(uuidString));
+                            goToContactConversationActivity(UUID.fromString(uuidString));
                 }
             });
             holder.userName.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     goToContactConversationActivity(UUID.fromString(uuidString));
+
                 }
             });
 
@@ -364,10 +384,8 @@ public class InboxFragment extends Fragment {
                         showProfilePictureInDialog(null);
                     else
                         showProfilePictureInDialog(node.getProfilePicture());
-
                 }
             });
-
         }
     }
 

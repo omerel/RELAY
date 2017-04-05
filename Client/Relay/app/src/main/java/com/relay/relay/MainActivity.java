@@ -15,16 +15,14 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.media.RingtoneManager;
 import android.net.Uri;
-import android.net.wifi.WifiManager;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.design.widget.NavigationView;
-import android.support.v4.app.TaskStackBuilder;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -36,16 +34,12 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.relay.relay.DB.Test;
 import com.relay.relay.SubSystem.DataManager;
 import com.relay.relay.SubSystem.RelayConnectivityManager;
 import com.relay.relay.Util.UuidGenerator;
 
 import java.util.UUID;
-
-import static android.preference.PreferenceManager.getDefaultSharedPreferences;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener ,
@@ -71,7 +65,7 @@ public class MainActivity extends AppCompatActivity
     // animation between views
     private View mContentView;
     private View mLoadingView;
-    private int mShortAnimationDuration;
+   // private int mShortAnimationDuration;
     private TextView textViewUserName;
     private TextView textViewUserEmail;
 
@@ -79,6 +73,8 @@ public class MainActivity extends AppCompatActivity
     private IntentFilter mFilter;
 
     private  UUID mMyuuid;
+
+    private UplaodInboxAsyncTask uplaodInboxAsyncTask;
 
 
     @Override
@@ -100,12 +96,10 @@ public class MainActivity extends AppCompatActivity
         mContentView = findViewById(R.id.content_body);
         mLoadingView = findViewById(R.id.loading_spinner);
 
-
-        // Retrieve and cache the system's default "short" animation time.
-        mShortAnimationDuration = getResources().getInteger(
-                android.R.integer.config_longAnimTime);
-
-
+//        // Retrieve and cache the system's default "short" animation time.
+//        mShortAnimationDuration = 2000;
+////        mShortAnimationDuration = getResources().getInteger(
+////                android.R.integer.config_longAnimTime);
 
 
         // get my uuid from login and put it in sharedPreferences
@@ -140,8 +134,6 @@ public class MainActivity extends AppCompatActivity
         Snackbar.make(this.mContentView, "Start RelayConnectivityManager service", Snackbar.LENGTH_SHORT)
                 .setAction("Action", null).show();
 
-        // start on inbox
-        displayFragment(0);
 
         // check Bluetooth support
         checkBluetoothAndBleSupport();
@@ -150,6 +142,9 @@ public class MainActivity extends AppCompatActivity
         createBroadcastReceiver();
 
         checkPermissions();
+
+        // start on inbox
+        displayFragment(0);
 
 //        Test t = new Test(this);
 //        t.startTest();
@@ -235,44 +230,44 @@ public class MainActivity extends AppCompatActivity
 
     private void displayFragment(int position) {
 
-        // Initially hide the content view.
-        mContentView.setVisibility(View.INVISIBLE);
-
+        //Initially hide the content view.
         mFragment = null;
         String title = getString(R.string.app_name);
-
         switch (position) {
             case 0:
-                mFragment = new InboxFragment();
+                mContentView.setVisibility(View.INVISIBLE);
+                uplaodInboxAsyncTask = new UplaodInboxAsyncTask();
                 title = getString(R.string.title_home_fragment);
+                uplaodInboxAsyncTask.execute("");
+                // set the toolbar title
+                getSupportActionBar().setTitle(title);
                 break;
             case 1:
+                mContentView.setVisibility(View.INVISIBLE);
                 mFragment = new PreferencesConnectionFragment();
                 title = getString(R.string.title_connection_fragment);
+                if (mFragment != null) {
+                    FragmentManager fragmentManager = getSupportFragmentManager();
+                    FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                    fragmentTransaction.replace(R.id.content_body, mFragment);
+                    fragmentTransaction.commit();
+                    // set the toolbar title
+                    getSupportActionBar().setTitle(title);
+                }
+                crossfade(500);
                 break;
             case 2:
                 break;
             default:
                 break;
         }
-
-        if (mFragment != null) {
-            FragmentManager fragmentManager = getSupportFragmentManager();
-            FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-            fragmentTransaction.replace(R.id.content_body, mFragment);
-            fragmentTransaction.commit();
-
-            // set the toolbar title
-            getSupportActionBar().setTitle(title);
-        }
-        crossfade();
     }
 
 
     /**
      * Animation between two views
      */
-    private void crossfade() {
+    private void crossfade(int mShortAnimationDuration) {
 
         // setup progress bar
         mLoadingView.setVisibility(View.VISIBLE);
@@ -461,4 +456,39 @@ public class MainActivity extends AppCompatActivity
     }
 
 
+    private class UplaodInboxAsyncTask extends AsyncTask<String, String, String>{
+
+
+        public UplaodInboxAsyncTask() {
+            super();
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            crossfade(2500);
+        }
+
+        @Override
+        protected String doInBackground(String... strings) {
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            mFragment = new InboxFragment();
+            if (mFragment != null) {
+                FragmentManager fragmentManager = getSupportFragmentManager();
+                FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                fragmentTransaction.replace(R.id.content_body, mFragment);
+                fragmentTransaction.commit();
+            }
+            return null;
+        }
+    }
 }

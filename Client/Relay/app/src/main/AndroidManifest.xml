@@ -36,11 +36,6 @@
                 </intent-filter>
             </receiver>
         </service>
-
-        <activity
-            android:name=".RelayMainActivity"
-            android:screenOrientation="portrait" />
-
         <activity
             android:name=".MainActivity"
             android:label="@string/title_activity_main"
