@@ -351,7 +351,7 @@ public class Test {
         Log.e(TAG, "add Nodes to nodeDB");
         for (int i = 0; i < numOFNodes; i++) {
             nodesDB.addNode(new Node(uuids[i],dates[randomIndex(0,MAX)],dates[randomIndex(0,MAX)],
-                    1,email[i],phoneNumber[i], userName[i], fullNAme[i], null,i));
+                    1,email[i],phoneNumber[i], userName[i], fullNAme[i], pic,i));
         }
 
 //        Log.e(TAG, "add Messages to messagesDB");
@@ -412,12 +412,12 @@ public class Test {
     public void startTest(){
 
         /////////start
-        baseDB();
+       // baseDB();
 
         timePerformance.start();
         Log.e(TAG, "Create DB");
         //////////////
-        createDB_4();
+      //  createDB_4();
         /////////////
 //        Log.e(TAG, "graphRelations.getMyNumEdges()--->"+ graphRelations.getMyNumEdges());
 //        Log.e(TAG, "graphRelations.getMyNumNodes()--->"+ graphRelations.getMyNumNodes());

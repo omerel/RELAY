@@ -144,7 +144,6 @@ public class HandShake implements BLConstants {
                 }
                 break;
             case STEP_3_TEXT_MESSAGES:
-
                 ArrayList<RelayMessage> relayMessages =
                          JsonConvertor.getRelayMessageListFromJsonContent(jsonPacket);
                 timePerformance.start();

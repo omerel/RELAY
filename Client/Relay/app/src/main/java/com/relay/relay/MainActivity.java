@@ -66,7 +66,7 @@ public class MainActivity extends AppCompatActivity
     // animation between views
     private View mContentView;
     private View mLoadingView;
-   // private int mShortAnimationDuration;
+    private int mShortAnimationDuration;
     private TextView textViewUserName;
     private TextView textViewUserEmail;
 
@@ -82,6 +82,13 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // for dubug
+        Test t = new Test(this);
+//        t.startTest();
+        //
+
+
         Toolbar  toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
@@ -97,10 +104,9 @@ public class MainActivity extends AppCompatActivity
         mContentView = findViewById(R.id.content_body);
         mLoadingView = findViewById(R.id.loading_spinner);
 
-//        // Retrieve and cache the system's default "short" animation time.
-//        mShortAnimationDuration = 2000;
-////        mShortAnimationDuration = getResources().getInteger(
-////                android.R.integer.config_longAnimTime);
+        // Retrieve and cache the system's default "short" animation time.
+        mShortAnimationDuration = getResources().getInteger(
+                android.R.integer.config_longAnimTime);
 
 
         // get my uuid from login and put it in sharedPreferences
@@ -146,9 +152,6 @@ public class MainActivity extends AppCompatActivity
 
         // start on inbox
         displayFragment(0);
-
-//        Test t = new Test(this);
-//        t.startTest();
 
     }
 
@@ -255,7 +258,7 @@ public class MainActivity extends AppCompatActivity
                     // set the toolbar title
                     getSupportActionBar().setTitle(title);
                 }
-                crossfade(500);
+                crossfade(mShortAnimationDuration);
                 break;
             case 2:
                 break;
@@ -470,7 +473,7 @@ public class MainActivity extends AppCompatActivity
         @Override
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
-            crossfade(500);
+            crossfade(mShortAnimationDuration);
         }
 
         @Override

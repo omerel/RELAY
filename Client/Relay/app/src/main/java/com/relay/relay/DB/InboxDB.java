@@ -53,6 +53,7 @@ public class InboxDB {
     final String FORMATTER_DATE = "yyyyMMddHHmmss";
     final String CONTACT_ID = "contact_";
     final String MESSAGE_ID = "message_";
+    final String SEARCH_KEY_DELIMITER = "%!%";
 
     // commands to update inboxDB
     public final int ADD_NEW_MESSAGE_TO_INBOX = 1;
@@ -163,7 +164,11 @@ public class InboxDB {
     }
 
 
-    public SavedRevision addContactItem(UUID contactUUID){
+    public SavedRevision addContactItem(UUID contactUUID,final String searchKey){
+
+        // ignore my contact
+//        if(contactUUID.equals(mMyId))
+//            return null;
 
         if (!isContactExist(contactUUID)){
             Map<String, Object> properties = new HashMap<String, Object>();
@@ -173,12 +178,31 @@ public class InboxDB {
             properties.put("updates", true);
             properties.put("disappear", true);
             properties.put("time", convertCalendarToFormattedString(Calendar.getInstance()));
+            properties.put("search_key", searchKey);
 
             String docId = CONTACT_ID+contactUUID;
             Document document = mDatabase.getDocument(docId);
 
             try {
                 return document.putProperties(properties);
+            } catch (CouchbaseLiteException e) {
+                e.printStackTrace();
+            }
+        }
+        else{
+            // happens when the device got mail from the user before he got its node
+            //  need to update the search key
+            Document doc = mDatabase.getDocument(CONTACT_ID + contactUUID.toString());
+            try {
+                doc.update(new Document.DocumentUpdater() {
+                    @Override
+                    public boolean update(UnsavedRevision newRevision) {
+                        Map<String, Object> properties = newRevision.getUserProperties();
+                        properties.put("search_key", searchKey);
+                        newRevision.setUserProperties(properties);
+                        return true;
+                    }
+                });
             } catch (CouchbaseLiteException e) {
                 e.printStackTrace();
             }
@@ -242,7 +266,7 @@ public class InboxDB {
         }
         else{
             Log.e(TAG,"New msg from user that not in my mesh");
-            addContactItem(contactUUID);
+            addContactItem(contactUUID,new UuidGenerator().GenerateEmailFromUUID(contactUUID));
             updateContactItem(contactUUID,withNewMessage,jumpItem,toUpdate,disappear);
         }
         return false;
@@ -401,7 +425,7 @@ public class InboxDB {
                 public void map(Map<String, Object> document, Emitter emitter) {
                     String type = (String) document.get("type");
                     if ("contact".equals(type)) {
-                        emitter.emit(document.get("time"), document.get("uuid"));
+                        emitter.emit(document.get("search_key"), document.get("uuid"));
                     }
                 }
             }, "1");
@@ -416,17 +440,19 @@ public class InboxDB {
             }
             for (Iterator<QueryRow> it = result; it.hasNext(); ) {
                 QueryRow row = it.next();
-                if (dataManager.getNodesDB().isNodeExist(UUID.fromString((String) row.getValue()))) {
-                    Node node = dataManager.getNodesDB().getNode(UUID.fromString((String) row.getValue()));
-                    String userName = node.getUserName();
-                    String fullName = node.getFullName();
-                    email = node.getEmail();
-                    uuid = node.getId();
+                String searchKey = (String)row.getDocument().getProperties().get("search_key");
+                String[] searchKeryArray = searchKey.split(SEARCH_KEY_DELIMITER);
+                // if the userId in nodesDB and we have the fullName, userName ,  and email
+                if (searchKeryArray.length == 3) {
+                    String userName = searchKeryArray[1];
+                    String fullName = searchKeryArray[0];
+                    email = searchKeryArray[2];
+                    uuid = UUID.fromString((String) row.getValue());
                     arrayList.add(new SearchUser(fullName, email, userName, uuid));
                 } else {
-                    UuidGenerator uuidGenerator = new UuidGenerator();
+                    // if the userId not in nodesDB and we have only its email
                     uuid = UUID.fromString((String) row.getValue());
-                    email = uuidGenerator.GenerateEmailFromUUID(uuid);
+                    email = searchKeryArray[0];
                     arrayList.add(new SearchUser("", email, "", uuid));
                 }
             }

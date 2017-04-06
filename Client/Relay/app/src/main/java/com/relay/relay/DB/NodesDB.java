@@ -49,7 +49,10 @@ public class NodesDB {
             dbManager.putJsonObject(node.getId(),JsonConvertor.convertToJson(node));
             graphRelations.addNode(node.getId());
             addNumNodes();
-            mInboxDB.addContactItem(node.getId());
+            String keySearch = node.getFullName()+mInboxDB.SEARCH_KEY_DELIMITER+
+                    node.getUserName()+mInboxDB.SEARCH_KEY_DELIMITER+
+                    node.getEmail();
+            mInboxDB.addContactItem(node.getId(),keySearch);
             return true;
         }
         else{
