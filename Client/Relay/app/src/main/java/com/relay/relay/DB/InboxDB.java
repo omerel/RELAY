@@ -93,6 +93,7 @@ public class InboxDB {
         /// check first if I'm the sender or the destination . in other words, if to to put the msg in the inbox
         if ( mMyId.equals(destinationId) || mMyId.equals(senderId) ){
 
+            // TODO fix is my message
             if (!mMyId.equals(destinationId))
                 contact = destinationId;
             else
@@ -102,7 +103,7 @@ public class InboxDB {
                 case ADD_NEW_MESSAGE_TO_INBOX:
                     boolean isMyMessage = senderId.equals(mMyId);
                     // add message to inboxDB( if already exist return false )
-                    addMessageItem(relayMessage.getId(),contact, relayMessage.getTimeCreated(),isMyMessage);
+                    addMessageItem(relayMessage.getId(),relayMessage.getContent(),contact, relayMessage.getTimeCreated(),isMyMessage);
                     break;
             }
         }
@@ -124,7 +125,7 @@ public class InboxDB {
     }
 
 
-    private SavedRevision addMessageItem(UUID messageUUID,UUID contactParentUUID,Calendar time,boolean isMyMessage) {
+    private SavedRevision addMessageItem(UUID messageUUID,String msgContent,UUID contactParentUUID,Calendar time,boolean isMyMessage) {
 
         if (!isMessageExist(messageUUID)){
 
@@ -136,17 +137,17 @@ public class InboxDB {
 
             if (isMyMessage){
                 Log.e(TAG,"I wrote the msg");
-                properties.put("is_new_message", false);
+                properties.put("is_my_message", true);
                 properties.put("update", false);
                 // update parent item with the changes
-                updateContactItem(contactParentUUID,false,true,false,false);
+                updateContactItem(contactParentUUID,msgContent,false,true,false,false);
             }
             else{
                 Log.e(TAG,"The msg for me");
-                properties.put("is_new_message", true);
+                properties.put("is_my_message", false);
                 properties.put("update", true);
                 // update parent item with the changes
-                updateContactItem(contactParentUUID,true,true,true,false);
+                updateContactItem(contactParentUUID,msgContent,true,true,true,false);
             }
             properties.put("disappear", false);
             properties.put("time", convertCalendarToFormattedString(time));
@@ -166,11 +167,7 @@ public class InboxDB {
 
     public SavedRevision addContactItem(UUID contactUUID,final String searchKey){
 
-        // ignore my contact
-//        if(contactUUID.equals(mMyId))
-//            return null;
-
-        if (!isContactExist(contactUUID)){
+        if ( !isContactExist(contactUUID) && !contactUUID.equals(mMyId) ){
             Map<String, Object> properties = new HashMap<String, Object>();
             properties.put("type", "contact");
             properties.put("uuid", contactUUID.toString());
@@ -237,7 +234,7 @@ public class InboxDB {
     }
 
 
-    public boolean updateContactItem(final UUID contactUUID, final boolean withNewMessage,
+    public boolean updateContactItem(final UUID contactUUID,final String lastMsg, final boolean withNewMessage,
                                      final boolean jumpItem, final boolean toUpdate,final boolean disappear){
 
         if (isContactExist(contactUUID)){
@@ -248,6 +245,7 @@ public class InboxDB {
                     @Override
                     public boolean update(UnsavedRevision newRevision) {
                         Map<String, Object> properties = newRevision.getUserProperties();
+                        properties.put("last_message", lastMsg);
                         properties.put("new_messages", withNewMessage);
                         properties.put("updates", toUpdate);
                         properties.put("disappear", disappear);
@@ -267,7 +265,7 @@ public class InboxDB {
         else{
             Log.e(TAG,"New msg from user that not in my mesh");
             addContactItem(contactUUID,new UuidGenerator().GenerateEmailFromUUID(contactUUID));
-            updateContactItem(contactUUID,withNewMessage,jumpItem,toUpdate,disappear);
+            updateContactItem(contactUUID,lastMsg,withNewMessage,jumpItem,toUpdate,disappear);
         }
         return false;
     }
@@ -363,7 +361,6 @@ public class InboxDB {
             Map<String, Object> properties = new HashMap<>();
             properties.putAll(doc.getProperties());
             properties.put("update", false);
-            properties.put("is_new_message", false);
 
             try {
                 doc.putProperties(properties);
@@ -406,7 +403,7 @@ public class InboxDB {
             }
 
             // disappear user
-            updateContactItem(contactUUID,false,false,false,true);
+            updateContactItem(contactUUID,"",false,false,false,true);
 
         }
         return;

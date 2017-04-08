@@ -2,11 +2,10 @@ package com.relay.relay.system;
 
 import android.graphics.Bitmap;
 
-import com.relay.relay.Util.BitmapConverter;
+import com.relay.relay.Util.ImageConverter;
 
+import java.io.InputStream;
 import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -24,7 +23,6 @@ public class RelayMessage {
     public static int STATUS_MESSAGE_DELIVERED = 300;
     public static int TYPE_MESSAGE_TEXT = 11;
     public static int TYPE_MESSAGE_INCLUDE_ATTACHMENT = 12;
-    public static int TYPE_ATTACHMENT_BITMAP = 13;
 
     private UUID mId;
     private Calendar mTimeCreated;
@@ -33,7 +31,7 @@ public class RelayMessage {
     private UUID mDestinationId;
     private int mType;
     private String mContent;
-    private Map<UUID,Attachment> mAttachments;
+    private byte[] mAttachment;
 
     /**
      * Constructor
@@ -42,7 +40,7 @@ public class RelayMessage {
      * @param mType
      * @param mContent
      */
-    public RelayMessage(UUID mSenderId, UUID mDestinationId, int mType, String mContent) {
+    public RelayMessage(UUID mSenderId, UUID mDestinationId, int mType, String mContent,byte[] picture) {
 
         this.mId = UUID.randomUUID(); // TODO check if is it the right generator
         this.mStatus = STATUS_MESSAGE_CREATED;
@@ -51,7 +49,7 @@ public class RelayMessage {
         this.mDestinationId = mDestinationId;
         this.mType = mType;
         this.mContent = mContent;
-        this.mAttachments = new HashMap<>();
+        this.mAttachment = picture;
     }
 
     /**
@@ -116,52 +114,17 @@ public class RelayMessage {
         mContent = null;
     }
 
-    public void deleteAttachments(){
-        mAttachments = null;
-    }
-    /**
-     * Get all attachments
-     * @return
-     */
-    public Attachment[] getAttachments() {
-        if ( mAttachments.size() > 0)
-            return (Attachment[]) mAttachments.values().toArray();
-        return null;
+    public void deleteAttachment(){
+        mAttachment = null;
     }
 
-    /**
-     * Get attachment from message by id
-     * @param id
-     * @return
-     */
-    public Attachment getAttachment(UUID id) {
-        if (mAttachments.containsKey(id))
-            return  mAttachments.get(id);
-        return null;
+    public void setAttachment( byte[] attachment){
+        mAttachment = attachment;
     }
 
-    /**
-     * Add attachment, the type is constant
-     * @param content
-     * @param type
-     * @return
-     */
-    public boolean addAttachment(Object content,int type){
-
-        if ( content == null )
-            // no content
-            return false;
-
-        if ( type == TYPE_ATTACHMENT_BITMAP){
-            Attachment tempAttachment =
-                    new Attachment(BitmapConverter.ConvertBitmapToBytes((Bitmap)content),type);
-            mAttachments.put(tempAttachment.getId(),tempAttachment);
-            return true;
-        }
-        // not such of type;
-        return false;
+    public byte[] getAttachment(){
+        return mAttachment;
     }
-
     /**
      * Get message status
      * @param mStatus
@@ -170,32 +133,6 @@ public class RelayMessage {
         this.mStatus = mStatus;
     }
 
-    private class Attachment{
-        private UUID mId;
-        private int mType;
-        private Object mContent;
 
-        public Attachment(Object mContent, int mType) {
-            this.mContent = mContent;
-            this.mType = mType;
-            this.mId = UUID.randomUUID(); // TODO check if is it the right generator
-        }
-
-        public UUID getId() {
-            return mId;
-        }
-
-        public int getType() {
-            return mType;
-        }
-
-        public Bitmap getContent() {
-
-            if ( mType == TYPE_ATTACHMENT_BITMAP)
-                return (Bitmap) BitmapConverter.convertBytesToBitmap((byte[])mContent);
-
-            return null;
-        }
-    }
 }
 

@@ -1,10 +1,14 @@
 package com.relay.relay.DB;
 
 import android.content.Context;
+import android.util.Log;
 
+import com.relay.relay.Util.ImageConverter;
 import com.relay.relay.Util.JsonConvertor;
 import com.relay.relay.system.Node;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.UUID;
 
@@ -22,6 +26,7 @@ public class NodesDB {
     private GraphRelations graphRelations;
     final String DB = "nodes_db";
     private InboxDB mInboxDB;
+    private AttachmentsDB mAttachmentsDB;
 
     // TODO add NODE for server
 
@@ -37,6 +42,7 @@ public class NodesDB {
             dbManager.putJsonObject(NUM_OF_NODES, JsonConvertor.convertToJson(0));
         this.graphRelations = graphRelations;
         this.mInboxDB = inboxDB;
+        mAttachmentsDB = new AttachmentsDB(context);
     }
 
     /**
@@ -46,9 +52,29 @@ public class NodesDB {
      */
     public boolean addNode(Node node){
         if (!dbManager.isKeyExist(node.getId())) {
+
+            byte[]  bytes = null;
+            if (node.getProfilePicture() != null){
+                // separate image from node. add node to node db
+                bytes = node.getProfilePicture();
+                node.setProfilePicture(null);
+            }
+
+            // add node to nodesDB
             dbManager.putJsonObject(node.getId(),JsonConvertor.convertToJson(node));
+
+            Log.e(TAG,"Add node to nodeDB");
+            // update attachmentDB
+            if (bytes != null) {
+                Log.e(TAG,"Add Attachment to DB ");
+                mAttachmentsDB.addAttachment(node.getId(), new ByteArrayInputStream(bytes));
+            }
+
+            // update graphRelations
             graphRelations.addNode(node.getId());
             addNumNodes();
+
+            // update inboxDB
             String keySearch = node.getFullName()+mInboxDB.SEARCH_KEY_DELIMITER+
                     node.getUserName()+mInboxDB.SEARCH_KEY_DELIMITER+
                     node.getEmail();
@@ -57,7 +83,7 @@ public class NodesDB {
         }
         else{
             dbManager.putJsonObject(node.getId(), JsonConvertor.convertToJson(node));
-            mInboxDB.updateContactItem(node.getId(),false,false,false,false);
+            mInboxDB.updateContactItem(node.getId(),"",false,false,false,false);
             return true;
         }
     }
@@ -73,7 +99,10 @@ public class NodesDB {
      */
     public Node getNode(UUID uuid){
         if (dbManager.isKeyExist(uuid)){
-            return JsonConvertor.JsonToNode(dbManager.getJsonObject(uuid));
+            Node node = JsonConvertor.JsonToNode(dbManager.getJsonObject(uuid));
+            if (mAttachmentsDB.getAttachment(uuid) != null)
+                node.setProfilePicture(ImageConverter.convertInputStreamToByteArray(mAttachmentsDB.getAttachment(uuid)));
+            return  node;
         }
         else
             return null;
@@ -89,7 +118,10 @@ public class NodesDB {
             dbManager.deleteJsonObject(uuid);
             graphRelations.deleteNode(uuid);
             reduceNumNodes();
+
             mInboxDB.deleteContactFromDB(uuid);
+
+            mAttachmentsDB.deleteAttachment(uuid);
             return true;
         }
         else
@@ -141,6 +173,7 @@ public class NodesDB {
      * @return
      */
     public boolean deleteNodedb(){
+        mAttachmentsDB.deleteDB();
         return dbManager.deleteDB();
     }
 

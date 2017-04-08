@@ -2,8 +2,9 @@ package com.relay.relay.system;
 
 import android.graphics.Bitmap;
 
-import com.relay.relay.Util.BitmapConverter;
+import com.relay.relay.Util.ImageConverter;
 
+import java.io.InputStream;
 import java.util.Calendar;
 import java.util.UUID;
 
@@ -35,12 +36,12 @@ public class Node {
      * @param mPhoneNumber
      * @param mUserName
      * @param mFullName
-     * @param mProfilePicture
+     * @param profilePicture
      * @param mResidenceCode
      */
     public Node(UUID mId, Calendar mTimeStampNodeDetails, Calendar mTimeStampNodeRelations, int mRank,
                 String mEmail, String mPhoneNumber, String mUserName, String mFullName,
-                Bitmap mProfilePicture, int mResidenceCode) {
+                byte[] profilePicture, int mResidenceCode) {
         this.mId = mId;
         this.mTimeStampNodeDetails = mTimeStampNodeDetails;
         this.mTimeStampNodeRelations = mTimeStampNodeRelations;
@@ -49,7 +50,7 @@ public class Node {
         this.mPhoneNumber = mPhoneNumber;
         this.mUserName = mUserName;
         this.mFullName = mFullName;
-        this.mProfilePicture = BitmapConverter.ConvertBitmapToBytes(mProfilePicture);
+        this.mProfilePicture = profilePicture;
         this.mResidenceCode = mResidenceCode;
     }
 
@@ -165,16 +166,16 @@ public class Node {
      * get node's profile picture
      * @return
      */
-    public Bitmap getProfilePicture() {
-        return BitmapConverter.convertBytesToBitmap(mProfilePicture);
+    public byte[] getProfilePicture() {
+        return this.mProfilePicture;
     }
 
     /**
      * set node's profile picture
      * @param mProfilePicture
      */
-    public void setProfilePicture(Bitmap mProfilePicture) {
-        this.mProfilePicture = BitmapConverter.ConvertBitmapToBytes(mProfilePicture);
+    public void setProfilePicture(byte[] mProfilePicture) {
+        this.mProfilePicture = mProfilePicture;
         setTimeStampNodeDetails(Calendar.getInstance());
     }
 

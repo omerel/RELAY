@@ -235,7 +235,7 @@ public class DataManager {
                 case DELETE_MESSAGE_CONTENT_FROM_MESSAGE_DB:
                     messageUUID = UUID.fromString( msg.getData().getString("uuid") );
                     RelayMessage message = getMessagesDB().getMessage(messageUUID);
-                    message.deleteAttachments();
+                    message.deleteAttachment();
                     message.deleteContent();
                     break;
 

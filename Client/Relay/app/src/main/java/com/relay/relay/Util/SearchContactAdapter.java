@@ -16,10 +16,10 @@ import java.util.ArrayList;
  * Created by omer on 05/04/2017.
  */
 
-public class SearchContactAdapter extends RecyclerView.Adapter<SearchContactAdapter.ViewHolder> implements Filterable {
+public class SearchContactAdapter extends RecyclerView.Adapter<SearchContactAdapter.SearchViewHolder> implements Filterable {
 
-    private ArrayList<SearchUser> mArrayList;
-    private ArrayList<SearchUser> mFilteredList;
+    public ArrayList<SearchUser> mArrayList;
+    public ArrayList<SearchUser> mFilteredList;
 
     public SearchContactAdapter(ArrayList<SearchUser> arrayList) {
         mArrayList = arrayList;
@@ -27,22 +27,12 @@ public class SearchContactAdapter extends RecyclerView.Adapter<SearchContactAdap
     }
 
     @Override
-    public SearchContactAdapter.ViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
-        View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.item_contact_search_result, viewGroup, false);
-        return new ViewHolder(view);
+    public SearchContactAdapter.SearchViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
+        return null;
     }
 
     @Override
-    public void onBindViewHolder(SearchContactAdapter.ViewHolder viewHolder, int i) {
-
-        if (mFilteredList.get(i).getUserName() == ""){
-            viewHolder.contact.setText(mFilteredList.get(i).getEmail());
-        }
-        else{
-            viewHolder.contact.setText("@"+mFilteredList.get(i).getUserName()+", "+
-                    mFilteredList.get(i).getFullName());
-        }
-    }
+    public void onBindViewHolder(SearchContactAdapter.SearchViewHolder viewHolder, int i) {}
 
     @Override
     public int getItemCount() {
@@ -88,9 +78,9 @@ public class SearchContactAdapter extends RecyclerView.Adapter<SearchContactAdap
         };
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder{
-        private TextView contact;
-        public ViewHolder(View view) {
+    public class SearchViewHolder extends RecyclerView.ViewHolder{
+        public TextView contact;
+        public SearchViewHolder(View view) {
             super(view);
             contact = (TextView)view.findViewById(R.id.textView_item_contact_search_name);
         }

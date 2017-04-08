@@ -9,6 +9,7 @@ import android.util.Log;
 import com.relay.relay.MainActivity;
 import com.relay.relay.R;
 import com.relay.relay.SubSystem.DataManager;
+import com.relay.relay.Util.ImageConverter;
 import com.relay.relay.Util.TimePerformance;
 import com.relay.relay.Util.UuidGenerator;
 import com.relay.relay.system.Node;
@@ -56,7 +57,7 @@ public class Test {
     private String[] phoneNumber;
     private String[] email;
     private String[] userName;
-    private Bitmap pic;
+    private static byte[] pic;
     private String[] messages = {"Hi","how are you","Great","what are you doing tonight?",
             "Im feeling fine","do you want to meet us?","Helllllooooo","OMG","Miss u!","Its working!!"};
     TimePerformance timePerformance = new TimePerformance();
@@ -86,107 +87,6 @@ public class Test {
         return min + (int)(Math.random() * ((max - min)));
     }
 
-    public void createDB(){
-        // create ids;
-        uuids = new UUID[15];
-        for (int i = 0; i < 15; i++){
-            uuids[i] =  UUID.randomUUID();
-        }
-
-        this.myID = uuids[0];
-
-        // create random dates
-        Calendar[] dates = new Calendar[30];
-        for (int i =0;i<30;i++){
-            long offset = Timestamp.valueOf("2017-01-01 00:00:00").getTime();
-            long end = Timestamp.valueOf("2017-03-03 00:00:00").getTime();
-            long diff = end - offset + 1;
-            Timestamp rand = new Timestamp(offset + (long)(Math.random() * diff));
-            dates[i] = Calendar.getInstance();
-            dates[i].setTime(rand);
-        }
-
-        // creates names
-        String[] fullNAme = {"Omer","Barr","Rachael","Adi","Stav","Ido","Eric","Rinat","Dana",
-                "Michal","Shlomit","Shir"};
-
-
-        // creates emails
-        String[] email = new String[fullNAme.length];
-        for(int i=0;i<email.length;i++){
-            email[i] = fullNAme[i]+"@gmail.com";
-        }
-
-
-        // creates phone numbers
-        String[] phoneNumber = new String[15];
-        for(int i=0;i<phoneNumber.length;i++){
-            String num = "";
-            for (int j =0 ;j<7;j++){
-                num = num + Integer.toString(randomIndex(0,9));
-            }
-            phoneNumber[i] = "054-"+num;
-        }
-
-        // creates Usernames
-        String[] userName = new String[15];
-        for(int i=0;i<fullNAme.length;i++){
-            userName[i] = fullNAme[i]+Integer.toString(randomIndex(0,9))+Integer.toString(randomIndex(0,9));
-        }
-
-        // creates profile picture
-        Bitmap pic = BitmapFactory.decodeResource(context.getResources(),
-                    R.drawable.pic);
-
-
-        String[] messages = {"Hi","how are you","Great","what are you doing tonight?",
-        "Im feeling fine","do you want to meet us?","Helllllooooo","OMG","Miss u!","Its working!!"};
-
-
-        Log.e(TAG, "add Nodes to nodeDB");
-        for (int i = 0; i < fullNAme.length; i++){
-
-            nodesDB.addNode(new Node(uuids[i],dates[randomIndex(0,29)],dates[randomIndex(0,29)],
-                    1,email[randomIndex(0,fullNAme.length-1)],phoneNumber[randomIndex(0,14)],userName[i],
-                    fullNAme[i], pic,i));
-        }
-
-        Log.e(TAG, "add Messages to messagesDB");
-        for(int i=0;i<30;i++){
-            messagesDB.addMessage( new RelayMessage(uuids[randomIndex(0,fullNAme.length)],uuids[randomIndex(0,fullNAme.length)],
-                    RelayMessage.TYPE_MESSAGE_TEXT,messages[randomIndex(0,9)]));
-        }
-
-        //////////////
-        Log.e(TAG, "Creating full graphRelations");
-        for (int i = 0; i < 5; i++){
-            graphRelations.addEdge(uuids[0],uuids[i]);
-        }
-        for (int i = 5; i < 7; i++){
-            graphRelations.addEdge(uuids[1],uuids[i]);
-        }
-        for (int i = 7; i < 10; i++){
-            graphRelations.addEdge(uuids[2],uuids[i]);
-        }
-        for (int i = 10; i < 13; i++){
-            graphRelations.addEdge(uuids[3],uuids[i]);
-        }
-        for (int i = 13; i < 14; i++){
-            graphRelations.addEdge(uuids[4],uuids[i]);
-        }
-
-        for (int i = 13; i < 14; i++){
-            graphRelations.addEdge(uuids[7],uuids[i]);
-        }
-        for (int i = 14; i < 14; i++){
-            graphRelations.addEdge(uuids[13],uuids[i]);
-        }
-        for (int i = 10; i < 14; i++){
-            graphRelations.addEdge(uuids[5],uuids[i]);
-        }
-        graphRelations.addEdge(uuids[10],uuids[14]);
-
-    }
 
     /**
      * 0-"Omer",1-"Barr",2-"Rachael",3-"Adi","4-Stav","5-Ido",6-"Eric",7-"Rinat",8-"Dana",9-"Michal",10-"Shlomit",11-"Shir"
@@ -240,8 +140,9 @@ public class Test {
         }
 
         // creates profile picture
-        pic = BitmapFactory.decodeResource(context.getResources(),
-                R.drawable.pic);
+          pic = ImageConverter.ConvertBitmapToBytes(BitmapFactory.decodeResource(context.getResources(),
+                R.drawable.ic_new));
+
     }
 
     /**
@@ -256,8 +157,9 @@ public class Test {
 
         Log.e(TAG, "add Nodes to nodeDB");
         for (int i = 0; i < numOFNodes; i++) {
-            nodesDB.addNode(new Node(uuids[0],dates[randomIndex(0,MAX)],dates[randomIndex(0,MAX)],
-                    1,email[i],phoneNumber[i], userName[i], fullNAme[i], pic,i));
+            Node node =new Node(uuids[0],dates[randomIndex(0,MAX)],dates[randomIndex(0,MAX)],
+                    1,email[i],phoneNumber[i], userName[i], fullNAme[i], pic,i);
+            nodesDB.addNode(node);
         }
 
 //        Log.e(TAG, "add Messages to messagesDB");
@@ -283,7 +185,7 @@ public class Test {
 
         Log.e(TAG, "add Nodes to nodeDB");
             nodesDB.addNode(new Node(uuids[1],dates[randomIndex(0,MAX)],dates[randomIndex(0,MAX)],
-                    1,email[1],phoneNumber[1], userName[1], fullNAme[1], pic,0));
+                    1,email[1],phoneNumber[1], userName[1], fullNAme[1],pic,0));
 
 
 //        Log.e(TAG, "add Messages to messagesDB");
@@ -350,8 +252,10 @@ public class Test {
 
         Log.e(TAG, "add Nodes to nodeDB");
         for (int i = 0; i < numOFNodes; i++) {
-            nodesDB.addNode(new Node(uuids[i],dates[randomIndex(0,MAX)],dates[randomIndex(0,MAX)],
-                    1,email[i],phoneNumber[i], userName[i], fullNAme[i], pic,i));
+
+            Node node =new Node(uuids[i],dates[randomIndex(0,MAX)],dates[randomIndex(0,MAX)],
+                    1,email[i],phoneNumber[i], userName[i], fullNAme[i],pic,i);
+            nodesDB.addNode(node);
         }
 
 //        Log.e(TAG, "add Messages to messagesDB");
@@ -384,14 +288,14 @@ public class Test {
         Log.e(TAG, "add Nodes to nodeDB");
         // add bar
         nodesDB.addNode(new Node(uuids[1],dates[randomIndex(0,MAX)],dates[randomIndex(0,MAX)],
-                1,email[1],phoneNumber[1], userName[1], fullNAme[1], pic,0));
+                1,email[1],phoneNumber[1], userName[1], fullNAme[1],pic,0));
 
         //add omer
         nodesDB.addNode(new Node(uuids[0],dates[randomIndex(0,MAX)],dates[randomIndex(0,MAX)],
-                1,email[0],phoneNumber[0], userName[0], fullNAme[0], pic,0));
+                1,email[0],phoneNumber[0], userName[0], fullNAme[0],pic,0));
         //add adi
         nodesDB.addNode(new Node(uuids[3],dates[randomIndex(0,MAX)],dates[randomIndex(0,MAX)],
-                1,email[3],phoneNumber[3], userName[3], fullNAme[3], pic,0));
+                1,email[3],phoneNumber[3], userName[3], fullNAme[3],pic,0));
 
 //        Log.e(TAG, "add Messages to messagesDB");
 //        for(int i=0;i<MAX;i++){
@@ -412,12 +316,12 @@ public class Test {
     public void startTest(){
 
         /////////start
-       // baseDB();
+        baseDB();
 
         timePerformance.start();
         Log.e(TAG, "Create DB");
         //////////////
-      //  createDB_4();
+      // createDB_4();
         /////////////
 //        Log.e(TAG, "graphRelations.getMyNumEdges()--->"+ graphRelations.getMyNumEdges());
 //        Log.e(TAG, "graphRelations.getMyNumNodes()--->"+ graphRelations.getMyNumNodes());
@@ -449,13 +353,15 @@ public class Test {
 
        if (myID.equals(uuids[0])){
          //  messagesDB.addMessage(m);
-//           messagesDB.addMessage(m1);
-//            messagesDB.addMessage( new RelayMessage(uuids[0],uuids[6],
-//                    RelayMessage.TYPE_MESSAGE_TEXT,"this msg will be sent"));
-//            messagesDB.addMessage( new RelayMessage(uuids[0],uuids[1],
-//                    RelayMessage.TYPE_MESSAGE_TEXT,"this msg will be delivered "));
-//            messagesDB.addMessage( new RelayMessage(uuids[6],uuids[7],
-//                    RelayMessage.TYPE_MESSAGE_TEXT,"this will not be sent"));
+        //   messagesDB.addMessage(m1);
+            messagesDB.addMessage( new RelayMessage(uuids[6],nodesDB.getMyNodeId(),
+                    RelayMessage.TYPE_MESSAGE_TEXT,"this msg will be sent",null));
+            messagesDB.addMessage( new RelayMessage(uuids[5],nodesDB.getMyNodeId(),
+                    RelayMessage.TYPE_MESSAGE_TEXT,"this msg will be delivered ",null));
+            messagesDB.addMessage( new RelayMessage(uuids[3],nodesDB.getMyNodeId(),
+                    RelayMessage.TYPE_MESSAGE_TEXT,"this will not be sent",null));
+           messagesDB.addMessage( new RelayMessage(nodesDB.getMyNodeId(),uuids[2],
+                   RelayMessage.TYPE_MESSAGE_TEXT,"this will not be sent",null));
         }
         else{
 //           messagesDB.addMessage( new RelayMessage(uuids[2],uuids[3],
@@ -492,6 +398,6 @@ public class Test {
 //
 //            messagesDB.deleteMessage(uuid);
 //        }
-     // deleteDB();
+      deleteDB();
     }
 }

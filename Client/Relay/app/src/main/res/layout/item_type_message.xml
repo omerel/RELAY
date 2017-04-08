@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+
+
+    <ImageView
+        android:layout_width="40dp"
+        android:id="@+id/imageView_add_picture_send_message_area"
+        android:layout_height="40dp"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:padding="2dp"
+        android:src="@drawable/ic_add_image"/>
+
+    <Button
+        android:id="@+id/button_send_message_area"
+        android:layout_width="50dp"
+        android:layout_height="35dp"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:background="@drawable/my_button_style"
+        android:padding="2dp"
+        android:textStyle="bold"
+        android:textColor="@android:color/white"
+        android:text="Send" />
+
+    <EditText
+
+        android:id="@+id/edit_text_write_message_area"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/rounded_edit_text"
+        android:layout_toRightOf="@id/imageView_add_picture_send_message_area"
+        android:layout_toLeftOf="@id/button_send_message_area"
+        android:layout_alignParentTop="true"
+        android:layout_marginRight="6dp"
+        android:layout_marginLeft="6dp"
+        android:paddingBottom="15dp"
+        android:textSize="15sp"
+        android:paddingLeft="8dp"
+        android:textColor="@color/colorText"
+        android:maxLines="3"
+        android:hint="Write here..."/>
+
+    <View
+        android:id="@+id/line"
+        android:layout_width="wrap_content"
+        android:layout_height="1dp"
+        android:layout_above="@id/edit_text_write_message_area"
+        android:layout_alignParentTop="true"
+        android:layout_marginBottom="3dp"
+        android:background="@android:color/darker_gray" />
+
+
+</RelativeLayout>

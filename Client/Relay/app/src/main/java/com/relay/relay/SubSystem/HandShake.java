@@ -209,7 +209,7 @@ public class HandShake implements BLConstants {
              if ( !msg.getDestinationId().equals(mMyNode.getId()) &&
                      !msg.getSenderId().equals(mMyNode.getId())){
                  msg.deleteContent();
-                 msg.deleteAttachments();
+                 msg.deleteAttachment();
              }
          }
      }
@@ -265,7 +265,7 @@ public class HandShake implements BLConstants {
             if (receivedMetadata.getMyNode().getId().equals(destinationId)) {
                 msg.setStatus(RelayMessage.STATUS_MESSAGE_DELIVERED);
                 if (!mMyNode.getId().equals(msg.getSenderId()))
-                    msg.deleteAttachments();
+                    msg.deleteAttachment();
             }
             // update msg
             mDataManager.getMessagesDB().addMessage(msg);
@@ -304,7 +304,7 @@ public class HandShake implements BLConstants {
                     if (senderId.equals(receivedMetadata.getMyNode().getId())) {
                         RelayMessage msg = mDataManager.getMessagesDB().getMessage(uuid);
                         msg.setStatus(RelayMessage.STATUS_MESSAGE_DELIVERED);
-                        msg.deleteAttachments();
+                        msg.deleteAttachment();
                         msg.deleteContent();
                     }// continue normally
                     else {
@@ -325,7 +325,7 @@ public class HandShake implements BLConstants {
                     if (status == RelayMessage.STATUS_MESSAGE_DELIVERED){
                         if ( !msg.getSenderId().equals(mMyNode.getId()) &&
                                 !msg.getDestinationId().equals(mMyNode.getId())){
-                            msg.deleteAttachments();
+                            msg.deleteAttachment();
                             msg.deleteContent();
                         }
                     }

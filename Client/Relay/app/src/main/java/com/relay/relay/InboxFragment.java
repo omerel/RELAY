@@ -1,7 +1,6 @@
 package com.relay.relay;
 
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -15,7 +14,6 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.MenuItemCompat;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.PopupMenu;
@@ -43,15 +41,16 @@ import com.couchbase.lite.Query;
 import com.relay.relay.SubSystem.DataManager;
 import com.relay.relay.SubSystem.RelayConnectivityManager;
 import com.relay.relay.Util.GridSpacingItemDecoration;
+import com.relay.relay.Util.ImageConverter;
 import com.relay.relay.Util.LiveQueryAdapter;
 import com.relay.relay.Util.SearchContactAdapter;
 import com.relay.relay.Util.SearchUser;
+import com.relay.relay.Util.ShowDialogWithPicture;
 import com.relay.relay.Util.UuidGenerator;
 import com.relay.relay.system.Node;
 import com.relay.relay.system.RelayMessage;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.UUID;
 
@@ -97,7 +96,7 @@ public class InboxFragment extends Fragment {
     // search view and adapter
     private RecyclerView mSearchContactRecyclerView;
     private ArrayList<SearchUser> mSearchContactArrayList;
-    private SearchContactAdapter mSearchContactAdapter;
+    private SearchListAdapter mSearchListAdapter;
 
 
     public InboxFragment() {
@@ -127,6 +126,10 @@ public class InboxFragment extends Fragment {
         // Inflate the layout for this fragment
         view = inflater.inflate(R.layout.fragment_inbox, container, false);
 
+
+        // TODO DELETE THIS- only fore testing
+        final Bitmap pic = BitmapFactory.decodeResource(this.getResources(),R.drawable.pic);
+
         // init fab view
         fab = (FloatingActionButton) view.findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -149,8 +152,11 @@ public class InboxFragment extends Fragment {
                         UuidGenerator uuidG= new UuidGenerator();
                         RelayMessage m = null;
                         try {
-                            m = new RelayMessage(uuidG.GenerateUUIDFromEmail("yolo@gmail.com"),mDataManager.getNodesDB().getMyNodeId(),
-                                    RelayMessage.TYPE_MESSAGE_TEXT,"this msg with txt");
+                            m = new RelayMessage(uuidG.GenerateUUIDFromEmail("rachael@gmail.com"),mDataManager.getNodesDB().getMyNodeId(),
+                                    RelayMessage.TYPE_MESSAGE_INCLUDE_ATTACHMENT,"this msg with picture",ImageConverter.ConvertBitmapToBytes(pic));
+//                            m = new RelayMessage(uuidG.GenerateUUIDFromEmail("rachael@gmail.com"),mDataManager.getNodesDB().getMyNodeId(),
+//                                    RelayMessage.TYPE_MESSAGE_TEXT,"this msg with picture",null);
+                            m.setStatus(m.STATUS_MESSAGE_DELIVERED);
                             mDataManager.getMessagesDB().addMessage(m);
                             //    mDataManager.getInboxDB().updateContactItem(uuidG.GenerateUUIDFromEmail("Rachael@gmail.com"),true,true);
                         } catch (Exception e) {
@@ -239,8 +245,8 @@ public class InboxFragment extends Fragment {
             public boolean onMenuItemActionExpand(MenuItem item) {
 
                 mSearchContactArrayList = mDataManager.getInboxDB().getUserList(mDataManager);
-                mSearchContactAdapter = new SearchContactAdapter(mSearchContactArrayList);
-                mSearchContactRecyclerView.setAdapter(mSearchContactAdapter);
+                mSearchListAdapter = new SearchListAdapter(mSearchContactArrayList);
+                mSearchContactRecyclerView.setAdapter(mSearchListAdapter);
 
                 mSearchContactRecyclerView.setVisibility(View.VISIBLE);
                 mContactRecyclerView.setVisibility(View.GONE);
@@ -333,8 +339,10 @@ public class InboxFragment extends Fragment {
             final String uuidString = (String) properties.get("uuid");
             boolean newMessages = (boolean) properties.get("new_messages");
             boolean updates = (boolean) properties.get("updates");
+            String lastMessage = (String) properties.get("last_message");
             //boolean disappear = (boolean) properties.get("disappear");
             String time = (String) properties.get("time");
+            String email ="";
 
             // get node from nodeDB
             final Node node = mDataManager.getNodesDB().getNode(UUID.fromString(uuidString));
@@ -342,12 +350,13 @@ public class InboxFragment extends Fragment {
             if (node == null){
                 holder.circleImageView.setImageResource(R.drawable.pic_unknown_user);
                 UuidGenerator uuidGenerator = new UuidGenerator();
-                String email =uuidGenerator.GenerateEmailFromUUID(UUID.fromString(uuidString));
+                email =uuidGenerator.GenerateEmailFromUUID(UUID.fromString(uuidString));
                 holder.userName.setText(email);
             }
             else{
-                holder.userName.setText("@"+node.getUserName()+", "+node.getFullName());
-                holder.circleImageView.setImageBitmap(node.getProfilePicture());
+                holder.userName.setText(node.getFullName()+", @"+node.getUserName());
+                holder.circleImageView.setImageBitmap(ImageConverter.convertBytesToBitmap(node.getProfilePicture()));
+
             }
 
 
@@ -366,7 +375,8 @@ public class InboxFragment extends Fragment {
             holder.time.setText(time);
 
             // set last msg
-            holder.lastMsg.setText("need to finish");
+            if(lastMessage != null)
+                holder.lastMsg.setText(lastMessage);
 
             // listener to contact setting
             holder.settingContact.setOnClickListener(new View.OnClickListener() {
@@ -380,13 +390,23 @@ public class InboxFragment extends Fragment {
             holder.lastMsg.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                            goToContactConversationActivity(UUID.fromString(uuidString));
+                    mDataManager.getInboxDB().setContactSeenByUser(UUID.fromString(uuidString));
+                    if (node != null)
+                        goToConversationActivity(UUID.fromString(uuidString),node.getFullName());
+                    else
+                        goToConversationActivity(UUID.fromString(uuidString),
+                                new UuidGenerator().GenerateEmailFromUUID(UUID.fromString(uuidString)));
                 }
             });
             holder.userName.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    goToContactConversationActivity(UUID.fromString(uuidString));
+                    mDataManager.getInboxDB().setContactSeenByUser(UUID.fromString(uuidString));
+                    if (node != null)
+                        goToConversationActivity(UUID.fromString(uuidString),node.getFullName());
+                    else
+                        goToConversationActivity(UUID.fromString(uuidString),
+                                new UuidGenerator().GenerateEmailFromUUID(UUID.fromString(uuidString)));
 
                 }
             });
@@ -396,18 +416,19 @@ public class InboxFragment extends Fragment {
                 @Override
                 public void onClick(View view) {
                     if ( node == null)
-                        showProfilePictureInDialog(null);
+                        new ShowDialogWithPicture(null,getActivity());
                     else
-                        showProfilePictureInDialog(node.getProfilePicture());
+                        new ShowDialogWithPicture(ImageConverter.convertBytesToBitmap(node.getProfilePicture()),getActivity());
                 }
             });
         }
     }
 
-    private void goToContactConversationActivity(UUID uuid) {
-        //TODO go to activity
-        Toast.makeText(getContext(), "goToContactConversationActivity: "+
-                mDataManager.getInboxDB().setContactSeenByUser(uuid), Toast.LENGTH_SHORT).show();
+    private void goToConversationActivity(UUID uuid, String name) {
+        Intent intent = new Intent(getContext(), ConversationActivity.class);
+        intent.putExtra(MainActivity.USER_NAME, name);
+        intent.putExtra(MainActivity.USER_UUID, uuid.toString());
+        startActivity(intent);
 
     }
 
@@ -441,7 +462,7 @@ public class InboxFragment extends Fragment {
             updates = (ImageView) view.findViewById(R.id.imageView_item_contact_updates);
             newMsgs = (ImageView) view.findViewById(R.id.imageView_item_contact_new_messages);
             circleImageView = (de.hdodenhof.circleimageview.CircleImageView)
-                    view.findViewById(R.id.profile_image);
+                    view.findViewById(R.id.dialog_image);
         }
 
     }
@@ -567,34 +588,37 @@ public class InboxFragment extends Fragment {
         }
     }
 
-    private void showProfilePictureInDialog(Bitmap pic){
 
-        // Get the layout inflater
-        LayoutInflater inflater = getActivity().getLayoutInflater();
+    public class SearchListAdapter extends SearchContactAdapter {
 
-        View view = inflater.inflate(R.layout.dialog_profile_picture, null);
+        public SearchListAdapter(ArrayList<SearchUser> arrayList) {
+            super(arrayList);
+        }
 
-        de.hdodenhof.circleimageview.CircleImageView circleImageView = (de.hdodenhof.circleimageview.CircleImageView)
-                view.findViewById(R.id.profile_image);
+        @Override
+        public SearchContactAdapter.SearchViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
+            View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.item_contact_search_result, viewGroup, false);
+            return new SearchViewHolder(view);
+        }
 
-        if (pic != null)
-            circleImageView.setImageBitmap(pic);
+        @Override
+        public void onBindViewHolder(SearchContactAdapter.SearchViewHolder viewHolder,final int i) {
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+            if (mFilteredList.get(i).getUserName() == ""){
+                viewHolder.contact.setText(mFilteredList.get(i).getEmail());
+            }
+            else{
+                viewHolder.contact.setText(mFilteredList.get(i).getFullName()+",  @"+mFilteredList.get(i).getUserName());
+            }
 
-        // Inflate and set the layout for the dialog
-        // Pass null as the parent view because its going in the dialog layout
-        builder.setView(view);
+            viewHolder.itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    goToConversationActivity(mFilteredList.get(i).getUuid(),mFilteredList.get(i).getFullName());
+                }
+            });
+        }
 
-        // Add action buttons
-        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int id) {
-                        // sign in the user ...
-                    }
-                });
-
-        builder.create().show();
     }
 
     // search for user  or name or email
@@ -609,10 +633,12 @@ public class InboxFragment extends Fragment {
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                mSearchContactAdapter.getFilter().filter(newText);
+                mSearchListAdapter.getFilter().filter(newText);
                 return true;
             }
 
         });
     }
+
+
 }

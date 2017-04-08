@@ -49,6 +49,8 @@ public class MainActivity extends AppCompatActivity
 
     private final String TAG = "RELAY_DEBUG: "+ MainActivity.class.getSimpleName();
 
+    public static final String USER_UUID = "relay.intent.uuid_user";
+    public static final String USER_NAME = "relay.intent.user_name";
     public static final String SYSTEM_SETTING = "relay.system_setting";
     public static final String CHANGE_PRIORITY_F = "relay.change_priority";
     public static final String MESSAGE_RECEIVED = "relay.BroadcastReceiver.MESSAGE";
@@ -85,7 +87,7 @@ public class MainActivity extends AppCompatActivity
 
         // for dubug
         Test t = new Test(this);
-//        t.startTest();
+        t.startTest();
         //
 
 
@@ -377,7 +379,7 @@ public class MainActivity extends AppCompatActivity
                     case MESSAGE_RECEIVED:
                         String relayMessage = intent.getStringExtra("relayMessage");
                         createAlertDialog("New message",relayMessage,false);
-                        notifyMessageArrived(); //create ssound
+                        notifyMessageArrived(); //create sound
                         break;
                     case FRESH_FRAGMENT:
                         refreshFragment(mFragment);

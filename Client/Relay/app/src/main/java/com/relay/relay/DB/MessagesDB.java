@@ -1,9 +1,12 @@
 package com.relay.relay.DB;
 import android.content.Context;
 
+import com.relay.relay.Util.ImageConverter;
 import com.relay.relay.Util.JsonConvertor;
 import com.relay.relay.system.RelayMessage;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.UUID;
 
@@ -19,6 +22,8 @@ public class MessagesDB {
     private DBManager dbManager;
     final String DB = "messages_db";
     private InboxDB mInboxDB;
+    private AttachmentsDB mAttachmentsDB;
+
 
     /**
      * Constructor. gets Context. and open the database.
@@ -29,6 +34,7 @@ public class MessagesDB {
         dbManager.openDB();
         dbManager.putJsonObject(NUM_OF_MESSAGES, JsonConvertor.convertToJson(0));
         this.mInboxDB = inboxDB;
+        mAttachmentsDB = new AttachmentsDB(context);
     }
 
 
@@ -38,14 +44,41 @@ public class MessagesDB {
      * @return true if success
      */
     public boolean addMessage(RelayMessage message){
+
         if (!isMessageExist(message.getId())) {
+
+            byte[] bytes = null;
+            // separate image from message.
+            if (message.getAttachment() != null){
+                bytes = message.getAttachment();
+                message.setAttachment(null);
+            }
+
             dbManager.putJsonObject(message.getId(), JsonConvertor.convertToJson(message));
+
+            // update attachmentDB
+            if (bytes != null)
+                mAttachmentsDB.addAttachment(message.getId(),new ByteArrayInputStream(bytes));
+
             addNumMessages();
             mInboxDB.updateInboxDB(message, mInboxDB.ADD_NEW_MESSAGE_TO_INBOX);
             return true;
         }
         else{
+
+            byte[] bytes = null;
+            // separate image from message.
+            if (message.getAttachment() != null){
+                bytes = message.getAttachment();
+                message.setAttachment(null);
+            }
+
             dbManager.putJsonObject(message.getId(), JsonConvertor.convertToJson(message));
+
+            // update attachmentDB
+            if (bytes != null)
+                mAttachmentsDB.addAttachment(message.getId(),new ByteArrayInputStream(bytes));
+
             mInboxDB.updateMessageItem(message.getId());
             return true;
         }
@@ -57,10 +90,13 @@ public class MessagesDB {
      * @return true if success
      */
     public RelayMessage getMessage(UUID uuid){
-        if (dbManager.isKeyExist(uuid))
-            return JsonConvertor.JsonToRelayMessage(dbManager.getJsonObject(uuid));
-        else
-            return null;
+        if (dbManager.isKeyExist(uuid)){
+            RelayMessage relayMessage = JsonConvertor.JsonToRelayMessage(dbManager.getJsonObject(uuid));
+            if (mAttachmentsDB.getAttachment(uuid) != null)
+                relayMessage.setAttachment(ImageConverter.convertInputStreamToByteArray(mAttachmentsDB.getAttachment(uuid)));
+            return relayMessage;
+        }
+        return null;
     }
 
 
@@ -77,6 +113,7 @@ public class MessagesDB {
         if (dbManager.isKeyExist(uuid)){
             dbManager.deleteJsonObject(uuid);
             reduceNumNodes();
+            mAttachmentsDB.deleteAttachment(uuid);
             mInboxDB.deleteMessageFromDB(uuid);
             return true;
         }
@@ -119,6 +156,8 @@ public class MessagesDB {
      * @return
      */
     public boolean deleteMessageDB(){
+
+        mAttachmentsDB.deleteDB();
         return dbManager.deleteDB();
     }
 
