@@ -86,8 +86,8 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
 
         // for dubug
-        Test t = new Test(this);
-        t.startTest();
+//        Test t = new Test(this);
+//        t.startTest();
         //
 
 

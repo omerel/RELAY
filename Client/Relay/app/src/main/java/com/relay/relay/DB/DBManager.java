@@ -1,6 +1,7 @@
 package com.relay.relay.DB;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.Database;
@@ -9,10 +10,12 @@ import com.couchbase.lite.Manager;
 import com.couchbase.lite.Query;
 import com.couchbase.lite.QueryEnumerator;
 import com.couchbase.lite.QueryRow;
+import com.couchbase.lite.UnsavedRevision;
 import com.couchbase.lite.android.AndroidContext;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -66,7 +69,7 @@ public class DBManager {
      * @param jsonObject
      * @return
      */
-    public boolean putJsonObject(UUID key, String jsonObject){
+    public boolean putJsonObject(final UUID key,final String jsonObject){
         Document document;
         Map<String, Object> properties;
         // create or get doc
@@ -74,22 +77,35 @@ public class DBManager {
             // if file exists
             document = mDatabase.getDocument(key.toString());
             // update the old one (its like this to prevent conflicts)
-            properties = new HashMap<String, Object>();
-            properties.putAll(document.getProperties());
+            try {
+                document.update(new Document.DocumentUpdater() {
+                    @Override
+                    public boolean update(UnsavedRevision newRevision) {
+                        Map<String, Object> properties = newRevision.getUserProperties();
+                        properties.put(key.toString(),jsonObject);
+                        newRevision.setUserProperties(properties);
+                        Log.e(TAG," contact added to inboxDB");
+                        return true;
+                    }
+                });
+            } catch (CouchbaseLiteException e) {
+                e.printStackTrace();
+            }
         }
         else{
             document = mDatabase.getDocument(key.toString());
             // create a new properties
             properties = new HashMap<String,Object>();
+            // update properties
+            properties.put(key.toString(),jsonObject);
+            try {
+                document.putProperties(properties);
+            } catch (CouchbaseLiteException e) {
+                e.printStackTrace();
+                return false;
+            }
         }
-        // update properties
-        properties.put(key.toString(),jsonObject);
-        try {
-            document.putProperties(properties);
-        } catch (CouchbaseLiteException e) {
-            e.printStackTrace();
-            return false;
-        }
+
         return true;
     }
 

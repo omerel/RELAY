@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
+import android.graphics.Bitmap;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.DefaultItemAnimator;
@@ -23,18 +24,25 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.Database;
 import com.couchbase.lite.Emitter;
 import com.couchbase.lite.LiveQuery;
 import com.couchbase.lite.Mapper;
 import com.couchbase.lite.Query;
+import com.couchbase.lite.QueryEnumerator;
+import com.couchbase.lite.QueryRow;
 import com.relay.relay.SubSystem.DataManager;
 import com.relay.relay.Util.GridSpacingItemDecoration;
 import com.relay.relay.Util.ImageConverter;
 import com.relay.relay.Util.LiveQueryMessageAdapter;
+import com.relay.relay.Util.SearchUser;
 import com.relay.relay.Util.ShowDialogWithPicture;
 import com.relay.relay.system.RelayMessage;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 
@@ -61,6 +69,7 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
 
     // contact list adapter
     private LiveQuery listsLiveQuery = null;
+    private ArrayList<Map<String,Object>> arrayListProperties = null;
     private ListAdapter mAdapter;
 
 
@@ -80,13 +89,15 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
         getSupportActionBar().setTitle("Relay to "+userName);
 
 
+        arrayListProperties = new ArrayList<>();
+
         // enter to data base
         mDataManager = new DataManager(this);
         mDataBase = mDataManager.getInboxDB().getDatabase();
 
         // set query
         setupLiveQuery(uuidString);
-        mAdapter = new ListAdapter(this,listsLiveQuery);
+        mAdapter = new ListAdapter(this,listsLiveQuery,arrayListProperties);
 
 
         mEditText = (EditText) findViewById(R.id.edit_text_write_message_area);
@@ -103,6 +114,7 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
         mMessageRecyclerView.addItemDecoration(new GridSpacingItemDecoration(1, dpToPx(15), true));
         mMessageRecyclerView.setItemAnimator(new DefaultItemAnimator());
         mMessageRecyclerView.setAdapter(mAdapter);
+        mMessageRecyclerView.setItemViewCacheSize(10);
     }
 
     @Override
@@ -141,7 +153,7 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
         return Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, r.getDisplayMetrics()));
     }
 
-    
+    // the live qeury will listen to the db changes, while the arraylist will be for the ui
     private void setupLiveQuery(final String uuid) {
         if (mDataBase == null) {
             Log.e(TAG,"Error, mDataBase is null!");
@@ -163,6 +175,21 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
         Log.e(TAG,"how many rows : "+listsView.getCurrentTotalRows());
         Query query = listsView.createQuery();
         query.setDescending(true);
+
+
+        // set arrayListProperties
+        QueryEnumerator result = null;
+        try {
+            result = query.run();
+        } catch (CouchbaseLiteException e) {
+            e.printStackTrace();
+        }
+        for (Iterator<QueryRow> it = result; it.hasNext(); ) {
+            QueryRow row = it.next();
+            arrayListProperties.add(row.getDocument().getProperties());
+        }
+
+        // set listsLiveQuery
         listsLiveQuery = query.toLiveQuery();
     }
 
@@ -171,8 +198,8 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
     private class ListAdapter extends LiveQueryMessageAdapter {
 
 
-        public ListAdapter(Context context, LiveQuery query) {
-            super(context, query);
+        public ListAdapter(Context context, LiveQuery query,ArrayList<Map<String,Object>> arrayListProperties) {
+            super(context, query,arrayListProperties);
         }
 
         @Override
@@ -185,9 +212,10 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
 
 
         @Override
-        public void onBindViewHolder(final MessageViewHolder holder, int position) {
+        public void onBindViewHolder(final MessageViewHolder holder, final int position) {
 
-            Map<String,Object> properties = enumerator.getRow(position).getDocument().getProperties();
+            //Map<String,Object> properties = enumerator.getRow(position).getDocument().getProperties();
+            Map<String,Object> properties = arrayListProperties.get(position);
 
             final String uuidString = (String) properties.get("uuid");
             boolean isMyMessage = (boolean) properties.get("is_my_message");
@@ -202,6 +230,17 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
             // set date
             holder.time.setText(time);
 
+            if (isMyMessage){
+                // set user name
+                holder.fullName.setText("Me");
+                RelativeLayout.LayoutParams lp =
+                        (RelativeLayout.LayoutParams) holder.cardAlignment.getLayoutParams();
+                lp.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
+            }else{
+                // set user name
+                holder.fullName.setText(userName);
+            }
+
             // set update message
             if (update)
                 holder.updates.setVisibility(View.VISIBLE);
@@ -215,8 +254,10 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
             }
             else if (relayMessage.getType() == relayMessage.TYPE_MESSAGE_INCLUDE_ATTACHMENT){
                 holder.textMessage.setText(relayMessage.getContent());
-                //holder.pictureAttachment.setImageBitmap(relayMessage.getAttachment());
-                holder.pictureAttachment.setImageBitmap(ImageConverter.convertBytesToBitmap(relayMessage.getAttachment()));
+                // create small pic with low resolution
+                Bitmap smallPic = ImageConverter.convertBytesToBitmap(relayMessage.getAttachment());
+                smallPic =ImageConverter.scaleDown(smallPic,100,true);
+                holder.pictureAttachment.setImageBitmap(smallPic);
             }
 
             int status = relayMessage.getStatus();
@@ -232,22 +273,14 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
                 holder.status.setImageResource(R.drawable.ic_status_cloud);
             }
 
-            if (isMyMessage){
-                // set user name
-                holder.fullName.setText("Me");
-                RelativeLayout.LayoutParams lp =
-                        (RelativeLayout.LayoutParams) holder.cardAlignment.getLayoutParams();
-                lp.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
-            }else{
-                // set user name
-                holder.fullName.setText(userName);
-            }
-
             // listener to card message
             holder.cardAlignment.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     mDataManager.getInboxDB().setMessageSeenByUser((UUID.fromString(uuidString)));
+                    // update holder and arraylist
+                    holder.updates.setVisibility(View.GONE);
+                    arrayListProperties.set(position,getItem(position).getProperties());
                 }
             });
 

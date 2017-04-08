@@ -128,7 +128,7 @@ public class InboxFragment extends Fragment {
 
 
         // TODO DELETE THIS- only fore testing
-        final Bitmap pic = BitmapFactory.decodeResource(this.getResources(),R.drawable.pic);
+        final Bitmap pic = BitmapFactory.decodeResource(this.getResources(),R.drawable.view);
 
         // init fab view
         fab = (FloatingActionButton) view.findViewById(R.id.fab);
@@ -154,9 +154,9 @@ public class InboxFragment extends Fragment {
                         try {
                             m = new RelayMessage(uuidG.GenerateUUIDFromEmail("rachael@gmail.com"),mDataManager.getNodesDB().getMyNodeId(),
                                     RelayMessage.TYPE_MESSAGE_INCLUDE_ATTACHMENT,"this msg with picture",ImageConverter.ConvertBitmapToBytes(pic));
-//                            m = new RelayMessage(uuidG.GenerateUUIDFromEmail("rachael@gmail.com"),mDataManager.getNodesDB().getMyNodeId(),
-//                                    RelayMessage.TYPE_MESSAGE_TEXT,"this msg with picture",null);
-                            m.setStatus(m.STATUS_MESSAGE_DELIVERED);
+//                            m = new RelayMessage(mDataManager.getNodesDB().getMyNodeId(),uuidG.GenerateUUIDFromEmail("adi@gmail.com"),
+//                                    RelayMessage.TYPE_MESSAGE_TEXT,"this msg ",null);
+//                            m.setStatus(m.STATUS_MESSAGE_DELIVERED);
                             mDataManager.getMessagesDB().addMessage(m);
                             //    mDataManager.getInboxDB().updateContactItem(uuidG.GenerateUUIDFromEmail("Rachael@gmail.com"),true,true);
                         } catch (Exception e) {
@@ -173,6 +173,7 @@ public class InboxFragment extends Fragment {
         mContactRecyclerView.addItemDecoration(new GridSpacingItemDecoration(1, dpToPx(1), true));
         mContactRecyclerView.setItemAnimator(new DefaultItemAnimator());
         mContactRecyclerView.setAdapter(mAdapter);
+        mContactRecyclerView.setItemViewCacheSize(20);
         initSwipe();
 
         // init search contacts view
@@ -181,6 +182,7 @@ public class InboxFragment extends Fragment {
         mSearchContactRecyclerView.addItemDecoration(new GridSpacingItemDecoration(1, dpToPx(1), true));
         mSearchContactRecyclerView.setItemAnimator(new DefaultItemAnimator());
         mSearchContactRecyclerView.setVisibility(View.GONE);
+        mSearchContactRecyclerView.setItemViewCacheSize(20);
 
         return view;
     }
@@ -355,7 +357,10 @@ public class InboxFragment extends Fragment {
             }
             else{
                 holder.userName.setText(node.getFullName()+", @"+node.getUserName());
-                holder.circleImageView.setImageBitmap(ImageConverter.convertBytesToBitmap(node.getProfilePicture()));
+                // scale down image quality
+                Bitmap newImage = ImageConverter.convertBytesToBitmap(node.getProfilePicture());
+                newImage = ImageConverter.scaleDown(newImage,100,true);
+                holder.circleImageView.setImageBitmap(newImage);
 
             }
 

@@ -9,6 +9,9 @@ import com.couchbase.lite.LiveQuery;
 import com.couchbase.lite.QueryEnumerator;
 import com.relay.relay.ConversationActivity;
 
+import java.util.ArrayList;
+import java.util.Map;
+
 /**
  * Created by omer on 07/04/2017.
  */
@@ -18,10 +21,12 @@ public class LiveQueryMessageAdapter extends RecyclerView.Adapter<ConversationAc
     private LiveQuery query;
     public QueryEnumerator enumerator;
     private Context context;
+    private ArrayList<Map<String,Object>> arrayListProperties;
 
-    public LiveQueryMessageAdapter(Context context, LiveQuery query) {
+    public LiveQueryMessageAdapter(Context context, LiveQuery query,ArrayList<Map<String,Object>> arrayListProperties) {
         this.context = context;
         this.query = query;
+        this.arrayListProperties = arrayListProperties;
 
         query.addChangeListener(new LiveQuery.ChangeListener() {
             @Override
@@ -30,7 +35,7 @@ public class LiveQueryMessageAdapter extends RecyclerView.Adapter<ConversationAc
                     @Override
                     public void run() {
                         enumerator = event.getRows();
-                        notifyDataSetChanged();
+                        //notifyDataSetChanged();
                     }
                 });
             }
@@ -48,7 +53,8 @@ public class LiveQueryMessageAdapter extends RecyclerView.Adapter<ConversationAc
 
     @Override
     public int getItemCount() {
-        return enumerator != null ? enumerator.getCount() : 0;
+//        return enumerator != null ? enumerator.getCount() : 0;
+        return arrayListProperties != null ? arrayListProperties.size() : 0;
     }
 
     public Document getItem(int position) {
