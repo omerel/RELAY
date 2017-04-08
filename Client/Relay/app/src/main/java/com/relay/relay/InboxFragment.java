@@ -387,7 +387,7 @@ public class InboxFragment extends Fragment {
             holder.settingContact.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    showPopupMenu(holder.settingContact,holder.userName.getText().toString());
+                    showPopupMenu(holder.settingContact,holder.userName.getText().toString(),uuidString);
                 }
             });
 
@@ -483,12 +483,12 @@ public class InboxFragment extends Fragment {
     /**
      * Showing popup menu when tapping on 3 dots
      */
-    private void showPopupMenu(View view,String name) {
+    private void showPopupMenu(View view,String name,String uuidString) {
         // inflate menu
         PopupMenu popup = new PopupMenu(getContext(), view);
         MenuInflater inflater = popup.getMenuInflater();
         inflater.inflate(R.menu.contact_menu, popup.getMenu());
-        popup.setOnMenuItemClickListener(new MyMenuItemClickListener(name));
+        popup.setOnMenuItemClickListener(new MyMenuItemClickListener(name,uuidString));
         popup.show();
     }
 
@@ -498,8 +498,10 @@ public class InboxFragment extends Fragment {
     class MyMenuItemClickListener implements PopupMenu.OnMenuItemClickListener {
 
         String name;
-        public MyMenuItemClickListener(String name) {
+        String uuidString;
+        public MyMenuItemClickListener(String name,String uuidString) {
             this.name = name;
+            this.uuidString = uuidString;
         }
 
         @Override
@@ -509,6 +511,7 @@ public class InboxFragment extends Fragment {
                     Toast.makeText(getContext(), "User "+name+" info ", Toast.LENGTH_SHORT).show();
                     return true;
                 case R.id.action_delete_conversation:
+                    mDataManager.getInboxDB().deleteUserAndConversation(UUID.fromString(uuidString),false);
                     Toast.makeText(getContext(), "Delete "+name+" conversation", Toast.LENGTH_SHORT).show();
                     return true;
                 default:
@@ -538,7 +541,7 @@ public class InboxFragment extends Fragment {
                     if(doc != null) {
                         Map<String, Object> properties = doc.getProperties();
                         String uuidString = (String) properties.get("uuid");
-                        mDataManager.getInboxDB().deleteUserAndConversation(UUID.fromString(uuidString));
+                        mDataManager.getInboxDB().deleteUserAndConversation(UUID.fromString(uuidString),true);
                         Toast.makeText(getContext(), "user was deleted", Toast.LENGTH_SHORT).show();
                     }
                 } else {

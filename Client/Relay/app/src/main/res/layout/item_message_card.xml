@@ -75,11 +75,11 @@
 
             <ImageView
                 android:id="@+id/image_view_picture_attachment"
-                android:layout_width="100dp"
+                android:layout_width="150dp"
                 android:layout_height="100dp"
                 android:layout_below="@id/textView_item_contact_message"
                 android:src="@drawable/pic_unknown_user"
-                android:layout_centerHorizontal="true"
+                android:layout_marginStart="10dp"
                 android:layout_marginBottom="10dp"
                 />
         </RelativeLayout>

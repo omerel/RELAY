@@ -373,11 +373,12 @@ public class InboxDB {
     }
 
     // Use it when click delete in contact - piratically only make contact disappear and messages deleted
-    public void deleteUserAndConversation(final UUID contactUUID){
+    public void deleteUserAndConversation(final UUID contactUUID,boolean disappearContact){
         if (isContactExist(contactUUID)){
 
+            Log.e(TAG,"request for deleteUserAndConversation");
             // Create a view and register its map function:
-            View messagesView = mDatabase.getView("messagesToDelete");
+            View messagesView = mDatabase.getView("messagesToDelete"+contactUUID);
             messagesView.setMap(new Mapper() {
                 @Override
                 public void map(Map<String, Object> document, Emitter emitter) {
@@ -389,6 +390,7 @@ public class InboxDB {
                 }
             }, "1");
 
+            Log.e(TAG,"how many rows to delete: "+messagesView.getCurrentTotalRows());
             Query query = messagesView.createQuery();
             query.setMapOnly(true);
             QueryEnumerator result = null;
@@ -400,10 +402,12 @@ public class InboxDB {
             for (Iterator<QueryRow> it = result; it.hasNext(); ) {
                 QueryRow row = it.next();
                 deleteMessageFromInbox(UUID.fromString((String)row.getValue()));
+                Log.e(TAG,"msg deleted from inbox db");
             }
 
             // disappear user
-            updateContactItem(contactUUID,"",false,false,false,true);
+            if (disappearContact)
+                updateContactItem(contactUUID,"",false,false,false,true);
 
         }
         return;

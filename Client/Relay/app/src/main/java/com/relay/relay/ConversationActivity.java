@@ -256,7 +256,8 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
                 holder.textMessage.setText(relayMessage.getContent());
                 // create small pic with low resolution
                 Bitmap smallPic = ImageConverter.convertBytesToBitmap(relayMessage.getAttachment());
-                smallPic =ImageConverter.scaleDown(smallPic,100,true);
+                smallPic =ImageConverter.scaleDown(smallPic,300,true);
+                smallPic = ImageConverter.getRoundedCornerBitmap(smallPic,5);
                 holder.pictureAttachment.setImageBitmap(smallPic);
             }
 
