@@ -152,10 +152,10 @@ public class InboxFragment extends Fragment {
                         UuidGenerator uuidG= new UuidGenerator();
                         RelayMessage m = null;
                         try {
+//                            m = new RelayMessage(uuidG.GenerateUUIDFromEmail("rachael@gmail.com"),mDataManager.getNodesDB().getMyNodeId(),
+//                                    RelayMessage.TYPE_MESSAGE_INCLUDE_ATTACHMENT,"this msg with picture",ImageConverter.ConvertBitmapToBytes(pic));
                             m = new RelayMessage(uuidG.GenerateUUIDFromEmail("rachael@gmail.com"),mDataManager.getNodesDB().getMyNodeId(),
-                                    RelayMessage.TYPE_MESSAGE_INCLUDE_ATTACHMENT,"this msg with picture",ImageConverter.ConvertBitmapToBytes(pic));
-//                            m = new RelayMessage(mDataManager.getNodesDB().getMyNodeId(),uuidG.GenerateUUIDFromEmail("adi@gmail.com"),
-//                                    RelayMessage.TYPE_MESSAGE_TEXT,"this msg ",null);
+                                    RelayMessage.TYPE_MESSAGE_TEXT,"this msg ",null);
 //                            m.setStatus(m.STATUS_MESSAGE_DELIVERED);
                             mDataManager.getMessagesDB().addMessage(m);
                             //    mDataManager.getInboxDB().updateContactItem(uuidG.GenerateUUIDFromEmail("Rachael@gmail.com"),true,true);
@@ -194,6 +194,17 @@ public class InboxFragment extends Fragment {
         }
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        // reAttach to data base again
+        mDataManager = new DataManager(getContext());
+        mDataBase = mDataManager.getInboxDB().getDatabase();
+        setupLiveQuery();
+        mAdapter = new ListAdapter(getContext(), listsLiveQuery);
+        mContactRecyclerView.setAdapter(mAdapter);
+    }
 
     @Override
     public void onAttach(Context context) {
@@ -205,6 +216,7 @@ public class InboxFragment extends Fragment {
             throw new RuntimeException(context.toString()
                     + " must implement OnFragmentInteractionListener");
         }
+
     }
 
     @Override

@@ -5,10 +5,27 @@
     android:layout_height="wrap_content">
 
 
+
+    <ImageView
+        android:id="@+id/imageView_attachment_send_message_area"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_marginLeft="4dp"
+        android:src="@drawable/ic_add_image"
+        android:layout_alignParentTop="true"/>
+    <ImageView
+        android:id="@+id/imageView_close_attachment_send_message_area"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:src="@drawable/ic_cancel"
+        android:layout_alignParentTop="true"
+        android:padding="5dp"
+        android:layout_toRightOf="@id/imageView_attachment_send_message_area"/>
     <View
+        android:id="@+id/view_line_send_message_area"
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:layout_alignParentTop="true"
+        android:layout_below="@id/imageView_attachment_send_message_area"
         android:paddingBottom="1dp"
         android:background="@color/colorLine"/>
 
@@ -17,7 +34,7 @@
         android:id="@+id/imageView_add_picture_send_message_area"
         android:layout_height="40dp"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
+        android:layout_below="@id/view_line_send_message_area"
         android:padding="2dp"
         android:layout_marginTop="2dp"
         android:src="@drawable/ic_add_image"/>
@@ -27,7 +44,7 @@
         android:layout_width="50dp"
         android:layout_height="35dp"
         android:layout_alignParentRight="true"
-        android:layout_alignParentTop="true"
+        android:layout_below="@id/view_line_send_message_area"
         android:background="@drawable/my_button_style"
         android:textStyle="bold"
         android:layout_marginTop="2dp"
@@ -42,12 +59,13 @@
         android:background="@drawable/rounded_edit_text"
         android:layout_toRightOf="@id/imageView_add_picture_send_message_area"
         android:layout_toLeftOf="@id/button_send_message_area"
-        android:layout_alignParentTop="true"
+        android:layout_below="@id/view_line_send_message_area"
         android:layout_marginRight="6dp"
         android:layout_marginLeft="6dp"
-        android:paddingBottom="15dp"
+        android:paddingBottom="8dp"
         android:textSize="15sp"
         android:paddingLeft="8dp"
+        android:paddingTop="5dp"
         android:textColor="@color/colorText"
         android:maxLines="3"
         android:layout_marginTop="2dp"

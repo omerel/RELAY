@@ -1,16 +1,30 @@
 package com.relay.relay;
 
+import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.net.Uri;
+import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
+import android.os.Messenger;
+import android.provider.MediaStore;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.support.v7.widget.helper.ItemTouchHelper;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
@@ -23,33 +37,39 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.Database;
+import com.couchbase.lite.Document;
 import com.couchbase.lite.Emitter;
 import com.couchbase.lite.LiveQuery;
 import com.couchbase.lite.Mapper;
 import com.couchbase.lite.Query;
-import com.couchbase.lite.QueryEnumerator;
-import com.couchbase.lite.QueryRow;
+import com.relay.relay.Bluetooth.BLManager;
 import com.relay.relay.SubSystem.DataManager;
 import com.relay.relay.Util.GridSpacingItemDecoration;
 import com.relay.relay.Util.ImageConverter;
 import com.relay.relay.Util.LiveQueryMessageAdapter;
-import com.relay.relay.Util.SearchUser;
 import com.relay.relay.Util.ShowDialogWithPicture;
 import com.relay.relay.system.RelayMessage;
+import com.theartofdev.edmodo.cropper.CropImage;
+import com.theartofdev.edmodo.cropper.CropImageView;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
 
 public class ConversationActivity extends AppCompatActivity implements View.OnClickListener{
 
     private final String TAG = "RELAY_DEBUG: "+ ConversationActivity.class.getSimpleName();
-
+    public static final int REFRESH_LIST_ADAPTER = 23;
     // activity for passing to other classes
     private Activity activity = this;
 
@@ -65,13 +85,18 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
     private EditText mEditText;
     private Button mSendButton;
     private ImageView mAddPictureButton;
+    private ImageView mAttachment;
+    private ImageView mDeleteAttachment;
     private RecyclerView mMessageRecyclerView;
 
     // contact list adapter
     private LiveQuery listsLiveQuery = null;
-    private ArrayList<Map<String,Object>> arrayListProperties = null;
     private ListAdapter mAdapter;
 
+    // Values and permissions adding picture
+    private Uri mLoadedImageUri;
+
+    public Messenger messenger =  new Messenger(new IncomingHandler());
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,25 +114,36 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
         getSupportActionBar().setTitle("Relay to "+userName);
 
 
-        arrayListProperties = new ArrayList<>();
-
         // enter to data base
         mDataManager = new DataManager(this);
         mDataBase = mDataManager.getInboxDB().getDatabase();
 
-        // set query
-        setupLiveQuery(uuidString);
-        mAdapter = new ListAdapter(this,listsLiveQuery,arrayListProperties);
-
 
         mEditText = (EditText) findViewById(R.id.edit_text_write_message_area);
         mSendButton = (Button) findViewById(R.id.button_send_message_area);
+        mSendButton.setOnClickListener(this);
+        mAttachment = (ImageView) findViewById(R.id.imageView_attachment_send_message_area);
+        mAttachment.setVisibility(View.GONE);
+        mDeleteAttachment = (ImageView) findViewById(R.id.imageView_close_attachment_send_message_area);
+        mDeleteAttachment.setOnClickListener(this);
+        mDeleteAttachment.setVisibility(View.GONE);
         mAddPictureButton = (ImageView) findViewById(R.id.imageView_add_picture_send_message_area);
+        mAddPictureButton.setOnClickListener(this);
+
+        initMessageRecyclerView();
+        // Permissions to get image from camera or library
+
+    }
+
+    public void initMessageRecyclerView(){
 
         // init messages view
-
         final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         linearLayoutManager.setReverseLayout(true);
+        
+        // set query
+        setupLiveQuery(uuidString);
+        mAdapter = new ListAdapter(this,listsLiveQuery,messenger);
 
         mMessageRecyclerView = (RecyclerView) findViewById(R.id.recycler_view_messages);
         mMessageRecyclerView.setLayoutManager(linearLayoutManager);
@@ -115,7 +151,9 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
         mMessageRecyclerView.setItemAnimator(new DefaultItemAnimator());
         mMessageRecyclerView.setAdapter(mAdapter);
         mMessageRecyclerView.setItemViewCacheSize(10);
+        initSwipe();
     }
+
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -137,13 +175,119 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
         switch (view.getId()) {
 
             case R.id.button_send_message_area:
+                sendMessage(uuidString);
                 break;
 
             case R.id.imageView_add_picture_send_message_area:
+                takePicture();
+                break;
+
+            case R.id.imageView_close_attachment_send_message_area:
+                mAttachment.setVisibility(View.GONE);
+                mDeleteAttachment.setVisibility(View.GONE);
                 break;
 
         }
     }
+
+    public void cropImage(){
+        if (mLoadedImageUri != null){
+            // crop image
+            CropImage.activity(mLoadedImageUri)
+                    .setGuidelines(CropImageView.Guidelines.ON)
+                    .start(this);
+        }
+    }
+
+    public void takePicture() {
+        Intent galleryIntent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        startActivityForResult(galleryIntent, 100);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+        switch(requestCode){
+            case 100:
+                if (data != null) {
+                    // get uri from result
+                    Uri selectedImage = data.getData();
+                    // decode it to picture
+                    mLoadedImageUri = selectedImage;
+                    cropImage();
+                }
+                break;
+
+            case CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE:
+
+                CropImage.ActivityResult result = CropImage.getActivityResult(data);
+                if (resultCode == RESULT_OK) {
+                    mLoadedImageUri = result.getUri();
+                    setSmallImageInAttachment(result.getUri());
+
+                } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
+                    Exception error = result.getError();
+                }
+                break;
+
+            case 200:
+
+                    break;
+        }
+
+    }
+
+    private void sendMessage(String destination) {
+        String content = mEditText.getText().toString();
+        //check if there is an image to upload
+        if (mAttachment.getVisibility() == View.VISIBLE){
+
+            // add relay message with attachment with image
+            if (mLoadedImageUri != null) {
+                try {
+                    Bitmap image = MediaStore.Images.Media.getBitmap(this.getContentResolver(), mLoadedImageUri);
+                    RelayMessage newMessage = new RelayMessage(
+                            mDataManager.getNodesDB().getMyNodeId(), UUID.fromString(destination), RelayMessage.TYPE_MESSAGE_INCLUDE_ATTACHMENT,
+                            content,ImageConverter.ConvertBitmapToBytes(image));
+                    mDataManager.getMessagesDB().addMessage(newMessage);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        else{
+            if (!content.equals("")) {
+                RelayMessage newMessage = new RelayMessage(
+                        mDataManager.getNodesDB().getMyNodeId(), UUID.fromString(destination), RelayMessage.TYPE_MESSAGE_TEXT,
+                        content, null);
+                mDataManager.getMessagesDB().addMessage(newMessage);
+            }
+        }
+        mLoadedImageUri = null;
+        mEditText.setText("");
+        mAttachment.setVisibility(View.GONE);
+        mDeleteAttachment.setVisibility(View.GONE);
+    }
+
+
+    public void setSmallImageInAttachment(Uri uriAttachment){
+
+        // set image in attachment
+        // create small pic with low resolution
+        Bitmap smallPic = null;
+        try {
+            smallPic = MediaStore.Images.Media.getBitmap(this.getContentResolver(), uriAttachment);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        smallPic =ImageConverter.scaleDown(smallPic,300,true);
+        smallPic = ImageConverter.getRoundedCornerBitmap(smallPic,10);
+        mAttachment.setImageBitmap(smallPic);
+        mAttachment.setVisibility(View.VISIBLE);
+        mDeleteAttachment.setVisibility(View.VISIBLE);
+    }
+
 
     /**
      * Converting dp to pixel
@@ -177,18 +321,6 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
         query.setDescending(true);
 
 
-        // set arrayListProperties
-        QueryEnumerator result = null;
-        try {
-            result = query.run();
-        } catch (CouchbaseLiteException e) {
-            e.printStackTrace();
-        }
-        for (Iterator<QueryRow> it = result; it.hasNext(); ) {
-            QueryRow row = it.next();
-            arrayListProperties.add(row.getDocument().getProperties());
-        }
-
         // set listsLiveQuery
         listsLiveQuery = query.toLiveQuery();
     }
@@ -198,8 +330,8 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
     private class ListAdapter extends LiveQueryMessageAdapter {
 
 
-        public ListAdapter(Context context, LiveQuery query,ArrayList<Map<String,Object>> arrayListProperties) {
-            super(context, query,arrayListProperties);
+        public ListAdapter(Context context, LiveQuery query,Messenger messenger) {
+            super(context, query,messenger);
         }
 
         @Override
@@ -211,11 +343,11 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
         }
 
 
+
         @Override
         public void onBindViewHolder(final MessageViewHolder holder, final int position) {
 
-            //Map<String,Object> properties = enumerator.getRow(position).getDocument().getProperties();
-            Map<String,Object> properties = arrayListProperties.get(position);
+            Map<String,Object> properties = enumerator.getRow(position).getDocument().getProperties();
 
             final String uuidString = (String) properties.get("uuid");
             boolean isMyMessage = (boolean) properties.get("is_my_message");
@@ -236,6 +368,8 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
                 RelativeLayout.LayoutParams lp =
                         (RelativeLayout.LayoutParams) holder.cardAlignment.getLayoutParams();
                 lp.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
+                holder.cardAlignment.setLayoutParams(lp);
+
             }else{
                 // set user name
                 holder.fullName.setText(userName);
@@ -249,11 +383,22 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
 
             // set text message and picture
             if (relayMessage.getType() == relayMessage.TYPE_MESSAGE_TEXT){
+                // if its emoji
+                if (relayMessage.getContent().length() == 1){
+                    char ch = relayMessage.getContent().charAt(0);
+                    //TODO check the char is emoji ascii
+                    if ( ch > 'z')
+                        holder.textMessage.setTextSize(40);
+                }
                 holder.textMessage.setText(relayMessage.getContent());
                 holder.pictureAttachment.setVisibility(View.GONE);
             }
             else if (relayMessage.getType() == relayMessage.TYPE_MESSAGE_INCLUDE_ATTACHMENT){
-                holder.textMessage.setText(relayMessage.getContent());
+                // if content is empty
+                if (relayMessage.getContent().equals(""))
+                    holder.textMessage.setVisibility(View.GONE);
+                else
+                    holder.textMessage.setText(relayMessage.getContent());
                 // create small pic with low resolution
                 Bitmap smallPic = ImageConverter.convertBytesToBitmap(relayMessage.getAttachment());
                 smallPic =ImageConverter.scaleDown(smallPic,300,true);
@@ -278,10 +423,8 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
             holder.cardAlignment.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    mDataManager.getInboxDB().setMessageSeenByUser((UUID.fromString(uuidString)));
-                    // update holder and arraylist
-                    holder.updates.setVisibility(View.GONE);
-                    arrayListProperties.set(position,getItem(position).getProperties());
+                    if (holder.updates.getVisibility() == View.VISIBLE)
+                        mDataManager.getInboxDB().setMessageSeenByUser((UUID.fromString(uuidString)));
                 }
             });
 
@@ -328,4 +471,63 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
         String min = time.substring(10,12);
         return day+"/"+month+"  "+hour+":"+min;
     }
+
+    private void initSwipe(){
+
+        final Paint p = new Paint();
+
+        ItemTouchHelper.SimpleCallback simpleItemTouchCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
+
+            @Override
+            public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+                return true;
+            }
+
+            @Override
+            public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
+                int position = viewHolder.getAdapterPosition();
+                //when I want to use direction
+//                if (direction == ItemTouchHelper.LEFT){} else {}
+                // set view to default alpha ( not impact other cards after delete )
+
+                viewHolder.itemView.setAlpha((float)1.0);
+
+                Document doc =  mAdapter.getItem(position);
+                if(doc != null) {
+                    Map<String, Object> properties = doc.getProperties();
+                    String uuidString = (String) properties.get("uuid");
+                    mDataManager.getInboxDB().deleteMessageFromInbox(UUID.fromString(uuidString));
+                    Toast.makeText(activity, "Message deleted", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onChildDraw(Canvas c, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
+                Bitmap icon;
+                if(actionState == ItemTouchHelper.ACTION_STATE_SWIPE){
+                    View itemView = viewHolder.itemView;
+                    if(dX > 0){
+                        itemView.setAlpha((float)(0.9-dX/500));
+                    } else {
+                        itemView.setAlpha((float)(0.9+dX/500));
+                    }
+                }
+                super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
+            }
+        };
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleItemTouchCallback);
+        itemTouchHelper.attachToRecyclerView(mMessageRecyclerView);
+    }
+
+    class IncomingHandler extends Handler {
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case REFRESH_LIST_ADAPTER:
+                    mMessageRecyclerView.setAdapter(mAdapter);
+                    break;
+            }
+        }
+    }
+
 }

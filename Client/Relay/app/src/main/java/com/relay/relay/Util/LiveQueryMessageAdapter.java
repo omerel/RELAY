@@ -2,8 +2,15 @@ package com.relay.relay.Util;
 
 import android.app.Activity;
 import android.content.Context;
+import android.os.Bundle;
+import android.os.Message;
+import android.os.Messenger;
+import android.os.RemoteException;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.ViewGroup;
+import android.widget.ListAdapter;
+
 import com.couchbase.lite.Document;
 import com.couchbase.lite.LiveQuery;
 import com.couchbase.lite.QueryEnumerator;
@@ -21,12 +28,10 @@ public class LiveQueryMessageAdapter extends RecyclerView.Adapter<ConversationAc
     private LiveQuery query;
     public QueryEnumerator enumerator;
     private Context context;
-    private ArrayList<Map<String,Object>> arrayListProperties;
 
-    public LiveQueryMessageAdapter(Context context, LiveQuery query,ArrayList<Map<String,Object>> arrayListProperties) {
+    public LiveQueryMessageAdapter(Context context, LiveQuery query, final Messenger messenger) {
         this.context = context;
         this.query = query;
-        this.arrayListProperties = arrayListProperties;
 
         query.addChangeListener(new LiveQuery.ChangeListener() {
             @Override
@@ -35,7 +40,12 @@ public class LiveQueryMessageAdapter extends RecyclerView.Adapter<ConversationAc
                     @Override
                     public void run() {
                         enumerator = event.getRows();
-                        //notifyDataSetChanged();
+                       // notifyDataSetChanged();
+                        try {
+                            messenger.send(Message.obtain(null, ConversationActivity.REFRESH_LIST_ADAPTER));
+                        } catch (RemoteException e) {
+                            e.printStackTrace();
+                        }
                     }
                 });
             }
@@ -53,11 +63,15 @@ public class LiveQueryMessageAdapter extends RecyclerView.Adapter<ConversationAc
 
     @Override
     public int getItemCount() {
-//        return enumerator != null ? enumerator.getCount() : 0;
-        return arrayListProperties != null ? arrayListProperties.size() : 0;
+        return enumerator != null ? enumerator.getCount() : 0;
     }
 
     public Document getItem(int position) {
         return enumerator != null ? enumerator.getRow(position).getDocument(): null;
     }
+
+    public void deleteItem(int position){
+        notifyItemRangeRemoved(0,getItemCount());
+    }
+
 }
