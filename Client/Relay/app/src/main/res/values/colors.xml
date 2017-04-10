@@ -8,4 +8,6 @@
     <color name="colorAccent">#70bdde</color>
     <color name="colorText">#949b9a</color>
     <color name="colorLine">#d9dcdb</color>
+
+    <color name="black_overlay">#66000000</color>
 </resources>

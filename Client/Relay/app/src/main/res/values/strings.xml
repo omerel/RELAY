@@ -30,5 +30,9 @@
     <string name="action_user_info">User info</string>
     <string name="action_delete_conversation">Delete conversation</string>
 
+    <string name="title_activity_fullscreen_image">FullscreenImageActivity</string>
+    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
+
 
 </resources>
