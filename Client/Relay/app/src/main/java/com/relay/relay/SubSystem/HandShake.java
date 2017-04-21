@@ -1,5 +1,6 @@
 package com.relay.relay.SubSystem;
 
+import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
 import android.os.Bundle;
@@ -14,6 +15,7 @@ import com.relay.relay.DB.InboxDB;
 import com.relay.relay.Util.DataTransferred;
 import com.relay.relay.Util.JsonConvertor;
 import com.relay.relay.Util.TimePerformance;
+import com.relay.relay.Util.UuidGenerator;
 import com.relay.relay.system.Node;
 import com.relay.relay.system.RelayMessage;
 
@@ -150,6 +152,13 @@ public class HandShake implements BLConstants {
                 for (RelayMessage relayMessage : relayMessages){
                     updateReceivedMessage(relayMessage);
                     mDataManager.getMessagesDB().addMessage(relayMessage);
+                    // alert device when he gets new message
+                    UUID destId = relayMessage.getDestinationId();
+                    if (destId.equals(mMyNode.getId())){
+                        String msg = relayMessage.getContent();
+                        sendMessageToManager(NEW_RELAY_MESSAGE,msg);
+                    }
+
                 }
                 Log.e(TAG,"TIME TO : "+"updateReceivedMessage"+" "+ timePerformance.stop());
 

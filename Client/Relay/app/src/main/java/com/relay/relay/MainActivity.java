@@ -115,7 +115,7 @@ public class MainActivity extends AppCompatActivity
         //TODO delete uuidGenerator when creating login
         UuidGenerator uuidGenerator = new UuidGenerator();
         try {
-            mMyuuid = uuidGenerator.GenerateUUIDFromEmail("Omer@gmail.com");
+            mMyuuid = uuidGenerator.GenerateUUIDFromEmail("omer@gmail.com");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -377,8 +377,8 @@ public class MainActivity extends AppCompatActivity
                 switch (action){
                     // When incoming message received
                     case MESSAGE_RECEIVED:
-                        String relayMessage = intent.getStringExtra("relayMessage");
-                        createAlertDialog("New message",relayMessage,false);
+                        //String relayMessage = intent.getStringExtra("relayMessage");
+                        //createAlertDialog("New message",relayMessage,false);
                         notifyMessageArrived(); //create sound
                         break;
                     case FRESH_FRAGMENT:

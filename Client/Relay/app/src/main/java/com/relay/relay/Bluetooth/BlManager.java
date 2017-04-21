@@ -405,13 +405,13 @@ public class BLManager extends Thread implements BLConstants {
                     mHandShake.getPacket(packet);
                     break;
 
-//               case NEW_RELAY_MESSAGE:
-//                   Log.e(TAG, "NEW_RELAY_MESSAGE");
-//                    // When the message is for this device
-//                    Log.d(TAG, "Received  new relay message from Handshake");
-//                    String relayMessage = msg.getData().getString("relayMessage");
-//                    sendMessageToConnectivityManager(NEW_RELAY_MESSAGE,relayMessage);
-//                    break;
+               case NEW_RELAY_MESSAGE:
+                   Log.e(TAG, "NEW_RELAY_MESSAGE");
+                    // When the message is for this device
+                    Log.d(TAG, "Received  new relay message from Handshake");
+                    String relayMessage = msg.getData().getString("sender");
+                    sendMessageToConnectivityManager(NEW_RELAY_MESSAGE,relayMessage);
+                    break;
 
                 case BLE_ADVERTISE_ERROR:
                     Log.e(TAG, "BLE_ADVERTISE_ERROR");

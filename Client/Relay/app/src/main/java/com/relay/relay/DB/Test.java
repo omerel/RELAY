@@ -157,8 +157,8 @@ public class Test {
 
         Log.e(TAG, "add Nodes to nodeDB");
         for (int i = 0; i < numOFNodes; i++) {
-            Node node =new Node(uuids[0],dates[randomIndex(0,MAX)],dates[randomIndex(0,MAX)],
-                    1,email[i],phoneNumber[i], userName[i], fullNAme[i], pic,i);
+            Node node =new Node(uuids[i],dates[randomIndex(0,MAX)],dates[randomIndex(0,MAX)],
+                    1,email[i],phoneNumber[i], userName[i], fullNAme[i],pic,i);
             nodesDB.addNode(node);
         }
 
@@ -321,7 +321,7 @@ public class Test {
         timePerformance.start();
         Log.e(TAG, "Create DB");
         //////////////
-       createDB_4();
+       createDB_2();
         /////////////
 //        Log.e(TAG, "graphRelations.getMyNumEdges()--->"+ graphRelations.getMyNumEdges());
 //        Log.e(TAG, "graphRelations.getMyNumNodes()--->"+ graphRelations.getMyNumNodes());
@@ -354,14 +354,14 @@ public class Test {
        if (myID.equals(uuids[0])){
          //  messagesDB.addMessage(m);
         //   messagesDB.addMessage(m1);
-            messagesDB.addMessage( new RelayMessage(uuids[6],nodesDB.getMyNodeId(),
-                    RelayMessage.TYPE_MESSAGE_TEXT,"this msg will be sent",null));
-            messagesDB.addMessage( new RelayMessage(uuids[5],nodesDB.getMyNodeId(),
-                    RelayMessage.TYPE_MESSAGE_TEXT,"this msg will be delivered ",null));
-            messagesDB.addMessage( new RelayMessage(uuids[3],nodesDB.getMyNodeId(),
-                    RelayMessage.TYPE_MESSAGE_TEXT,"this will not be sent",null));
-           messagesDB.addMessage( new RelayMessage(nodesDB.getMyNodeId(),uuids[2],
-                   RelayMessage.TYPE_MESSAGE_TEXT,"this will not be sent",null));
+//            messagesDB.addMessage( new RelayMessage(uuids[6],nodesDB.getMyNodeId(),
+//                    RelayMessage.TYPE_MESSAGE_TEXT,"this msg will be sent",null));
+//            messagesDB.addMessage( new RelayMessage(uuids[5],nodesDB.getMyNodeId(),
+//                    RelayMessage.TYPE_MESSAGE_TEXT,"this msg will be delivered ",null));
+//            messagesDB.addMessage( new RelayMessage(uuids[3],nodesDB.getMyNodeId(),
+//                    RelayMessage.TYPE_MESSAGE_TEXT,"this will not be sent",null));
+//           messagesDB.addMessage( new RelayMessage(nodesDB.getMyNodeId(),uuids[2],
+//                   RelayMessage.TYPE_MESSAGE_TEXT,"this will not be sent",null));
         }
         else{
 //           messagesDB.addMessage( new RelayMessage(uuids[2],uuids[3],
@@ -398,6 +398,6 @@ public class Test {
 //
 //            messagesDB.deleteMessage(uuid);
 //        }
-     // deleteDB();
+      //deleteDB();
     }
 }
