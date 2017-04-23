@@ -1,6 +1,7 @@
 package com.relay.relay.DB;
 import android.content.Context;
 
+import com.couchbase.lite.Database;
 import com.relay.relay.Util.ImageConverter;
 import com.relay.relay.Util.JsonConvertor;
 import com.relay.relay.system.RelayMessage;
@@ -168,4 +169,6 @@ public class MessagesDB {
     public int getNumNodes() {
         return JsonConvertor.JsonToInt(dbManager.getJsonObject(NUM_OF_MESSAGES));
     }
+
+    public Database getDatabase(){return dbManager.getDatabase();}
 }

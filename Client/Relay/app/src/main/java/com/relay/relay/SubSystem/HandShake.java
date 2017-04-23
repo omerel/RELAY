@@ -107,98 +107,101 @@ public class HandShake implements BLConstants {
      */
 
     public void getPacket(String jsonPacket){
-        int command = JsonConvertor.getCommand(jsonPacket);
-        switch (command){
-            case STEP_1_METADATA:
-                // receive meta data
-                receivedMetadata = JsonConvertor.getMetadataFromJsonContent(jsonPacket);
-                receivedKnownMessage = receivedMetadata.getKnownMessagesList();
-                receivedKnownRelations = receivedMetadata.getKnownRelationsList();
-                timePerformance.start();
-                checkRankBeforeHandShake(receivedMetadata);
-                Log.e(TAG,"TIME TO : "+"checkRankBeforeHandShake"+" "+ timePerformance.stop());
-                finalDegree = CalculateFinalRank();
-                timePerformance.start();
-                updateNodeAndRelations = createUpdateNodeAndRelations(finalDegree);
-                Log.e(TAG,"TIME TO : "+"createUpdateNodeAndRelations"+" "+ timePerformance.stop());
-                if(!mInitiator){
-                    sendPacket(STEP_1_METADATA,JsonConvertor.convertToJson(metadata));
-                }
-                else{
-                    sendPacket(STEP_2_UPDATE_NODES_AND_RELATIONS,JsonConvertor.convertToJson(updateNodeAndRelations));
-                }
-                break;
-            case STEP_2_UPDATE_NODES_AND_RELATIONS:
-                receivedUpdateNodeAndRelations =
-                        JsonConvertor.getUpdateNodeAndRelationsFromJsonContent(jsonPacket);
-                timePerformance.start();
-                updateNodeAndRelations(receivedUpdateNodeAndRelations);
-                Log.e(TAG,"TIME TO : "+"updateNodeAndRelations"+" "+ timePerformance.stop());
-                timePerformance.start();
-                updateMessagesAndCreateMessagesListToSend();
-                Log.e(TAG,"TIME TO : "+"updateMessagesAndCreateMessagesListToSend"+" "+ timePerformance.stop());
+        try {
+            int command = JsonConvertor.getCommand(jsonPacket);
+            switch (command) {
+                case STEP_1_METADATA:
+                    // receive meta data
+                    receivedMetadata = JsonConvertor.getMetadataFromJsonContent(jsonPacket);
+                    receivedKnownMessage = receivedMetadata.getKnownMessagesList();
+                    receivedKnownRelations = receivedMetadata.getKnownRelationsList();
+                    timePerformance.start();
+                    checkRankBeforeHandShake(receivedMetadata);
+                    Log.e(TAG, "TIME TO : " + "checkRankBeforeHandShake" + " " + timePerformance.stop());
+                    finalDegree = CalculateFinalRank();
+                    timePerformance.start();
+                    updateNodeAndRelations = createUpdateNodeAndRelations(finalDegree);
+                    Log.e(TAG, "TIME TO : " + "createUpdateNodeAndRelations" + " " + timePerformance.stop());
+                    if (!mInitiator) {
+                        sendPacket(STEP_1_METADATA, JsonConvertor.convertToJson(metadata));
+                    } else {
+                        sendPacket(STEP_2_UPDATE_NODES_AND_RELATIONS, JsonConvertor.convertToJson(updateNodeAndRelations));
+                    }
+                    break;
+                case STEP_2_UPDATE_NODES_AND_RELATIONS:
+                    receivedUpdateNodeAndRelations =
+                            JsonConvertor.getUpdateNodeAndRelationsFromJsonContent(jsonPacket);
+                    timePerformance.start();
+                    updateNodeAndRelations(receivedUpdateNodeAndRelations);
+                    Log.e(TAG, "TIME TO : " + "updateNodeAndRelations" + " " + timePerformance.stop());
+                    timePerformance.start();
+                    updateMessagesAndCreateMessagesListToSend();
+                    Log.e(TAG, "TIME TO : " + "updateMessagesAndCreateMessagesListToSend" + " " + timePerformance.stop());
 
-                if(!mInitiator){
-                    sendPacket(STEP_2_UPDATE_NODES_AND_RELATIONS,JsonConvertor.convertToJson(updateNodeAndRelations));
-                }
-                else{
-                    sendPacket(STEP_3_TEXT_MESSAGES,JsonConvertor.convertToJson(textMessagesToSend));
-                }
-                break;
-            case STEP_3_TEXT_MESSAGES:
-                ArrayList<RelayMessage> relayMessages =
-                         JsonConvertor.getRelayMessageListFromJsonContent(jsonPacket);
-                timePerformance.start();
-                for (RelayMessage relayMessage : relayMessages){
+                    if (!mInitiator) {
+                        sendPacket(STEP_2_UPDATE_NODES_AND_RELATIONS, JsonConvertor.convertToJson(updateNodeAndRelations));
+                    } else {
+                        sendPacket(STEP_3_TEXT_MESSAGES, JsonConvertor.convertToJson(textMessagesToSend));
+                    }
+                    break;
+                case STEP_3_TEXT_MESSAGES:
+                    ArrayList<RelayMessage> relayMessages =
+                            JsonConvertor.getRelayMessageListFromJsonContent(jsonPacket);
+                    timePerformance.start();
+                    for (RelayMessage relayMessage : relayMessages) {
+                        updateReceivedMessage(relayMessage);
+                        mDataManager.getMessagesDB().addMessage(relayMessage);
+                        // alert device when he gets new message
+                        UUID destId = relayMessage.getDestinationId();
+                        if (destId.equals(mMyNode.getId())) {
+                            String msg = relayMessage.getContent();
+                            sendMessageToManager(NEW_RELAY_MESSAGE, msg);
+                        }
+
+                    }
+                    Log.e(TAG, "TIME TO : " + "updateReceivedMessage" + " " + timePerformance.stop());
+
+                    if (!mInitiator) {
+                        sendPacket(STEP_3_TEXT_MESSAGES, JsonConvertor.convertToJson(textMessagesToSend));
+                    } else {
+                        timePerformance.start();
+                        updateSentTextMessages();
+                        Log.e(TAG, "TIME TO : " + "updateSentTextMessages" + " " + timePerformance.stop());
+                        timePerformance.start();
+                        for (int i = 0; i < objectMessagesToSend.size(); i++) {
+                            sendPacket(STEP_4_OBJECT_MESSAGE, JsonConvertor.convertToJson(objectMessagesToSend.get(i)));
+                        }
+                        Log.e(TAG, "TIME TO : " + "objectMessagesToSend" + " " + timePerformance.stop());
+                        sendPacket(FINISH_STEP_4, new String("DUMMY"));
+                    }
+                    break;
+
+                case STEP_4_OBJECT_MESSAGE:
+                    RelayMessage relayMessage = JsonConvertor.getRelayMessageFromJsonContent(jsonPacket);
                     updateReceivedMessage(relayMessage);
                     mDataManager.getMessagesDB().addMessage(relayMessage);
-                    // alert device when he gets new message
-                    UUID destId = relayMessage.getDestinationId();
-                    if (destId.equals(mMyNode.getId())){
-                        String msg = relayMessage.getContent();
-                        sendMessageToManager(NEW_RELAY_MESSAGE,msg);
-                    }
+                    break;
 
-                }
-                Log.e(TAG,"TIME TO : "+"updateReceivedMessage"+" "+ timePerformance.stop());
-
-                if(!mInitiator){
-                    sendPacket(STEP_3_TEXT_MESSAGES,JsonConvertor.convertToJson(textMessagesToSend));
-                }
-                else{
-                    timePerformance.start();
+                case FINISH_STEP_4:
                     updateSentTextMessages();
-                    Log.e(TAG,"TIME TO : "+"updateSentTextMessages"+" "+ timePerformance.stop());
-                    timePerformance.start();
-                    for(int i = 0; i < objectMessagesToSend.size();i++){
-                        sendPacket(STEP_4_OBJECT_MESSAGE,JsonConvertor.convertToJson(objectMessagesToSend.get(i)));
+                    if (!mInitiator) {
+                        for (int i = 0; i < objectMessagesToSend.size(); i++) {
+                            sendPacket(STEP_4_OBJECT_MESSAGE, JsonConvertor.convertToJson(objectMessagesToSend.get(i)));
+                        }
+                        sendPacket(FINISH, new String("DUMMY"));
+                        updateSentAttachmentMessages();
+                        finishHandshake();
                     }
-                    Log.e(TAG,"TIME TO : "+"objectMessagesToSend"+" "+ timePerformance.stop());
-                    sendPacket(FINISH_STEP_4,new String("DUMMY"));
-                }
-                break;
-
-            case STEP_4_OBJECT_MESSAGE:
-                RelayMessage relayMessage = JsonConvertor.getRelayMessageFromJsonContent(jsonPacket);
-                updateReceivedMessage(relayMessage);
-                mDataManager.getMessagesDB().addMessage(relayMessage);
-                break;
-
-            case FINISH_STEP_4:
-                updateSentTextMessages();
-                if(!mInitiator){
-                    for(int i = 0; i < objectMessagesToSend.size();i++){
-                        sendPacket(STEP_4_OBJECT_MESSAGE,JsonConvertor.convertToJson(objectMessagesToSend.get(i)));
-                    }
-                    sendPacket(FINISH,new String("DUMMY"));
+                    break;
+                case FINISH:
                     updateSentAttachmentMessages();
                     finishHandshake();
-                }
-                break;
-            case FINISH:
-                updateSentAttachmentMessages();
-                finishHandshake();
-                break;
+                    break;
+            }
+        } catch (Exception e) {
+            // TODO need to be tested
+            Log.e(TAG,"Error in hand shake");
+            sendMessageToManager(FAILED_CONNECTING_TO_DEVICE,null);
         }
     }
 
@@ -340,6 +343,7 @@ public class HandShake implements BLConstants {
                     }
                     // update msg status and content
                     mDataManager.getMessagesDB().addMessage(msg);
+                    //if the device is TODO
                 }
             }
         }

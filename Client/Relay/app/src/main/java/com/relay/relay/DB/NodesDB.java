@@ -3,6 +3,7 @@ package com.relay.relay.DB;
 import android.content.Context;
 import android.util.Log;
 
+import com.couchbase.lite.Database;
 import com.relay.relay.Util.ImageConverter;
 import com.relay.relay.Util.JsonConvertor;
 import com.relay.relay.system.Node;
@@ -195,4 +196,5 @@ public class NodesDB {
         return JsonConvertor.JsonToUUID(dbManager.getJsonObject(MY_NODE_ID));
     }
 
+    public Database getDatabase(){return dbManager.getDatabase();}
 }

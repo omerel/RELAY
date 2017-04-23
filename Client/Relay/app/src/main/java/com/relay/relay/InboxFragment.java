@@ -1,7 +1,9 @@
 package com.relay.relay;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -32,6 +34,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.Database;
 import com.couchbase.lite.Document;
 import com.couchbase.lite.Emitter;
@@ -55,6 +58,8 @@ import java.util.Map;
 import java.util.UUID;
 
 import static com.couchbase.lite.replicator.RemoteRequestRetry.TAG;
+import static com.relay.relay.DB.InboxDB.REFRESH_INBOX_DB;
+import static com.relay.relay.MainActivity.MESSAGE_RECEIVED;
 
 
 /**
@@ -98,6 +103,10 @@ public class InboxFragment extends Fragment {
     private ArrayList<SearchUser> mSearchContactArrayList;
     private SearchListAdapter mSearchListAdapter;
 
+    // Listener when new update arrived (new msg or update) to refresh contacts database
+    private BroadcastReceiver mBroadcastReceiver;
+    private IntentFilter mFilter;
+
 
     public InboxFragment() {
         // Required empty public constructor
@@ -116,6 +125,8 @@ public class InboxFragment extends Fragment {
         mDataBase = mDataManager.getInboxDB().getDatabase();
         setupLiveQuery();
         mAdapter = new ListAdapter(getContext(), listsLiveQuery);
+
+        createBroadcastReceiver();
 
     }
 
@@ -375,7 +386,6 @@ public class InboxFragment extends Fragment {
                 holder.circleImageView.setImageBitmap(newImage);
 
             }
-
 
             // set updates and new messages icon
             if (newMessages)
@@ -660,5 +670,37 @@ public class InboxFragment extends Fragment {
         });
     }
 
+    /**
+     * BroadcastReceiver
+     */
+    private  void createBroadcastReceiver() {
+        mFilter = new IntentFilter();
+        mFilter.addAction(REFRESH_INBOX_DB);
+
+        mBroadcastReceiver = new BroadcastReceiver() {
+
+            @Override
+            public void onReceive(Context context, Intent intent) {
+
+                String action = intent.getAction();
+                switch (action){
+
+                    case REFRESH_INBOX_DB:
+                        mDataManager.getNodesDB().getDatabase().close();
+                        mDataManager.getInboxDB().getDatabase().close();
+                        try {
+                            mDataManager.getNodesDB().getDatabase().open();
+                            mDataManager.getInboxDB().getDatabase().open();
+                        } catch (CouchbaseLiteException e) {
+                            e.printStackTrace();
+                        }
+                        setupLiveQuery();
+                        mAdapter.myNotify();
+                        break;
+                }
+            }
+        };
+        getActivity().registerReceiver(mBroadcastReceiver, mFilter);
+    }
 
 }

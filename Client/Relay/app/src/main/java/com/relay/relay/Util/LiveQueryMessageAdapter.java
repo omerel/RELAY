@@ -28,10 +28,17 @@ public class LiveQueryMessageAdapter extends RecyclerView.Adapter<ConversationAc
     private LiveQuery query;
     public QueryEnumerator enumerator;
     private Context context;
+    private Messenger messenger;
 
     public LiveQueryMessageAdapter(Context context, LiveQuery query, final Messenger messenger) {
         this.context = context;
         this.query = query;
+        this.messenger = messenger;
+        addQueryListener();
+    }
+
+
+    public void addQueryListener(){
 
         query.addChangeListener(new LiveQuery.ChangeListener() {
             @Override
@@ -40,7 +47,7 @@ public class LiveQueryMessageAdapter extends RecyclerView.Adapter<ConversationAc
                     @Override
                     public void run() {
                         enumerator = event.getRows();
-                       // notifyDataSetChanged();
+                        //notifyDataSetChanged();
                         try {
                             messenger.send(Message.obtain(null, ConversationActivity.REFRESH_LIST_ADAPTER));
                         } catch (RemoteException e) {
@@ -52,7 +59,6 @@ public class LiveQueryMessageAdapter extends RecyclerView.Adapter<ConversationAc
         });
         query.start();
     }
-
     @Override
     public ConversationActivity.MessageViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         return null;
@@ -69,9 +75,11 @@ public class LiveQueryMessageAdapter extends RecyclerView.Adapter<ConversationAc
     public Document getItem(int position) {
         return enumerator != null ? enumerator.getRow(position).getDocument(): null;
     }
-
     public void deleteItem(int position){
         notifyItemRangeRemoved(0,getItemCount());
     }
 
+    public void myNotify(){
+        query.queryOptionsChanged();
+    }
 }

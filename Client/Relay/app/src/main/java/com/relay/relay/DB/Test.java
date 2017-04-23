@@ -321,7 +321,8 @@ public class Test {
         timePerformance.start();
         Log.e(TAG, "Create DB");
         //////////////
-       createDB_2();
+        createDB_2();
+        //deleteDB();
         /////////////
 //        Log.e(TAG, "graphRelations.getMyNumEdges()--->"+ graphRelations.getMyNumEdges());
 //        Log.e(TAG, "graphRelations.getMyNumNodes()--->"+ graphRelations.getMyNumNodes());
@@ -398,6 +399,6 @@ public class Test {
 //
 //            messagesDB.deleteMessage(uuid);
 //        }
-      //deleteDB();
+     // deleteDB();
     }
 }

@@ -1,5 +1,6 @@
 package com.relay.relay.SubSystem;
 
+import android.annotation.SuppressLint;
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
@@ -21,8 +22,11 @@ import android.util.Log;
 
 import com.relay.relay.Bluetooth.BLConstants;
 import com.relay.relay.Bluetooth.*;
+import com.relay.relay.DB.InboxDB;
 import com.relay.relay.MainActivity;
 import com.relay.relay.R;
+
+import static com.relay.relay.MainActivity.SYSTEM_SETTING;
 
 /**
  * Created by omer on 13/12/2016.
@@ -71,7 +75,7 @@ public class RelayConnectivityManager extends Service implements BLConstants {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "Service started");
         // get values from sharedPreferences
-        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        sharedPreferences = getSharedPreferences(SYSTEM_SETTING,0);
         setConnectivityValues();
         mCurrentMode = NULL_MODE;
         startConnectivityByPriority();
@@ -79,6 +83,7 @@ public class RelayConnectivityManager extends Service implements BLConstants {
         setWakeLock();
         return  START_NOT_STICKY;
     }
+
 
     /**
      * setConnectivityValues from sharedPreferences
@@ -175,7 +180,7 @@ public class RelayConnectivityManager extends Service implements BLConstants {
      */
     public void updateActivityNewMessage(String message) {
 
-    //  BroadCast relay message to activity
+        // BroadCast relay message to activity
         Intent updateActivity = new Intent(MainActivity.MESSAGE_RECEIVED);
         updateActivity.putExtra("relayMessage", message);
         sendBroadcast(updateActivity);
@@ -189,6 +194,7 @@ public class RelayConnectivityManager extends Service implements BLConstants {
 
     private void stopBluetoothMode(){mBluetoothManager.cancel();}
 
+    @SuppressLint("WifiManagerLeak")
     private boolean isWifiAvailable() {
         return ((WifiManager)getSystemService(Context.WIFI_SERVICE)).isWifiEnabled();
     }
@@ -448,6 +454,12 @@ public class RelayConnectivityManager extends Service implements BLConstants {
                     String relayMessage = msg.getData().getString("relayMessage");
                     updateActivityNewMessage(relayMessage);
                     Log.e(TAG, "update activity with new message");
+                    break;
+
+                case FINISHED_HANDSHAKE:
+                    //broadcast to update inboxDB
+                    Intent updateDB = new Intent(InboxDB.REFRESH_INBOX_DB);
+                    sendBroadcast(updateDB);
                     break;
 
                 case BLE_ERROR:

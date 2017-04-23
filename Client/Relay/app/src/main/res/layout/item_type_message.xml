@@ -69,7 +69,9 @@
         android:textColor="@color/colorText"
         android:maxLines="3"
         android:layout_marginTop="2dp"
-        android:hint="Write here..."/>
+        android:hint="Write here..." />
+
+
 
 
 

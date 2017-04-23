@@ -49,6 +49,9 @@ import static com.couchbase.lite.replicator.RemoteRequestRetry.TAG;
 public class InboxDB {
 
     final String TAG = "RELAY_DEBUG: "+ InboxDB.class.getSimpleName();
+    public static final String REFRESH_INBOX_DB = "relay.BroadcastReceiver.REFRESH_DB";
+
+
     final String DB_NAME = "inbox_db";
     final String FORMATTER_DATE = "yyyyMMddHHmmss";
     final String CONTACT_ID = "contact_";
@@ -93,7 +96,6 @@ public class InboxDB {
         /// check first if I'm the sender or the destination . in other words, if to to put the msg in the inbox
         if ( mMyId.equals(destinationId) || mMyId.equals(senderId) ){
 
-            // TODO fix is my message
             if (!mMyId.equals(destinationId))
                 contact = destinationId;
             else
@@ -372,7 +374,7 @@ public class InboxDB {
         return false;
     }
 
-    // Use it when click delete in contact - piratically only make contact disappear and messages deleted
+    // Use it when click delete in contact - practically only make contact disappear and messages deleted
     public void deleteUserAndConversation(final UUID contactUUID,boolean disappearContact){
         if (isContactExist(contactUUID)){
 
@@ -496,5 +498,6 @@ public class InboxDB {
             Log.e(TAG, "Error -  sendResultToManager ");
         }
     }
+
 
 }

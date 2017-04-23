@@ -38,6 +38,7 @@ public class DataManager {
     private HandShakeDB mHandShakeDB;
     private InboxDB mInboxDB;
     private Context context;
+    private UUID myUuid;
     // Handler for incoming messages from inboxDB
     private final Messenger mMessengerFromDB = new Messenger(new IncomingHandler());
 
@@ -51,13 +52,12 @@ public class DataManager {
         this.mHandShakeDB = new HandShakeDB(context);
 
         SharedPreferences sharedPreferences = context.getSharedPreferences(MainActivity.SYSTEM_SETTING,0);
-        UUID myUuid = UUID.fromString(sharedPreferences.getString("my_uuid",null));
+        myUuid = UUID.fromString(sharedPreferences.getString("my_uuid",null));
         if ( myUuid == null )
             Log.e(TAG,"Error!, uuid not found");
         this.mNodesDB.setMyNodeId(myUuid);
         this.mGraphRelations.setNodesDB(mNodesDB);
         this.mInboxDB.getMyNodeIdFromNodesDB(mNodesDB);
-
     }
 
     public GraphRelations getGraphRelations() {

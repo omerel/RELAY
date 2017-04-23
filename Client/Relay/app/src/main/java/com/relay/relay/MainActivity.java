@@ -85,11 +85,6 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // for dubug
-//        Test t = new Test(this);
-//        t.startTest();
-        //
-
 
         Toolbar  toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -111,21 +106,36 @@ public class MainActivity extends AppCompatActivity
                 android.R.integer.config_longAnimTime);
 
 
-        // get my uuid from login and put it in sharedPreferences
         //TODO delete uuidGenerator when creating login
-        UuidGenerator uuidGenerator = new UuidGenerator();
-        try {
-            mMyuuid = uuidGenerator.GenerateUUIDFromEmail("omer@gmail.com");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        // check if the is a user name
         SharedPreferences sharedPreferences =  getSharedPreferences(SYSTEM_SETTING,0);
-        // saving myuuid into sharedPreferences
+        String uuid = sharedPreferences.getString("my_uuid",null);
 
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString("my_uuid",mMyuuid.toString());
-        editor.commit();
+        if (uuid == null){
+            //get my uuid from login and put it in sharedPreferences
+            UuidGenerator uuidGenerator = new UuidGenerator();
+            try {
+                mMyuuid = uuidGenerator.GenerateUUIDFromEmail("barr@gmail.com");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            // saving myuuid into sharedPreferences
 
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putString("my_uuid",mMyuuid.toString());
+            editor.commit();
+        }
+        else{
+            mMyuuid = UUID.fromString(uuid);
+        }
+
+
+        // for dubug
+//        Test t = new Test(this);
+//        t.startTest();
+        //
+
+        // todo delete up to here
 
         navHeaderView= navigationView.getHeaderView(0);
 
@@ -226,7 +236,6 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.nav_logout) {
 
         } else if (id == R.id.nav_about_us) {
-
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);

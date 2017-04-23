@@ -67,7 +67,7 @@ public class DataTransferred {
         ArrayList<UUID> uuidArrayList;
         HashMap< Integer, ArrayList<UUID>> bfs = graphRelations.bfs(graphRelations, myNode.getId());
 
-        // set min(maxdegree,bfs.size
+        // set min(maxdegree,bfs.size)
         if ( bfs.size() < degree)
             degree = bfs.size();
 

@@ -1,23 +1,19 @@
 package com.relay.relay;
 
-import android.Manifest;
-import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
+import android.content.IntentFilter;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.net.Uri;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Messenger;
 import android.provider.MediaStore;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.DefaultItemAnimator;
@@ -31,6 +27,7 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -39,13 +36,13 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.Database;
 import com.couchbase.lite.Document;
 import com.couchbase.lite.Emitter;
 import com.couchbase.lite.LiveQuery;
 import com.couchbase.lite.Mapper;
 import com.couchbase.lite.Query;
-import com.relay.relay.Bluetooth.BLManager;
 import com.relay.relay.SubSystem.DataManager;
 import com.relay.relay.Util.GridSpacingItemDecoration;
 import com.relay.relay.Util.ImageConverter;
@@ -55,21 +52,22 @@ import com.relay.relay.system.RelayMessage;
 import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
+import static com.relay.relay.DB.InboxDB.REFRESH_INBOX_DB;
+import static com.relay.relay.MainActivity.MESSAGE_RECEIVED;
 
 
 public class ConversationActivity extends AppCompatActivity implements View.OnClickListener{
 
     private final String TAG = "RELAY_DEBUG: "+ ConversationActivity.class.getSimpleName();
     public static final int REFRESH_LIST_ADAPTER = 23;
+
+    // helps to recognize if character is emoji
+    private final String regex = "([\\u20a0-\\u32ff\\ud83c\\udc00-\\ud83d\\udeff\\udbb9\\udce5-\\udbb9\\udcee])";
+
     // activity for passing to other classes
     private Activity activity = this;
 
@@ -96,7 +94,12 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
     // Values and permissions adding picture
     private Uri mLoadedImageUri;
 
+    // Listener when new update arrived (new msg or update) to refresh database
+    private BroadcastReceiver mBroadcastReceiver;
+    private IntentFilter mFilter;
+
     public Messenger messenger =  new Messenger(new IncomingHandler());
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -118,8 +121,10 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
         mDataManager = new DataManager(this);
         mDataBase = mDataManager.getInboxDB().getDatabase();
 
-
         mEditText = (EditText) findViewById(R.id.edit_text_write_message_area);
+        mEditText.setCursorVisible(false);
+        mEditText.setOnClickListener(this);
+
         mSendButton = (Button) findViewById(R.id.button_send_message_area);
         mSendButton.setOnClickListener(this);
         mAttachment = (ImageView) findViewById(R.id.imageView_attachment_send_message_area);
@@ -131,8 +136,51 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
         mAddPictureButton.setOnClickListener(this);
 
         initMessageRecyclerView();
-        // Permissions to get image from camera or library
 
+        // TODO Permissions to get image from camera or library
+
+        // start listen to connectivity Manager when there any updates with messages
+        createBroadcastReceiver();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+    }
+
+    @Override
+    public void onBackPressed() {
+        unregisterReceiver(mBroadcastReceiver);
+        super.onBackPressed();
+    }
+
+
+    public void setupDB(){
+        mDataManager = new DataManager(this);
+        mDataBase = mDataManager.getInboxDB().getDatabase();
+    }
+    /**
+     * Hides the soft keyboard
+     */
+    public void hideSoftKeyboard() {
+        if(getCurrentFocus()!=null) {
+            InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+            inputMethodManager.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
+        }
+    }
+
+    /**
+     * Shows the soft keyboard
+     */
+    public void showSoftKeyboard(View view) {
+        InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+        view.requestFocus();
+        inputMethodManager.showSoftInput(view, 0);
     }
 
     public void initMessageRecyclerView(){
@@ -150,10 +198,14 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
         mMessageRecyclerView.addItemDecoration(new GridSpacingItemDecoration(1, dpToPx(15), true));
         mMessageRecyclerView.setItemAnimator(new DefaultItemAnimator());
         mMessageRecyclerView.setAdapter(mAdapter);
-        mMessageRecyclerView.setItemViewCacheSize(10);
+        mMessageRecyclerView.setItemViewCacheSize(30);
         initSwipe();
     }
 
+    public void setQueryAdapter(){
+        setupLiveQuery(uuidString);
+        mAdapter = new ListAdapter(this,listsLiveQuery,messenger);
+    }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -174,8 +226,15 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
 
         switch (view.getId()) {
 
+            case R.id.edit_text_write_message_area:
+                mEditText.setCursorVisible(true);
+                break;
+
             case R.id.button_send_message_area:
-                sendMessage(uuidString);
+                boolean didSend = sendMessage(uuidString);
+                if (didSend){
+                    mEditText.setCursorVisible(false);
+                }
                 break;
 
             case R.id.imageView_add_picture_send_message_area:
@@ -238,7 +297,8 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
 
     }
 
-    private void sendMessage(String destination) {
+    private boolean sendMessage(String destination) {
+
         String content = mEditText.getText().toString();
         //check if there is an image to upload
         if (mAttachment.getVisibility() == View.VISIBLE){
@@ -257,17 +317,22 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
             }
         }
         else{
-            if (!content.equals("")) {
+            if (content.trim().length() != 0) {
                 RelayMessage newMessage = new RelayMessage(
                         mDataManager.getNodesDB().getMyNodeId(), UUID.fromString(destination), RelayMessage.TYPE_MESSAGE_TEXT,
                         content, null);
                 mDataManager.getMessagesDB().addMessage(newMessage);
             }
+            else{
+                return false;
+            }
+
         }
         mLoadedImageUri = null;
         mEditText.setText("");
         mAttachment.setVisibility(View.GONE);
         mDeleteAttachment.setVisibility(View.GONE);
+        return true;
     }
 
 
@@ -298,7 +363,7 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
     }
 
     // the live qeury will listen to the db changes, while the arraylist will be for the ui
-    private void setupLiveQuery(final String uuid) {
+    public void setupLiveQuery(final String uuid) {
         if (mDataBase == null) {
             Log.e(TAG,"Error, mDataBase is null!");
             return;
@@ -345,7 +410,8 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
 
 
         @Override
-        public void onBindViewHolder(final MessageViewHolder holder, final int position) {
+        public void onBindViewHolder( final MessageViewHolder holder, final int position) {
+
 
             Map<String,Object> properties = enumerator.getRow(position).getDocument().getProperties();
 
@@ -373,6 +439,7 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
             }else{
                 // set user name
                 holder.fullName.setText(userName);
+                holder.status.setVisibility(View.GONE);
             }
 
             // set update message
@@ -383,13 +450,15 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
 
             // set text message and picture
             if (relayMessage.getType() == relayMessage.TYPE_MESSAGE_TEXT){
+
                 // if its emoji
-                if (relayMessage.getContent().length() == 1){
-                    char ch = relayMessage.getContent().charAt(0);
+                if (relayMessage.getContent().length() == 2){
                     //TODO check the char is emoji ascii
-                    if ( ch > 'z')
+
+                    if (relayMessage.getContent().matches(regex))
                         holder.textMessage.setTextSize(40);
                 }
+
                 holder.textMessage.setText(relayMessage.getContent());
                 holder.pictureAttachment.setVisibility(View.GONE);
             }
@@ -407,6 +476,7 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
             }
 
             int status = relayMessage.getStatus();
+
 
             if (status == relayMessage.STATUS_MESSAGE_CREATED){
                 holder.status.setImageResource(R.drawable.ic_status_waiting);
@@ -530,4 +600,46 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
         }
     }
 
+
+    private void refreshMessageRecyclerView(){
+        mDataManager.getMessagesDB().getDatabase().close();
+        mDataManager.getInboxDB().getDatabase().close();
+        try {
+            mDataManager.getInboxDB().getDatabase().open();
+            mDataManager.getMessagesDB().getDatabase().open();
+        } catch (CouchbaseLiteException e) {
+            e.printStackTrace();
+        }
+        setupLiveQuery(uuidString);
+        mAdapter.myNotify();
+    }
+
+    /**
+     * BroadcastReceiver
+     */
+    private  void createBroadcastReceiver() {
+        mFilter = new IntentFilter();
+        mFilter.addAction(REFRESH_INBOX_DB);
+        mFilter.addAction(MESSAGE_RECEIVED);
+
+        mBroadcastReceiver = new BroadcastReceiver() {
+
+            @Override
+            public void onReceive(Context context, Intent intent) {
+
+                String action = intent.getAction();
+                switch (action){
+                    // When incoming message
+                    case MESSAGE_RECEIVED:
+                        mAdapter.myNotify();
+                        break;
+
+                    case REFRESH_INBOX_DB:
+                        refreshMessageRecyclerView();
+                        break;
+                }
+            }
+        };
+        registerReceiver(mBroadcastReceiver, mFilter);
+    }
 }

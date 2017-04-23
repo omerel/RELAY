@@ -63,4 +63,8 @@ public class LiveQueryAdapter extends RecyclerView.Adapter<InboxFragment.Contact
     public Document getItem(int position) {
         return enumerator != null ? enumerator.getRow(position).getDocument(): null;
     }
+
+    public void myNotify(){
+        query.queryOptionsChanged();
+    }
 }
