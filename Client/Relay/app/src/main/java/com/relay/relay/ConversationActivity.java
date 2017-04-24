@@ -49,7 +49,7 @@ import com.relay.relay.SubSystem.RelayConnectivityManager;
 import com.relay.relay.Util.GridSpacingItemDecoration;
 import com.relay.relay.Util.ImageConverter;
 import com.relay.relay.Util.LiveQueryMessageAdapter;
-import com.relay.relay.Util.ShowDialogWithPicture;
+import com.relay.relay.Util.ShowActivityFullImage;
 import com.relay.relay.system.RelayMessage;
 import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
@@ -519,7 +519,7 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
             holder.pictureAttachment.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    new ShowDialogWithPicture(ImageConverter.convertBytesToBitmap(relayMessage.getAttachment()),activity);
+                    new ShowActivityFullImage(ImageConverter.convertBytesToBitmap(relayMessage.getAttachment()),activity);
                 }
             });
         }

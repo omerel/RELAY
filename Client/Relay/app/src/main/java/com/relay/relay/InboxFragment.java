@@ -48,7 +48,7 @@ import com.relay.relay.Util.ImageConverter;
 import com.relay.relay.Util.LiveQueryAdapter;
 import com.relay.relay.Util.SearchContactAdapter;
 import com.relay.relay.Util.SearchUser;
-import com.relay.relay.Util.ShowDialogWithPicture;
+import com.relay.relay.Util.ShowActivityFullImage;
 import com.relay.relay.Util.UuidGenerator;
 import com.relay.relay.system.Node;
 import com.relay.relay.system.RelayMessage;
@@ -59,7 +59,6 @@ import java.util.UUID;
 
 import static com.couchbase.lite.replicator.RemoteRequestRetry.TAG;
 import static com.relay.relay.DB.InboxDB.REFRESH_INBOX_DB;
-import static com.relay.relay.MainActivity.MESSAGE_RECEIVED;
 
 
 /**
@@ -445,9 +444,9 @@ public class InboxFragment extends Fragment {
                 @Override
                 public void onClick(View view) {
                     if ( node == null)
-                        new ShowDialogWithPicture(null,getActivity());
+                        new ShowActivityFullImage(null,getActivity());
                     else
-                        new ShowDialogWithPicture(ImageConverter.convertBytesToBitmap(node.getProfilePicture()),getActivity());
+                        new ShowActivityFullImage(ImageConverter.convertBytesToBitmap(node.getProfilePicture()),getActivity());
                 }
             });
         }
