@@ -234,6 +234,8 @@ public class InboxFragment extends Fragment {
     public void onDetach() {
         super.onDetach();
         mListener = null;
+        getActivity().unregisterReceiver(mBroadcastReceiver);
+
 //        if (listsLiveQuery != null) {
 //            listsLiveQuery.stop();
 //            listsLiveQuery = null;
@@ -688,9 +690,11 @@ public class InboxFragment extends Fragment {
                     case REFRESH_INBOX_DB:
                         mDataManager.getNodesDB().getDatabase().close();
                         mDataManager.getInboxDB().getDatabase().close();
+                        mDataManager.getMessagesDB().getDatabase().close();
                         try {
                             mDataManager.getNodesDB().getDatabase().open();
                             mDataManager.getInboxDB().getDatabase().open();
+                            mDataManager.getMessagesDB().getDatabase().open();
                         } catch (CouchbaseLiteException e) {
                             e.printStackTrace();
                         }

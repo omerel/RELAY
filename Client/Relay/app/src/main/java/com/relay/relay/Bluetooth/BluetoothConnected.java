@@ -95,6 +95,11 @@ public class BluetoothConnected extends Thread implements BLConstants {
                 Log.e(TAG, "Error - got out from read packet loop ");
                 break;
             }
+            catch (Exception e) {
+                // TODO testing it
+                Log.e(TAG, "Error - Problem with reading data");
+                sendPacketMessageBluetoothManager(FAILED_DURING_HAND_SHAKE,null);
+            }
         }
     }
 
@@ -114,7 +119,8 @@ public class BluetoothConnected extends Thread implements BLConstants {
             mmOutStream.write(packetStringWithHeader.getBytes());
             Log.d(TAG, "Packet delivered");
 
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             Log.e(TAG, "Error with writePacket ");
         }
     }
@@ -140,6 +146,21 @@ public class BluetoothConnected extends Thread implements BLConstants {
         }
     }
 
+
+    private void sendPacketMessageBluetoothManager(int m,String message)  {
+
+        // Send packet as a byte array
+        Bundle bundle = new Bundle();
+        bundle.putString("message", message);
+        Message msg = Message.obtain(null, m);
+        msg.setData(bundle);
+        Log.d(TAG, "message sent to BLManager ");
+        try {
+            mMessenger.send(msg);
+        } catch (RemoteException e) {
+            Log.e(TAG, "Error with sendMessageToBluetoothManager ");
+        }
+    }
 
     // Close thread
     public void cancel() {

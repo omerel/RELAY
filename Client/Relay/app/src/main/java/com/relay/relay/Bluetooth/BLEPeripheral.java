@@ -71,6 +71,7 @@ public class BLEPeripheral implements BLConstants {
             if (mBluetoothAdapter.isEnabled())
                 mGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS,
                     offset, characteristic.getValue());
+            sendResultToManager(GET_BLUETOOTH_SERVER_READY);
         }
     };
 

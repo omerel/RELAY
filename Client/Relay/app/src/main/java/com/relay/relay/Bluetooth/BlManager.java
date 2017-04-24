@@ -52,7 +52,7 @@ public class BLManager extends Thread implements BLConstants {
     private Handler mHandler;
     private Handler mAdvertiserHandler;
     private HandShake mHandShake;
-    private int mStatus;
+    public int mStatus;
     private RelayConnectivityManager mRelayConnectivityManager;
     // who connect(initiate) to who
     private boolean mInitiator;
@@ -96,8 +96,8 @@ public class BLManager extends Thread implements BLConstants {
     public void run() {
 
         // Open server socket
-        mBluetoothServer.start();
-        checkSupport();
+//        mBluetoothServer.start();
+//        checkSupport();
 
         // Start advertising
         mBlePeripheral.startPeripheral();
@@ -161,7 +161,7 @@ public class BLManager extends Thread implements BLConstants {
     /**
      * Start search with timer
      */
-    private void startSearchImmediately(){
+    public void startSearchImmediately(){
         mBLECentral.getBleScan().startScanning();
         mHandler.postDelayed(new Runnable() {
             @Override
@@ -312,10 +312,10 @@ public class BLManager extends Thread implements BLConstants {
                     Log.e(TAG, "FAILED_CONNECTING_TO_DEVICE");
                     // update status
                     mStatus = DISCONNECTED;
-                    // Open server socket
-                    mBluetoothServer.cancel();
-                    mBluetoothServer = new BluetoothServer(mBluetoothAdapter,mMessenger);
-                    mBluetoothServer.start();
+//                    // Open server socket
+//                    mBluetoothServer.cancel();
+//                    mBluetoothServer = new BluetoothServer(mBluetoothAdapter,mMessenger);
+//                    mBluetoothServer.start();
                     startSearchImmediately();
                     break;
 
@@ -379,19 +379,19 @@ public class BLManager extends Thread implements BLConstants {
                     metadata = mDataTransferred.createMetaData();
                     // Open server socket
                     mBluetoothServer.cancel();
-                    mBluetoothServer = new BluetoothServer(mBluetoothAdapter,mMessenger);
+//                    mBluetoothServer = new BluetoothServer(mBluetoothAdapter,mMessenger);
                     if (mInitiator)
                         new Handler().postDelayed(new Runnable() {
                             @Override
                             public void run() {
-                                // TODO sometimes thread  is alive. prevent error
-                                if (!mBluetoothServer.isAlive())
-                                    mBluetoothServer.start();
+                                // TODO sometimes thread is alive. prevent error
+                              //  if (!mBluetoothServer.isAlive())
+                                 //   mBluetoothServer.start();
                                 intervalSearch();
                             }
                         }, DELAY_AFTER_HANDSHAKE);
                     else{
-                        mBluetoothServer.start();
+                      //  mBluetoothServer.start();
                         intervalSearch();
                     }
                     break;
@@ -409,7 +409,7 @@ public class BLManager extends Thread implements BLConstants {
                    Log.e(TAG, "NEW_RELAY_MESSAGE");
                     // When the message is for this device
                     Log.d(TAG, "Received  new relay message from Handshake");
-                    String relayMessage = msg.getData().getString("sender");
+                    String relayMessage = msg.getData().getString("relayMessage");
                     sendMessageToConnectivityManager(NEW_RELAY_MESSAGE,relayMessage);
                     break;
 
@@ -449,9 +449,22 @@ public class BLManager extends Thread implements BLConstants {
                     mStatus = DISCONNECTED;
                     intervalSearch();
                     break;
+                case GET_BLUETOOTH_SERVER_READY:
+                    // Open server socket
+                    mBluetoothServer.cancel();
+                    mBluetoothServer = new BluetoothServer(mBluetoothAdapter,mMessenger);
+                    mBluetoothServer.start();
+                    break;
+                case FAILED_DURING_HAND_SHAKE:
+                    Log.e(TAG, "FAILED_DURING_HAND_SHAKE");
+                    // update status
+                    mStatus = DISCONNECTED;
+                    startSearchImmediately();
+                    break;
                 default:
                     super.handleMessage(msg);
             }
         }
     }
 }
+// TODO delete all the  mBluetoothServer that in comment

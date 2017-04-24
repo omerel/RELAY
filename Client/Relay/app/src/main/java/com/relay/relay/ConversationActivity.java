@@ -14,6 +14,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.Messenger;
 import android.provider.MediaStore;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.DefaultItemAnimator;
@@ -44,6 +45,7 @@ import com.couchbase.lite.LiveQuery;
 import com.couchbase.lite.Mapper;
 import com.couchbase.lite.Query;
 import com.relay.relay.SubSystem.DataManager;
+import com.relay.relay.SubSystem.RelayConnectivityManager;
 import com.relay.relay.Util.GridSpacingItemDecoration;
 import com.relay.relay.Util.ImageConverter;
 import com.relay.relay.Util.LiveQueryMessageAdapter;
@@ -311,6 +313,7 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
                             mDataManager.getNodesDB().getMyNodeId(), UUID.fromString(destination), RelayMessage.TYPE_MESSAGE_INCLUDE_ATTACHMENT,
                             content,ImageConverter.ConvertBitmapToBytes(image));
                     mDataManager.getMessagesDB().addMessage(newMessage);
+                    requestForSearch();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -322,6 +325,7 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
                         mDataManager.getNodesDB().getMyNodeId(), UUID.fromString(destination), RelayMessage.TYPE_MESSAGE_TEXT,
                         content, null);
                 mDataManager.getMessagesDB().addMessage(newMessage);
+                requestForSearch();
             }
             else{
                 return false;
@@ -335,6 +339,15 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
         return true;
     }
 
+    /**
+     * When ending message, the activity will try ti initiate search from service to send immediately the new message.
+     * it will work only if the service is in disconnected mode or wifi connected
+     */
+    public void requestForSearch(){
+        //  BroadCast to service
+        Intent updateActivity = new Intent(RelayConnectivityManager.SEARCH_FOR_HANDSHAKE_AFTER_ADDING_MESSAGE);
+        activity.sendBroadcast(updateActivity);
+    }
 
     public void setSmallImageInAttachment(Uri uriAttachment){
 
@@ -440,6 +453,7 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
                 // set user name
                 holder.fullName.setText(userName);
                 holder.status.setVisibility(View.GONE);
+                holder.cardView.setCardBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.messageBackground));
             }
 
             // set update message
@@ -464,8 +478,11 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
             }
             else if (relayMessage.getType() == relayMessage.TYPE_MESSAGE_INCLUDE_ATTACHMENT){
                 // if content is empty
-                if (relayMessage.getContent().equals(""))
-                    holder.textMessage.setVisibility(View.GONE);
+                if (relayMessage.getContent().equals("")){
+                    //holder.textMessage.setVisibility(View.GONE);
+                    holder.textMessage.setText("");
+                    holder.textMessage.setTextSize(0);
+                }
                 else
                     holder.textMessage.setText(relayMessage.getContent());
                 // create small pic with low resolution
@@ -517,6 +534,7 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
         public ImageView updates;
         public ImageView status;
         public LinearLayout cardAlignment;
+        public android.support.v7.widget.CardView cardView;
 
 
         public MessageViewHolder(View view) {
@@ -529,6 +547,7 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
             pictureAttachment = (ImageView) view.findViewById(R.id.image_view_picture_attachment);
             updates = (ImageView) view.findViewById(R.id.imageView_item_message_updates);
             status = (ImageView) view.findViewById(R.id.imageView_item_message_status);
+            cardView = (android.support.v7.widget.CardView ) view.findViewById(R.id.message_card);
         }
 
     }

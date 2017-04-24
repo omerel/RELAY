@@ -34,6 +34,9 @@ public interface BLConstants {
     int BLE_ADVERTISE_ERROR = 30;
     int BLE_SCAN_ERROR = 31;
 
+    // Message from BLEPERIPHERAL
+    int GET_BLUETOOTH_SERVER_READY = 32;
+
 
     // Message from BLEScan
     int FOUND_NEW_DEVICE = 40;
@@ -45,7 +48,7 @@ public interface BLConstants {
     int TIME_RELAY_SCAN = 20*SECOND;
     int TIME_RELAY_KEEPS_FOUND_DEVICE_IN_LIST = 20*SECOND;
     int TIME_RELAY_KEEPS_FOUND_DEVICE_IN_LIST_POWER_MODE =5*SECOND;//20
-    int DELAY_AFTER_HANDSHAKE = 10*SECOND;//30
+    int DELAY_AFTER_HANDSHAKE = 30*SECOND;
     int SCAN_FINISHED_WITHOUT_CHANGES = 50;
     int RESET_SEARCH_COUNTER = 51;
     int BLE_ERROR = 32;
@@ -65,6 +68,7 @@ public interface BLConstants {
     // Message from HandShake
     int FINISHED_HANDSHAKE = 70;
     int  NEW_RELAY_MESSAGE = 71;
+    int FAILED_DURING_HAND_SHAKE = 72;
 
     // Message from BLECentral
     int FOUND_MAC_ADDRESS = 80;

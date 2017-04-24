@@ -1,6 +1,5 @@
 package com.relay.relay.SubSystem;
 
-import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
 import android.os.Bundle;
@@ -11,11 +10,9 @@ import android.util.Log;
 
 import com.relay.relay.Bluetooth.BLConstants;
 import com.relay.relay.Bluetooth.BluetoothConnected;
-import com.relay.relay.DB.InboxDB;
 import com.relay.relay.Util.DataTransferred;
 import com.relay.relay.Util.JsonConvertor;
 import com.relay.relay.Util.TimePerformance;
-import com.relay.relay.Util.UuidGenerator;
 import com.relay.relay.system.Node;
 import com.relay.relay.system.RelayMessage;
 
@@ -201,7 +198,7 @@ public class HandShake implements BLConstants {
         } catch (Exception e) {
             // TODO need to be tested
             Log.e(TAG,"Error in hand shake");
-            sendMessageToManager(FAILED_CONNECTING_TO_DEVICE,null);
+            sendMessageToManager(FAILED_DURING_HAND_SHAKE,null);
         }
     }
 
@@ -343,7 +340,6 @@ public class HandShake implements BLConstants {
                     }
                     // update msg status and content
                     mDataManager.getMessagesDB().addMessage(msg);
-                    //if the device is TODO
                 }
             }
         }
@@ -467,12 +463,7 @@ public class HandShake implements BLConstants {
         //  add edge between node
         mDataManager.getGraphRelations().addEdge(mMyNode.getId(),
                 receivedMetadata.getMyNode().getId());
-        // TODO change
-        // send finish handshake to Log
-//        sendRelayMessageToManager(NEW_RELAY_MESSAGE,"finish handshake with:\n"+
-//                mBluetoothSocket.getRemoteDevice().getAddress());
-        // Send message back to the bluetooth manager - bluetooth address
-        sendMessageToManager(FINISHED_HANDSHAKE, mBluetoothSocket.getRemoteDevice().getAddress());
+        sendFinishMessageToManager(FINISHED_HANDSHAKE, mBluetoothSocket.getRemoteDevice().getAddress());
         Log.d(TAG, "FINISHED_HANDSHAKE");
 
     }
@@ -481,7 +472,7 @@ public class HandShake implements BLConstants {
     /**
      * Send message to the bluetoothManager class
      */
-    private void sendMessageToManager(int m,String address)  {
+    private void sendFinishMessageToManager(int m, String address)  {
 
         // Send address as a String
         Bundle bundle = new Bundle();
@@ -493,7 +484,7 @@ public class HandShake implements BLConstants {
         try {
             mMessenger.send(msg);
         } catch (RemoteException e) {
-            Log.e(TAG, "Problem with sendMessageToManager ");
+            Log.e(TAG, "Problem with sendFinishMessageToManager ");
         }
     }
 
@@ -501,18 +492,18 @@ public class HandShake implements BLConstants {
     /**
      * Send  relay message to the bluetoothManager class
      */
-    private void sendRelayMessageToManager(int m,String relayMessage)  {
+    private void sendMessageToManager(int m,String message)  {
 
         // Send address as a String
         Bundle bundle = new Bundle();
-        bundle.putString("relayMessage", relayMessage);
+        bundle.putString("relayMessage", message);
         Message msg = Message.obtain(null, m);
         msg.setData(bundle);
 
         try {
             mMessenger.send(msg);
         } catch (RemoteException e) {
-            Log.e(TAG, "Problem with sendRelayMessageToManager ");
+            Log.e(TAG, "Problem with sendFinishMessageToManager ");
         }
     }
 

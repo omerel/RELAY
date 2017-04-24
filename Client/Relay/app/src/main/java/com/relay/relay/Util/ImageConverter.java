@@ -94,8 +94,11 @@ public class ImageConverter {
         int width = Math.round((float) ratio * realImage.getWidth());
         int height = Math.round((float) ratio * realImage.getHeight());
 
-        Bitmap newBitmap = Bitmap.createScaledBitmap(realImage, width,
-                height, filter);
+        int size = Math.max(height,width);
+
+
+        Bitmap newBitmap = Bitmap.createScaledBitmap(realImage, size,
+                size, filter);
         return newBitmap;
     }
 

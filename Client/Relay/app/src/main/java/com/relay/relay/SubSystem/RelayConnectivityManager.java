@@ -41,6 +41,8 @@ public class RelayConnectivityManager extends Service implements BLConstants {
     public static final String KILL_SERVICE = "relay.BroadcastReceiver.KILL_SERVICE";
     public static final String MANUAL_SYNC = "relay.BroadcastReceiver.MANUAL_SYNC";
     public static final String CHANGE_PRIORITY_B = "relay.BroadcastReceiver.CHANGE_PRIORITY_B";
+    public static final String SEARCH_FOR_HANDSHAKE_AFTER_ADDING_MESSAGE =
+            "relay.BroadcastReceiver.SEARCH_FOR_HANDSHAKE_AFTER_ADDING_MESSAGE";
 
     private static final int BLUETOOTH_MODE = 1;
     private static final int WIFI_MODE = 2;
@@ -221,6 +223,7 @@ public class RelayConnectivityManager extends Service implements BLConstants {
         mFilter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
         mFilter.addAction(CHANGE_PRIORITY_B);
         mFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+        mFilter.addAction(SEARCH_FOR_HANDSHAKE_AFTER_ADDING_MESSAGE);
 
         mBroadcastReceiver = new BroadcastReceiver() {
 
@@ -279,6 +282,16 @@ public class RelayConnectivityManager extends Service implements BLConstants {
                                 startConnectivityByPriority();
                                 Log.e(TAG, " detect Wifi connected to internet ");
                             }
+                        }
+                        break;
+                    case SEARCH_FOR_HANDSHAKE_AFTER_ADDING_MESSAGE:
+                        if (mCurrentMode == BLUETOOTH_MODE){
+                            if (mBluetoothManager.mStatus == DISCONNECTED){
+                                mBluetoothManager.startSearchImmediately();
+                            }
+                        }
+                        else if (mCurrentMode == WIFI_MODE){
+                            //TODO complete after implement wifi
                         }
                         break;
                 }

@@ -116,6 +116,7 @@ public class BLEScan implements BLConstants {
             super.onScanFailed(errorCode);
             // TODO
             stopScanning();
+            mBluetoothLeScanner.notify();
             //sendResultToBLECentral(BLE_SCAN_ERROR,null);
             Log.e(TAG, "Error - Scan failed with error: "+ errorCode);
         }
