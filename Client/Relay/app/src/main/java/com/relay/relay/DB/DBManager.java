@@ -76,7 +76,7 @@ public class DBManager {
         if (isKeyExist(key)){
             // if file exists
             document = mDatabase.getDocument(key.toString());
-            // update the old one (its like this to prevent conflicts)
+            // update the old one
             try {
                 document.update(new Document.DocumentUpdater() {
                     @Override
@@ -84,7 +84,7 @@ public class DBManager {
                         Map<String, Object> properties = newRevision.getUserProperties();
                         properties.put(key.toString(),jsonObject);
                         newRevision.setUserProperties(properties);
-                        Log.e(TAG," contact added to inboxDB");
+                        Log.e(TAG,"update document");
                         return true;
                     }
                 });

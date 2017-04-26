@@ -3,6 +3,7 @@ package com.relay.relay.SubSystem;
 import android.annotation.SuppressLint;
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -220,6 +221,7 @@ public class RelayConnectivityManager extends Service implements BLConstants {
 
         mFilter = new IntentFilter();
         mFilter.addAction(KILL_SERVICE);
+        mFilter.addAction(MANUAL_SYNC);
         mFilter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
         mFilter.addAction(CHANGE_PRIORITY_B);
         mFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
@@ -233,6 +235,16 @@ public class RelayConnectivityManager extends Service implements BLConstants {
                 String action = intent.getAction();
 
                 switch (action){
+
+
+                    case MANUAL_SYNC:
+                        if (!BluetoothAdapter.getDefaultAdapter().isEnabled()){
+                            //broadcast unavailability to manual sync
+                            Intent updateActivity = new Intent(MainActivity.REQUEST_FOR_MANUAL_HAND_SHAKE);
+                            updateActivity.putExtra("message","Please turn on bluetooth");
+                            sendBroadcast(updateActivity);
+                        }
+                        break;
                     // When incoming message received
                     case KILL_SERVICE:
                         killService();
@@ -341,7 +353,15 @@ public class RelayConnectivityManager extends Service implements BLConstants {
                 switch (action){
                     // When incoming message received
                     case MANUAL_SYNC:
-                        mBluetoothManager.startManualSync();
+                        if(mBluetoothManager.mStatus == DISCONNECTED) {
+                            mBluetoothManager.startManualSync();
+                        }
+                        else{
+                            // broadcast unavailability to manual sync
+                            Intent updateActivity = new Intent(MainActivity.REQUEST_FOR_MANUAL_HAND_SHAKE);
+                            updateActivity.putExtra("message","Not available,\nSyncing with other device");
+                            sendBroadcast(updateActivity);
+                        }
                         break;
 
                     // When bluetooth state changed

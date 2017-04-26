@@ -29,6 +29,7 @@ public class LiveQueryMessageAdapter extends RecyclerView.Adapter<ConversationAc
     public QueryEnumerator enumerator;
     private Context context;
     private Messenger messenger;
+    private int rowCounter;
 
     public LiveQueryMessageAdapter(Context context, LiveQuery query, final Messenger messenger) {
         this.context = context;
@@ -47,6 +48,7 @@ public class LiveQueryMessageAdapter extends RecyclerView.Adapter<ConversationAc
                     @Override
                     public void run() {
                         enumerator = event.getRows();
+                        rowCounter = enumerator.getCount();
                         //notifyDataSetChanged();
                         try {
                             messenger.send(Message.obtain(null, ConversationActivity.REFRESH_LIST_ADAPTER));
@@ -68,9 +70,7 @@ public class LiveQueryMessageAdapter extends RecyclerView.Adapter<ConversationAc
     public void onBindViewHolder(ConversationActivity.MessageViewHolder holder, int position) {}
 
     @Override
-    public int getItemCount() {
-        return enumerator != null ? enumerator.getCount() : 0;
-    }
+    public int getItemCount() {return rowCounter;} //
 
     public Document getItem(int position) {
         return enumerator != null ? enumerator.getRow(position).getDocument(): null;

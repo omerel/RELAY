@@ -3,6 +3,7 @@ package com.relay.relay;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Resources;
@@ -48,6 +49,7 @@ import com.relay.relay.SubSystem.DataManager;
 import com.relay.relay.SubSystem.RelayConnectivityManager;
 import com.relay.relay.Util.GridSpacingItemDecoration;
 import com.relay.relay.Util.ImageConverter;
+import com.relay.relay.Util.Imageutils;
 import com.relay.relay.Util.LiveQueryMessageAdapter;
 import com.relay.relay.Util.ShowActivityFullImage;
 import com.relay.relay.system.RelayMessage;
@@ -60,6 +62,8 @@ import java.util.UUID;
 
 import static com.relay.relay.DB.InboxDB.REFRESH_INBOX_DB;
 import static com.relay.relay.MainActivity.MESSAGE_RECEIVED;
+import static com.relay.relay.Util.Imageutils.CAMERA_REQUEST;
+import static com.relay.relay.Util.Imageutils.GALLERY_REQUEST;
 
 
 public class ConversationActivity extends AppCompatActivity implements View.OnClickListener{
@@ -94,7 +98,12 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
     private ListAdapter mAdapter;
 
     // Values and permissions adding picture
-    private Uri mLoadedImageUri;
+   // private Uri mLoadedImageUri;
+
+    //For Image Attachment
+    private Imageutils imageUtils;
+    private Bitmap loadedBitmap;
+    private Uri loadedUri;
 
     // Listener when new update arrived (new msg or update) to refresh database
     private BroadcastReceiver mBroadcastReceiver;
@@ -139,7 +148,7 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
 
         initMessageRecyclerView();
 
-        // TODO Permissions to get image from camera or library
+        imageUtils = new Imageutils(this);
 
         // start listen to connectivity Manager when there any updates with messages
         createBroadcastReceiver();
@@ -162,10 +171,6 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
     }
 
 
-    public void setupDB(){
-        mDataManager = new DataManager(this);
-        mDataBase = mDataManager.getInboxDB().getDatabase();
-    }
     /**
      * Hides the soft keyboard
      */
@@ -204,10 +209,6 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
         initSwipe();
     }
 
-    public void setQueryAdapter(){
-        setupLiveQuery(uuidString);
-        mAdapter = new ListAdapter(this,listsLiveQuery,messenger);
-    }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -240,61 +241,56 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
                 break;
 
             case R.id.imageView_add_picture_send_message_area:
-                takePicture();
+                imagepicker();
                 break;
 
             case R.id.imageView_close_attachment_send_message_area:
-                mAttachment.setVisibility(View.GONE);
-                mDeleteAttachment.setVisibility(View.GONE);
+
                 break;
 
         }
     }
 
-    public void cropImage(){
-        if (mLoadedImageUri != null){
+    public void cropImage(Uri uri){
+        if (uri != null){
             // crop image
-            CropImage.activity(mLoadedImageUri)
+            CropImage.activity(uri)
                     .setGuidelines(CropImageView.Guidelines.ON)
                     .start(this);
         }
     }
 
-    public void takePicture() {
-        Intent galleryIntent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-        new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        startActivityForResult(galleryIntent, 100);
-    }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
 
-        switch(requestCode){
-            case 100:
-                if (data != null) {
-                    // get uri from result
-                    Uri selectedImage = data.getData();
-                    // decode it to picture
-                    mLoadedImageUri = selectedImage;
-                    cropImage();
-                }
-                break;
+        switch (requestCode) {
 
             case CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE:
-
                 CropImage.ActivityResult result = CropImage.getActivityResult(data);
                 if (resultCode == RESULT_OK) {
-                    mLoadedImageUri = result.getUri();
-                    setSmallImageInAttachment(result.getUri());
-
+                    loadedUri = result.getUri();
+                    loadedBitmap = uriToBitmap(loadedUri);
+                    setSmallImageInAttachment(loadedBitmap);
                 } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
                     Exception error = result.getError();
                 }
                 break;
 
-            case 200:
+            case CAMERA_REQUEST:
+                if(resultCode == RESULT_OK) {
+                    loadedBitmap = (Bitmap) data.getExtras().get("data");
+                    setSmallImageInAttachment(loadedBitmap);
+                }
+                break;
 
-                    break;
+            case GALLERY_REQUEST:
+                if(resultCode== RESULT_OK) {
+                    Log.i("Gallery","Photo");
+                    loadedUri = data.getData();
+                    cropImage(loadedUri);
+                }
+                break;
         }
 
     }
@@ -306,17 +302,12 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
         if (mAttachment.getVisibility() == View.VISIBLE){
 
             // add relay message with attachment with image
-            if (mLoadedImageUri != null) {
-                try {
-                    Bitmap image = MediaStore.Images.Media.getBitmap(this.getContentResolver(), mLoadedImageUri);
-                    RelayMessage newMessage = new RelayMessage(
-                            mDataManager.getNodesDB().getMyNodeId(), UUID.fromString(destination), RelayMessage.TYPE_MESSAGE_INCLUDE_ATTACHMENT,
-                            content,ImageConverter.ConvertBitmapToBytes(image));
-                    mDataManager.getMessagesDB().addMessage(newMessage);
-                    requestForSearch();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+            if (loadedBitmap != null) {
+                RelayMessage newMessage = new RelayMessage(
+                        mDataManager.getNodesDB().getMyNodeId(), UUID.fromString(destination), RelayMessage.TYPE_MESSAGE_INCLUDE_ATTACHMENT,
+                        content,ImageConverter.ConvertBitmapToBytes(loadedBitmap));
+                mDataManager.getMessagesDB().addMessage(newMessage);
+                requestForSearch();
             }
         }
         else{
@@ -332,11 +323,52 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
             }
 
         }
-        mLoadedImageUri = null;
         mEditText.setText("");
         mAttachment.setVisibility(View.GONE);
         mDeleteAttachment.setVisibility(View.GONE);
         return true;
+    }
+
+
+    public Bitmap uriToBitmap(Uri uri){
+
+        Bitmap bitmap = null;
+        try {
+            bitmap =  MediaStore.Images.Media.getBitmap(this.getContentResolver(), uri);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return bitmap;
+    }
+
+    public void imagepicker() {
+
+        final CharSequence[] items;
+
+        if(imageUtils.isDeviceSupportCamera()) {
+            items=new CharSequence[2];
+            items[0]="Camera";
+            items[1]="Gallery";
+        }
+        else {
+            items=new CharSequence[1];
+            items[0]="Gallery";
+        }
+
+        android.app.AlertDialog.Builder alertdialog = new android.app.AlertDialog.Builder(this);
+        alertdialog.setTitle("Add Image");
+        alertdialog.setItems(items, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int item) {
+                if (items[item].equals("Camera")) {
+                    imageUtils.launchCamera();
+                }
+                else if (items[item].equals("Gallery")) {
+                    imageUtils.launchGallery();
+                }
+            }
+        });
+        alertdialog.show();
     }
 
     /**
@@ -349,17 +381,11 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
         activity.sendBroadcast(updateActivity);
     }
 
-    public void setSmallImageInAttachment(Uri uriAttachment){
-
+    public void setSmallImageInAttachment(Bitmap image){
         // set image in attachment
         // create small pic with low resolution
-        Bitmap smallPic = null;
-        try {
-            smallPic = MediaStore.Images.Media.getBitmap(this.getContentResolver(), uriAttachment);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        smallPic =ImageConverter.scaleDown(smallPic,300,true);
+        Bitmap smallPic;
+        smallPic =ImageConverter.scaleDown(image,300,true);
         smallPic = ImageConverter.getRoundedCornerBitmap(smallPic,10);
         mAttachment.setImageBitmap(smallPic);
         mAttachment.setVisibility(View.VISIBLE);

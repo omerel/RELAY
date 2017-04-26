@@ -34,6 +34,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.relay.relay.DB.Test;
 import com.relay.relay.SubSystem.DataManager;
@@ -41,6 +42,8 @@ import com.relay.relay.SubSystem.RelayConnectivityManager;
 import com.relay.relay.Util.UuidGenerator;
 
 import java.util.UUID;
+
+import static com.relay.relay.DB.InboxDB.REFRESH_INBOX_DB;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener ,
@@ -55,6 +58,7 @@ public class MainActivity extends AppCompatActivity
     public static final String CHANGE_PRIORITY_F = "relay.change_priority";
     public static final String MESSAGE_RECEIVED = "relay.BroadcastReceiver.MESSAGE";
     public static final String FRESH_FRAGMENT = "relay.BroadcastReceiver.FRESH_FRAGMENT";
+    public static final String REQUEST_FOR_MANUAL_HAND_SHAKE = "relay.BroadcastReceiver.REQUEST_FOR_MANUAL_HAND_SHAKE";
     private static final int PERMISSION_REQUEST_COARSE_LOCATION = 1;
 
 
@@ -78,6 +82,7 @@ public class MainActivity extends AppCompatActivity
     private  UUID mMyuuid;
 
     private UplaodInboxAsyncTask uplaodInboxAsyncTask;
+
 
 
     @Override
@@ -185,6 +190,14 @@ public class MainActivity extends AppCompatActivity
                 navigationView.setCheckedItem(R.id.nav_inbox);
             }
         }
+    }
+
+    @Override
+    public void onRestart() {
+        super.onRestart();
+        //  BroadCast to fragment to refresh inbox
+        Intent updateActivity = new Intent(REFRESH_INBOX_DB);
+        sendBroadcast(updateActivity);
     }
 
     @Override

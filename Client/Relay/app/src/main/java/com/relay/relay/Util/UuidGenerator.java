@@ -126,7 +126,7 @@ public class UuidGenerator {
 
         checkMailIsValid(email);
 
-        String actualLength; //2 chars a number between 10 to 99
+        String actualLength; //2 chars a number between 01 to 99
         String domain; // string, the part of the email from the @ char
         String domainCode; // domain encoded to 2 char
         String emailUser;  // all chars before '@'
@@ -134,6 +134,7 @@ public class UuidGenerator {
         String fillHex; // dynamic - 0 to X chars
 
         String[] temp = email.split("@");
+
 
         emailUser = temp[0];
         emailUser = emailUser.toLowerCase();
@@ -177,11 +178,16 @@ public class UuidGenerator {
         String emailUser;  // all chars before '@'
         String[] temp = email.split("@");
 
+
+        //check for valid email pattern
+        if (temp.length != 2)
+            throw new Exception("Email not valid");
+
         emailUser = temp[0];
         domain = temp[1];
 
         if(getDomainCode(domain)== null)
-            throw new Exception(new Exception("Email not valid"));
+            throw new Exception("Email not valid");
 
 //        if (convertStringToHex(emailUser).length() > MAXIMUM_CHARS)
 //            throw new Exception(new Exception("Email not valid"));

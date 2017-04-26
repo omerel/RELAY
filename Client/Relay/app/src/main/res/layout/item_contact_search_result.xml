@@ -28,6 +28,7 @@
                 android:textSize="20dp"
                 android:id="@+id/textView_item_contact_search_name" />
             <ImageView
+                android:id="@+id/arrow_item_contact_search_name"
                 android:layout_width="30dp"
                 android:layout_height="wrap_content"
                 android:layout_alignParentRight="true"

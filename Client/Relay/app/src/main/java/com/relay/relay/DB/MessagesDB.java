@@ -33,7 +33,8 @@ public class MessagesDB {
     public MessagesDB(Context context,InboxDB inboxDB){
         dbManager = new DBManager(DB,context);
         dbManager.openDB();
-        dbManager.putJsonObject(NUM_OF_MESSAGES, JsonConvertor.convertToJson(0));
+        if (!dbManager.isKeyExist(NUM_OF_MESSAGES))
+            dbManager.putJsonObject(NUM_OF_MESSAGES, JsonConvertor.convertToJson(0));
         this.mInboxDB = inboxDB;
         mAttachmentsDB = new AttachmentsDB(context);
     }

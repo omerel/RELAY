@@ -11,7 +11,7 @@
     <!-- Titles on action bar when changing fragments -->
     <string name="title_activity_main">RELAY</string>
     <string name="title_connection_fragment">Connections</string>
-    <string name="title_home_fragment">Relay</string>
+    <string name="title_home_fragment">Inbox</string>
 
 
     <!-- Preference keys -->

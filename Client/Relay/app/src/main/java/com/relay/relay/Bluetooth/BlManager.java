@@ -269,10 +269,8 @@ public class BLManager extends Thread implements BLConstants {
     }
 
     public void startManualSync() {
-        if(mStatus == DISCONNECTED) {
-            stopSearch(RESET_SEARCH_COUNTER);
-            mBluetoothScan.startScan();
-        }
+        stopSearch(RESET_SEARCH_COUNTER);
+        mBluetoothScan.startScan();
     }
 
     //  mFilter.addAction(BluetoothAdapter.ACTION_CONNECTION_STATE_CHANGED);

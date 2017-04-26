@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Filter;
 import android.widget.Filterable;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.relay.relay.R;
@@ -21,9 +22,10 @@ public class SearchContactAdapter extends RecyclerView.Adapter<SearchContactAdap
     public ArrayList<SearchUser> mArrayList;
     public ArrayList<SearchUser> mFilteredList;
 
+
     public SearchContactAdapter(ArrayList<SearchUser> arrayList) {
         mArrayList = arrayList;
-        mFilteredList = arrayList;
+        mFilteredList = new ArrayList<>();
     }
 
     @Override
@@ -49,7 +51,7 @@ public class SearchContactAdapter extends RecyclerView.Adapter<SearchContactAdap
                 String charString = charSequence.toString();
 
                 if (charString.isEmpty()) {
-                    mFilteredList = mArrayList;
+                    mFilteredList = new ArrayList<>();
                 } else {
 
                     ArrayList<SearchUser> filteredList = new ArrayList<>();
@@ -80,9 +82,11 @@ public class SearchContactAdapter extends RecyclerView.Adapter<SearchContactAdap
 
     public class SearchViewHolder extends RecyclerView.ViewHolder{
         public TextView contact;
+        public ImageView arrow;
         public SearchViewHolder(View view) {
             super(view);
             contact = (TextView)view.findViewById(R.id.textView_item_contact_search_name);
+            arrow = (ImageView)view.findViewById(R.id.arrow_item_contact_search_name);
         }
     }
 

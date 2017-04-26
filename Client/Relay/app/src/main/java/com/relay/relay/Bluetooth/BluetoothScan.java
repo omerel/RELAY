@@ -51,6 +51,7 @@ public class BluetoothScan implements BLConstants{
         if (mBluetoothAdapter != null) {
             mBluetoothName = mBluetoothAdapter.getName();
             mBluetoothAdapter.setName("relay_"+mBluetoothName);
+            sendMessageToBluetoothManager(GET_BLUETOOTH_SERVER_READY,null);
             mBluetoothAdapter.startDiscovery();
             Log.e(TAG, "start Discovery ");
             beDiscoverable();
@@ -60,7 +61,7 @@ public class BluetoothScan implements BLConstants{
             public void run() {
                 stopScan();
                 if(!isDeviceFound)
-                    sendResultToBluetoothManager(NOT_FOUND_ADDRESS_FROM_BLSCAN,null);
+                    sendMessageToBluetoothManager(NOT_FOUND_ADDRESS_FROM_BLSCAN,null);
             }
         }, SCAN_TIME);
     }
@@ -92,7 +93,6 @@ public class BluetoothScan implements BLConstants{
                 switch (action) {
                     // When discovery finds a device
                     case BluetoothDevice.ACTION_FOUND:
-
                         // Get the BluetoothDevice object from the Intent
                         BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                         Log.e(TAG, "ACTION_FOUND "+device.getName());
@@ -100,13 +100,17 @@ public class BluetoothScan implements BLConstants{
                         String[] split = null;
                         if (device.getName()!= null)
                             split = device.getName().split("_");
-                        if (split!= null && split.length>0)
+                        if (split!= null && split.length>0){
                             if (split[0].equals("relay")) {
                                 isDeviceFound = true;
                                 stopScan();
-                                sendResultToBluetoothManager(FOUND_MAC_ADDRESS_FROM_BLSCAN, device.getAddress());
+                                sendMessageToBluetoothManager(FOUND_MAC_ADDRESS_FROM_BLSCAN, device.getAddress());
+                                mRelayConnectivityManager.unregisterReceiver(mBroadcastReceiver);
                             }
-                            mRelayConnectivityManager.unregisterReceiver(mBroadcastReceiver);
+                        }
+                        else{
+                            mBluetoothAdapter.startDiscovery();
+                        }
                         break;
                 }
             }
@@ -131,7 +135,7 @@ public class BluetoothScan implements BLConstants{
     /**
      * Send scan device to bluetooth manager
      */
-    private void sendResultToBluetoothManager(int m, String address)  {
+    private void sendMessageToBluetoothManager(int m, String address)  {
 
         // Send data
         Bundle bundle = new Bundle();
@@ -142,7 +146,7 @@ public class BluetoothScan implements BLConstants{
         try {
             mMessenger.send(msg);
         } catch (RemoteException e) {
-            Log.e(TAG, "Error with sendResultToBluetoothManager ");
+            Log.e(TAG, "Error with sendMessageToBluetoothManager ");
         }
     }
 
