@@ -37,6 +37,7 @@ public class HandShake implements BLConstants {
     private final int STEP_2_UPDATE_NODES_AND_RELATIONS = 3;
     private final int STEP_3_TEXT_MESSAGES = 5;
     private final int STEP_4_OBJECT_MESSAGE = 6;
+    private final int ACK_OBJECT_STEP_4 = 9;
     private final int FINISH_STEP_4 = 7;
     private final int FINISH = 8;
 
@@ -47,6 +48,8 @@ public class HandShake implements BLConstants {
     private DataManager mDataManager;
     private DataTransferred mDataTransferred;
     private Node mMyNode;
+
+
 
     private DataTransferred.Metadata metadata;
     private DataTransferred.Metadata receivedMetadata;
@@ -61,6 +64,8 @@ public class HandShake implements BLConstants {
     private Map<UUID,Node> newNodeIdList; // store all the  new nodes that sent to the device. used to update messages status
     private TimePerformance timePerformance = new TimePerformance();
 
+    // attachments sent on by one because of their size
+    private int attachmentsCounter;
 
 
     public HandShake(BluetoothSocket bluetoothSocket,
@@ -79,6 +84,7 @@ public class HandShake implements BLConstants {
         this.objectMessagesToSend = new ArrayList<>();
         this.metadata = metadata;
         this.mBluetoothConnected.start();
+
         startHandshake();
     }
 
@@ -90,6 +96,7 @@ public class HandShake implements BLConstants {
      */
     private void startHandshake() {
 
+        attachmentsCounter = 0;
         timePerformance.start();
         this.metadata = mDataTransferred.createMetaData();
         Log.e(TAG,"TIME TO : "+"createMetaData"+" "+ timePerformance.stop());
@@ -108,6 +115,7 @@ public class HandShake implements BLConstants {
             int command = JsonConvertor.getCommand(jsonPacket);
             switch (command) {
                 case STEP_1_METADATA:
+                    Log.e(TAG, "STEP_1_METADATA. Initiator: "+mInitiator );
                     // receive meta data
                     receivedMetadata = JsonConvertor.getMetadataFromJsonContent(jsonPacket);
                     receivedKnownMessage = receivedMetadata.getKnownMessagesList();
@@ -126,6 +134,7 @@ public class HandShake implements BLConstants {
                     }
                     break;
                 case STEP_2_UPDATE_NODES_AND_RELATIONS:
+                    Log.e(TAG, "STEP_2_UPDATE_NODES_AND_RELATIONS. Initiator: "+mInitiator );
                     receivedUpdateNodeAndRelations =
                             JsonConvertor.getUpdateNodeAndRelationsFromJsonContent(jsonPacket);
                     timePerformance.start();
@@ -142,6 +151,7 @@ public class HandShake implements BLConstants {
                     }
                     break;
                 case STEP_3_TEXT_MESSAGES:
+                    Log.e(TAG, "STEP_3_TEXT_MESSAGES. Initiator: "+mInitiator );
                     ArrayList<RelayMessage> relayMessages =
                             JsonConvertor.getRelayMessageListFromJsonContent(jsonPacket);
                     timePerformance.start();
@@ -154,7 +164,6 @@ public class HandShake implements BLConstants {
                             String msg = relayMessage.getContent();
                             sendMessageToManager(NEW_RELAY_MESSAGE, msg);
                         }
-
                     }
                     Log.e(TAG, "TIME TO : " + "updateReceivedMessage" + " " + timePerformance.stop());
 
@@ -165,32 +174,70 @@ public class HandShake implements BLConstants {
                         updateSentTextMessages();
                         Log.e(TAG, "TIME TO : " + "updateSentTextMessages" + " " + timePerformance.stop());
                         timePerformance.start();
-                        for (int i = 0; i < objectMessagesToSend.size(); i++) {
-                            sendPacket(STEP_4_OBJECT_MESSAGE, JsonConvertor.convertToJson(objectMessagesToSend.get(i)));
+                        // send first attachment if exist
+                        if (objectMessagesToSend.size() > 0) {
+                            Log.e(TAG, "there are  "+objectMessagesToSend.size()+ " objects to send, sending " +attachmentsCounter +" from "+objectMessagesToSend.size() );
+                            sendPacket(STEP_4_OBJECT_MESSAGE, JsonConvertor.convertToJson(objectMessagesToSend.get(attachmentsCounter)));
+                            attachmentsCounter ++;
+                        } else{
+                            Log.e(TAG, "there are  "+objectMessagesToSend.size()+ " objects to send, sending " +attachmentsCounter +" from "+objectMessagesToSend.size() );
+                            Log.e(TAG, "TIME TO : " + "objectMessagesToSend" + " " + timePerformance.stop());
+                            sendPacket(FINISH_STEP_4, new String("DUMMY"));
                         }
-                        Log.e(TAG, "TIME TO : " + "objectMessagesToSend" + " " + timePerformance.stop());
-                        sendPacket(FINISH_STEP_4, new String("DUMMY"));
                     }
+                    break;
+
+
+                case ACK_OBJECT_STEP_4:
+                    //while there is attachments, send them one by one
+                    if (attachmentsCounter < objectMessagesToSend.size()) {
+                        Log.e(TAG, "there are  "+objectMessagesToSend.size()+ " objects to send, sending " +attachmentsCounter +" from "+objectMessagesToSend.size() );
+                        sendPacket(STEP_4_OBJECT_MESSAGE, JsonConvertor.convertToJson(objectMessagesToSend.get(attachmentsCounter)));
+                        attachmentsCounter ++;
+                    }
+                    else{
+                        if (!mInitiator) {
+
+                            sendPacket(FINISH, new String("DUMMY"));
+                            updateSentAttachmentMessages();
+                            finishHandshake();
+                        }
+                        else{
+                            Log.e(TAG, "TIME TO : " + "objectMessagesToSend" + " " + timePerformance.stop());
+                            sendPacket(FINISH_STEP_4, new String("DUMMY"));
+                        }
+                    }
+
                     break;
 
                 case STEP_4_OBJECT_MESSAGE:
+                    Log.e(TAG, "STEP_4_OBJECT_MESSAGE. Initiator: "+mInitiator );
                     RelayMessage relayMessage = JsonConvertor.getRelayMessageFromJsonContent(jsonPacket);
                     updateReceivedMessage(relayMessage);
                     mDataManager.getMessagesDB().addMessage(relayMessage);
+                    Log.e(TAG, "ACK object message");
+                    sendPacket(ACK_OBJECT_STEP_4, new String("DUMMY"));
                     break;
 
-                case FINISH_STEP_4:
+                case FINISH_STEP_4: // only !mInitiator get it
+                    Log.e(TAG, "FINISH_STEP_4. Initiator: "+mInitiator );
                     updateSentTextMessages();
                     if (!mInitiator) {
-                        for (int i = 0; i < objectMessagesToSend.size(); i++) {
-                            sendPacket(STEP_4_OBJECT_MESSAGE, JsonConvertor.convertToJson(objectMessagesToSend.get(i)));
+                        // send first attachment if exist
+                        if (objectMessagesToSend.size() > 0) {
+                            sendPacket(STEP_4_OBJECT_MESSAGE, JsonConvertor.convertToJson(objectMessagesToSend.get(attachmentsCounter)));
+                            attachmentsCounter ++;
                         }
-                        sendPacket(FINISH, new String("DUMMY"));
-                        updateSentAttachmentMessages();
-                        finishHandshake();
+                        else{
+                            sendPacket(FINISH, new String("DUMMY"));
+                            updateSentAttachmentMessages();
+                            finishHandshake();
+                        }
                     }
                     break;
+
                 case FINISH:
+                    Log.e(TAG, "FINISH. Initiator: "+mInitiator );
                     updateSentAttachmentMessages();
                     finishHandshake();
                     break;

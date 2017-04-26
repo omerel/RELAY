@@ -98,6 +98,7 @@ public class BluetoothConnected extends Thread implements BLConstants {
             catch (Exception e) {
                 // TODO testing it
                 Log.e(TAG, "Error - Problem with reading data");
+                cancel();
                 sendPacketMessageBluetoothManager(FAILED_DURING_HAND_SHAKE,null);
             }
         }
