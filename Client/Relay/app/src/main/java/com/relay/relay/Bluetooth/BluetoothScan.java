@@ -32,6 +32,7 @@ public class BluetoothScan implements BLConstants{
     private IntentFilter mFilter;
     private boolean isDeviceFound;
     private String mBluetoothName;
+    private Handler stopScanHandler;
 
 
     public BluetoothScan(BluetoothAdapter bluetoothAdapter,Messenger messenger,
@@ -55,12 +56,15 @@ public class BluetoothScan implements BLConstants{
             mBluetoothAdapter.startDiscovery();
             Log.e(TAG, "start Discovery ");
             beDiscoverable();
+
         }
-        new Handler().postDelayed(new Runnable() {
+        stopScanHandler = new Handler();
+        stopScanHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
                 stopScan();
-                if(!isDeviceFound)
+                if(!isDeviceFound) // if not found or if the device was the server
+                    mRelayConnectivityManager.unregisterReceiver(mBroadcastReceiver);
                     sendMessageToBluetoothManager(NOT_FOUND_ADDRESS_FROM_BLSCAN,null);
             }
         }, SCAN_TIME);
@@ -70,8 +74,6 @@ public class BluetoothScan implements BLConstants{
         if (mBluetoothAdapter != null)
             mBluetoothAdapter.cancelDiscovery();
         mBluetoothAdapter.setName(mBluetoothName);
-        mRelayConnectivityManager.unregisterReceiver(mBroadcastReceiver);
-
         Log.e(TAG, "cancel Discovery ");
     }
 
@@ -105,8 +107,8 @@ public class BluetoothScan implements BLConstants{
                             if (split[0].equals("relay")) {
                                 isDeviceFound = true;
                                 stopScan();
-                                sendMessageToBluetoothManager(FOUND_MAC_ADDRESS_FROM_BLSCAN, device.getAddress());
                                 mRelayConnectivityManager.unregisterReceiver(mBroadcastReceiver);
+                                sendMessageToBluetoothManager(FOUND_MAC_ADDRESS_FROM_BLSCAN, device.getAddress());
                             }
                         }
                         else{

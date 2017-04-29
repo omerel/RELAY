@@ -444,9 +444,10 @@ public class BLManager extends Thread implements BLConstants {
 
                 case NOT_FOUND_ADDRESS_FROM_BLSCAN:
                     Log.d(TAG, "NOT_FOUND_ADDRESS_FROM_BLSCAN");
-                    mStatus = DISCONNECTED;
+                   // mStatus = DISCONNECTED;
                     intervalSearch();
                     break;
+
                 case GET_BLUETOOTH_SERVER_READY:
                     // Open server socket
                     mBluetoothServer.cancel();
