@@ -3,6 +3,7 @@ package com.relay.relay.DB;
 import android.content.Context;
 import android.util.Log;
 
+import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.Database;
 import com.relay.relay.Util.ImageConverter;
 import com.relay.relay.Util.JsonConvertor;
@@ -11,6 +12,7 @@ import com.relay.relay.system.Node;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.UUID;
 
 /**
@@ -52,6 +54,8 @@ public class NodesDB {
      * @return true if success
      */
     public boolean addNode(Node node){
+
+        Log.e(TAG,"add node");
         if (!dbManager.isKeyExist(node.getId())) {
 
             byte[]  bytes = null;
@@ -70,7 +74,6 @@ public class NodesDB {
                 Log.e(TAG,"Add Attachment to DB ");
                 mAttachmentsDB.addAttachment(node.getId(), new ByteArrayInputStream(bytes));
             }
-
             // update graphRelations
             graphRelations.addNode(node.getId());
             addNumNodes();
@@ -83,10 +86,47 @@ public class NodesDB {
             return true;
         }
         else{
+            Log.e(TAG,"update node without rankServer");
+            Node oldNode = getNode(node.getId());
+            int oldRank = oldNode.getRank();
+            Calendar oldTimeStampRank = oldNode.getTimeStampRankFromServer();
+            node.setRank(oldRank,oldTimeStampRank);
+
+            // separate image from node. add node to node db
+            byte[]  bytes = node.getProfilePicture();
+            node.setProfilePicture(null);
+
+            Log.e(TAG,"Update node to nodeDB");
             dbManager.putJsonObject(node.getId(), JsonConvertor.convertToJson(node));
-            mInboxDB.updateContactItem(node.getId(),"",false,false,false,false);
+
+            // update attachmentDB
+            if (bytes != null) {
+                Log.e(TAG,"Add Attachment to DB ");
+                mAttachmentsDB.addAttachment(node.getId(), new ByteArrayInputStream(bytes));
+            }
+
+            // update inboxDB
+            String keySearch = node.getFullName()+mInboxDB.SEARCH_KEY_DELIMITER+
+                    node.getUserName()+mInboxDB.SEARCH_KEY_DELIMITER+
+                    node.getEmail();
+            mInboxDB.addContactItem(node.getId(),keySearch);
+
+            //mInboxDB.updateContactItem(node.getId(),"",false,false,false,true);
             return true;
         }
+    }
+
+    public boolean updateNodeRank(UUID nodeID,int rank,Calendar timeStampRankFromServer){
+        Log.e(TAG,"update node rank");
+        if (dbManager.isKeyExist(nodeID)) {
+            Node node = getNode(nodeID);
+            node.setRank(rank,timeStampRankFromServer);
+            // remove attachment
+            node.setProfilePicture(null);
+            dbManager.putJsonObject(node.getId(), JsonConvertor.convertToJson(node));
+            return true;
+        }
+        return false;
     }
 
     public boolean isNodeExist(UUID nodeId){
@@ -118,6 +158,7 @@ public class NodesDB {
         if (dbManager.isKeyExist(uuid)){
             dbManager.deleteJsonObject(uuid);
             graphRelations.deleteNode(uuid);
+            // TODO delete attachment of node?
             reduceNumNodes();
 
             mInboxDB.deleteContactFromDB(uuid);
@@ -197,4 +238,20 @@ public class NodesDB {
     }
 
     public Database getDatabase(){return dbManager.getDatabase();}
+
+    public boolean closeNodesDB(){
+        mAttachmentsDB.getDatabase().close();
+        dbManager.getDatabase().close();
+        return true;
+    }
+    public boolean openNodesDB(){
+        try {
+            if ( ! mAttachmentsDB.getDatabase().isOpen()) mAttachmentsDB.getDatabase().open();
+            if ( ! dbManager.getDatabase().isOpen() ) dbManager.getDatabase().open();
+            return true;
+        } catch (CouchbaseLiteException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
 }

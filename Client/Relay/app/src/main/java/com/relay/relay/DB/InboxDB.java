@@ -190,7 +190,7 @@ public class InboxDB {
         }
         else{
             // happens when the device got mail from the user before he got its node
-            //  need to update the search key
+            //  need to update the search key or there's a node that need to update
             Document doc = mDatabase.getDocument(CONTACT_ID + contactUUID.toString());
             try {
                 doc.update(new Document.DocumentUpdater() {
@@ -247,7 +247,8 @@ public class InboxDB {
                     @Override
                     public boolean update(UnsavedRevision newRevision) {
                         Map<String, Object> properties = newRevision.getUserProperties();
-                        properties.put("last_message", lastMsg);
+                        if (!lastMsg.equals(""))
+                            properties.put("last_message", lastMsg);
                         properties.put("new_messages", withNewMessage);
                         properties.put("updates", toUpdate);
                         properties.put("disappear", disappear);

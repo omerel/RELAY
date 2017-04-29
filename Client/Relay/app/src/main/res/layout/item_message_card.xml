@@ -32,7 +32,7 @@
                 android:layout_marginLeft="10dp"
                 android:textStyle="normal"
                 android:layout_marginRight="4dp"
-                android:textSize="13sp"
+                android:textSize="11sp"
                 android:textColor="@color/colorPrimaryDark"
                 android:layout_toEndOf="@+id/dialog_image"
                 android:id="@+id/textView_item_contact_name" />
@@ -55,9 +55,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="13:00 12/08/2016"
-                android:textSize="10sp"
+                android:textSize="8sp"
                 android:layout_toRightOf="@id/textView_item_contact_name"
-                android:layout_marginLeft="50dp"
+                android:layout_marginLeft="8dp"
                 android:layout_alignEnd="@+id/textView_item_contact_message"
                 android:layout_alignBaseline="@id/textView_item_contact_name"
                 android:textAlignment="textEnd"
@@ -67,7 +67,7 @@
                 android:layout_width="12dp"
                 android:layout_height="12dp"
                 android:src="@drawable/ic_star"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="8dp"
                 android:layout_marginRight="4dp"
                 android:layout_toRightOf="@id/textView_item_contact_name"
                 android:id="@+id/imageView_item_message_updates"/>
@@ -76,7 +76,7 @@
                 android:layout_width="12dp"
                 android:layout_height="12dp"
                 android:src="@drawable/ic_status_waiting"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="8dp"
                 android:layout_marginRight="4dp"
                 android:layout_toRightOf="@id/imageView_item_message_updates"
                 android:id="@+id/imageView_item_message_status"/>

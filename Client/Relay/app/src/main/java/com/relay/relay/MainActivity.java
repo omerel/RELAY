@@ -48,7 +48,7 @@ import static com.relay.relay.DB.InboxDB.REFRESH_INBOX_DB;
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener ,
         PreferencesConnectionFragment.OnFragmentInteractionListener,
-        InboxFragment.OnFragmentInteractionListener{
+        InboxFragment.OnFragmentInteractionListener, ProfileFragment.OnFragmentInteractionListener{
 
     private final String TAG = "RELAY_DEBUG: "+ MainActivity.class.getSimpleName();
 
@@ -82,6 +82,8 @@ public class MainActivity extends AppCompatActivity
     private  UUID mMyuuid;
 
     private UplaodInboxAsyncTask uplaodInboxAsyncTask;
+
+    private static DataManager mDataManager;
 
 
 
@@ -120,7 +122,7 @@ public class MainActivity extends AppCompatActivity
             //get my uuid from login and put it in sharedPreferences
             UuidGenerator uuidGenerator = new UuidGenerator();
             try {
-                mMyuuid = uuidGenerator.GenerateUUIDFromEmail("barr@gmail.com");
+                mMyuuid = uuidGenerator.GenerateUUIDFromEmail("Rachael@gmail.com");
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -147,11 +149,12 @@ public class MainActivity extends AppCompatActivity
         textViewUserName = (TextView) navHeaderView.findViewById(R.id.textView_menu_userName);
         textViewUserEmail = (TextView) navHeaderView.findViewById(R.id.textView_menu_user_mail);
         // Update navigator with name and email
-        DataManager mDataManager = new DataManager(this);
-        textViewUserEmail.setText(mDataManager.getNodesDB().getNode(mMyuuid).getEmail());
+        mDataManager = new DataManager(this);
+        String email = mDataManager.getNodesDB().getNode(mMyuuid).getEmail();
         String userName = mDataManager.getNodesDB().getNode(mMyuuid).getUserName();
         String fullName = mDataManager.getNodesDB().getNode(mMyuuid).getFullName();
         textViewUserName.setText("@"+userName+", "+fullName);
+        textViewUserEmail.setText(email);
 
 
         startService(new Intent(MainActivity.this,RelayConnectivityManager.class));
@@ -211,6 +214,7 @@ public class MainActivity extends AppCompatActivity
         getMenuInflater().inflate(R.menu.main, menu);
         menu.findItem(R.id.action_manual_handshake).setVisible(false);
         menu.findItem(R.id.action_search).setVisible(false);
+        menu.findItem(R.id.action_approve).setVisible(false);
         return true;
     }
 
@@ -230,9 +234,11 @@ public class MainActivity extends AppCompatActivity
         return super.onOptionsItemSelected(item);
     }
 
+
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
+
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
@@ -241,7 +247,7 @@ public class MainActivity extends AppCompatActivity
         }else if (id == R.id.nav_connection_setting) {
             displayFragment(1);
         } else if (id == R.id.nav_user_properties) {
-
+            displayFragment(2);
         } else if (id == R.id.nav_debug_screen) {
 
         } else if (id == R.id.nav_setting) {
@@ -266,6 +272,7 @@ public class MainActivity extends AppCompatActivity
                 mContentView.setVisibility(View.INVISIBLE);
                 uplaodInboxAsyncTask = new UplaodInboxAsyncTask();
                 title = getString(R.string.title_home_fragment);
+                mFragment = new InboxFragment();
                 uplaodInboxAsyncTask.execute("");
                 // set the toolbar title
                 getSupportActionBar().setTitle(title);
@@ -285,6 +292,18 @@ public class MainActivity extends AppCompatActivity
                 crossfade(mShortAnimationDuration);
                 break;
             case 2:
+                mContentView.setVisibility(View.INVISIBLE);
+                mFragment = new ProfileFragment();
+                title = getString(R.string.title_profile_fragment);
+                if (mFragment != null) {
+                    FragmentManager fragmentManager = getSupportFragmentManager();
+                    FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                    fragmentTransaction.replace(R.id.content_body, mFragment);
+                    fragmentTransaction.commit();
+                    // set the toolbar title
+                    getSupportActionBar().setTitle(title);
+                }
+                crossfade(mShortAnimationDuration);
                 break;
             default:
                 break;
@@ -482,6 +501,10 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    @Override
+    public void onFragmentInteraction(Uri uri) {
+
+    }
 
     private class UplaodInboxAsyncTask extends AsyncTask<String, String, String>{
 
@@ -507,7 +530,6 @@ public class MainActivity extends AppCompatActivity
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            mFragment = new InboxFragment();
             if (mFragment != null) {
                 FragmentManager fragmentManager = getSupportFragmentManager();
                 FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();

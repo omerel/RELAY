@@ -1,6 +1,7 @@
 package com.relay.relay.DB;
 import android.content.Context;
 
+import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.Database;
 import com.relay.relay.Util.ImageConverter;
 import com.relay.relay.Util.JsonConvertor;
@@ -172,4 +173,21 @@ public class MessagesDB {
     }
 
     public Database getDatabase(){return dbManager.getDatabase();}
+
+
+    public boolean closeMessageDB(){
+        mAttachmentsDB.getDatabase().close();
+        dbManager.getDatabase().close();
+        return true;
+    }
+    public boolean openMessageDB(){
+        try {
+            if ( ! mAttachmentsDB.getDatabase().isOpen()) mAttachmentsDB.getDatabase().open();
+            if ( ! dbManager.getDatabase().isOpen() ) dbManager.getDatabase().open();
+            return true;
+        } catch (CouchbaseLiteException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
 }

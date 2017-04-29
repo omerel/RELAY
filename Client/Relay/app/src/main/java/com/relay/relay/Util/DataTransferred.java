@@ -77,7 +77,7 @@ public class DataTransferred {
                 Node tempNode = nodesDB.getNode(uuidArrayList.get(j));
                 knownRelationsArrayList.put(tempNode.getId(),new KnownRelations(tempNode.getId(),
                         tempNode.getTimeStampNodeDetails(),tempNode.getTimeStampNodeRelations(),
-                        i,tempNode.getRank()));
+                        i,tempNode.getRank(),tempNode.getTimeStampRankFromServer()));
             }
         }
         return knownRelationsArrayList;
@@ -134,14 +134,16 @@ public class DataTransferred {
         private UUID nodeId;
         private Calendar timeStampNodeDetails;
         private Calendar timeStampNodeRelations;
+        private Calendar timeStampRankFromServer;
         private int nodeDegree;
         private int rank;
 
         public KnownRelations(UUID nodeId, Calendar timeStampNodeDetails,
-                              Calendar timeStampNodeRelations, int nodeDegree,int rank){
+                              Calendar timeStampNodeRelations, int nodeDegree,int rank,Calendar timeStampRankFromServer){
             this.nodeId = nodeId;
             this.timeStampNodeDetails = timeStampNodeDetails;
             this.timeStampNodeRelations = timeStampNodeRelations;
+            this.timeStampRankFromServer = timeStampRankFromServer;
             this.nodeDegree = nodeDegree;
             this.rank = rank;
         }
@@ -161,6 +163,8 @@ public class DataTransferred {
         public Calendar getTimeStampNodeRelations() {
             return timeStampNodeRelations;
         }
+
+        public Calendar getTimeStampRankFromServer(){return timeStampRankFromServer;}
 
         public int getNodeDegree() {
             return nodeDegree;

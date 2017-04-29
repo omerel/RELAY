@@ -70,6 +70,7 @@ public class BluetoothScan implements BLConstants{
         if (mBluetoothAdapter != null)
             mBluetoothAdapter.cancelDiscovery();
         mBluetoothAdapter.setName(mBluetoothName);
+        mRelayConnectivityManager.unregisterReceiver(mBroadcastReceiver);
 
         Log.e(TAG, "cancel Discovery ");
     }

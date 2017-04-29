@@ -158,7 +158,7 @@ public class Test {
         Log.e(TAG, "add Nodes to nodeDB");
         for (int i = 0; i < numOFNodes; i++) {
             Node node =new Node(uuids[i],dates[randomIndex(0,MAX)],dates[randomIndex(0,MAX)],
-                    1,email[i],phoneNumber[i], userName[i], fullNAme[i],pic,i);
+                    1,email[i],phoneNumber[i], userName[i], fullNAme[i],pic,i,Calendar.getInstance());
             nodesDB.addNode(node);
         }
 
@@ -173,6 +173,29 @@ public class Test {
 
     }
 
+
+    /**
+     * Rachael
+     */
+    public void createDB_0(){
+
+        // choose  what is the device - set omer@gmail.com in ,in  main activity uuid
+
+
+        Log.e(TAG, "add Nodes to nodeDB");
+        nodesDB.addNode(new Node(uuids[2],dates[randomIndex(0,MAX)],dates[randomIndex(0,MAX)],
+                1,email[2],phoneNumber[2], userName[2], fullNAme[2],pic,0,Calendar.getInstance()));
+
+//        Log.e(TAG, "add Messages to messagesDB");
+//        for(int i=0;i<MAX;i++){
+//            messagesDB.addMessage( new RelayMessage(uuids[randomIndex(0,1)],uuids[randomIndex(1,fullNAme.length)],
+//                    RelayMessage.TYPE_MESSAGE_TEXT,messages[randomIndex(0,messages.length)]));
+//        }
+
+        Log.e(TAG, "Creating full graphRelations");
+//        graphRelations.addEdge(uuids[0],uuids[i]);
+
+    }
     /**
      * barr
      */
@@ -185,7 +208,7 @@ public class Test {
 
         Log.e(TAG, "add Nodes to nodeDB");
             nodesDB.addNode(new Node(uuids[1],dates[randomIndex(0,MAX)],dates[randomIndex(0,MAX)],
-                    1,email[1],phoneNumber[1], userName[1], fullNAme[1],pic,0));
+                    1,email[1],phoneNumber[1], userName[1], fullNAme[1],pic,0,Calendar.getInstance()));
 
 
 //        Log.e(TAG, "add Messages to messagesDB");
@@ -213,13 +236,13 @@ public class Test {
         Log.e(TAG, "add Nodes to nodeDB");
         // add omer
         nodesDB.addNode(new Node(uuids[0],dates[randomIndex(0,MAX)],dates[randomIndex(0,MAX)],
-                    1,email[0],phoneNumber[0], userName[0], fullNAme[0], pic,0));
+                    1,email[0],phoneNumber[0], userName[0], fullNAme[0], pic,0,Calendar.getInstance()));
         // add racahel
         nodesDB.addNode(new Node(uuids[2],dates[randomIndex(0,MAX)],dates[randomIndex(0,MAX)],
-                1,email[2],phoneNumber[2], userName[2], fullNAme[2], pic,0));
+                1,email[2],phoneNumber[2], userName[2], fullNAme[2], pic,0,Calendar.getInstance()));
         //add stav
         nodesDB.addNode(new Node(uuids[4],dates[randomIndex(0,MAX)],dates[randomIndex(0,MAX)],
-                1,email[4],phoneNumber[4], userName[4], fullNAme[4], pic,0));
+                1,email[4],phoneNumber[4], userName[4], fullNAme[4], pic,0,Calendar.getInstance()));
 
 //        Log.e(TAG, "add Messages to messagesDB");
 //        for(int i=0;i<MAX;i++){
@@ -254,7 +277,7 @@ public class Test {
         for (int i = 0; i < numOFNodes; i++) {
 
             Node node =new Node(uuids[i],dates[randomIndex(0,MAX)],dates[randomIndex(0,MAX)],
-                    1,email[i],phoneNumber[i], userName[i], fullNAme[i],pic,i);
+                    1,email[i],phoneNumber[i], userName[i], fullNAme[i],pic,i,Calendar.getInstance());
             nodesDB.addNode(node);
         }
 
@@ -288,14 +311,14 @@ public class Test {
         Log.e(TAG, "add Nodes to nodeDB");
         // add bar
         nodesDB.addNode(new Node(uuids[1],dates[randomIndex(0,MAX)],dates[randomIndex(0,MAX)],
-                1,email[1],phoneNumber[1], userName[1], fullNAme[1],pic,0));
+                1,email[1],phoneNumber[1], userName[1], fullNAme[1],pic,0,Calendar.getInstance()));
 
         //add omer
         nodesDB.addNode(new Node(uuids[0],dates[randomIndex(0,MAX)],dates[randomIndex(0,MAX)],
-                1,email[0],phoneNumber[0], userName[0], fullNAme[0],pic,0));
+                1,email[0],phoneNumber[0], userName[0], fullNAme[0],pic,0,Calendar.getInstance()));
         //add adi
         nodesDB.addNode(new Node(uuids[3],dates[randomIndex(0,MAX)],dates[randomIndex(0,MAX)],
-                1,email[3],phoneNumber[3], userName[3], fullNAme[3],pic,0));
+                1,email[3],phoneNumber[3], userName[3], fullNAme[3],pic,0,Calendar.getInstance()));
 
 //        Log.e(TAG, "add Messages to messagesDB");
 //        for(int i=0;i<MAX;i++){
@@ -310,6 +333,7 @@ public class Test {
 
     public void deleteDB(){
         dataManager.deleteAlldataManager();
+
     }
 
 
@@ -321,8 +345,8 @@ public class Test {
         timePerformance.start();
         Log.e(TAG, "Create DB");
         //////////////
-        createDB_2();
-        //deleteDB();
+        createDB_0();
+      //  deleteDB();
         /////////////
 //        Log.e(TAG, "graphRelations.getMyNumEdges()--->"+ graphRelations.getMyNumEdges());
 //        Log.e(TAG, "graphRelations.getMyNumNodes()--->"+ graphRelations.getMyNumNodes());

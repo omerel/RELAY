@@ -3,6 +3,7 @@ package com.relay.relay.SubSystem;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
@@ -17,6 +18,7 @@ import com.relay.relay.system.Node;
 import com.relay.relay.system.RelayMessage;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -48,6 +50,7 @@ public class HandShake implements BLConstants {
     private DataManager mDataManager;
     private DataTransferred mDataTransferred;
     private Node mMyNode;
+    private Handler watchDogHandler;
 
 
 
@@ -79,22 +82,47 @@ public class HandShake implements BLConstants {
         this.mDataManager = dataManager;
         this.mDataTransferred = new DataTransferred(dataManager.getGraphRelations(),
                 dataManager.getNodesDB(),dataManager.getMessagesDB());
-        this.mMyNode = mDataManager.getNodesDB().getNode(mDataManager.getNodesDB().getMyNodeId());
         this.textMessagesToSend = new ArrayList<>();
         this.objectMessagesToSend = new ArrayList<>();
         this.metadata = metadata;
         this.mBluetoothConnected.start();
-
+        handShakeWatchDog(20000);
         startHandshake();
+
     }
 
 
+    /**
+     * if handshake is stuck close it after period of time
+     * @param time
+     */
+    private void handShakeWatchDog(int time){
+        final int newTime = time;
+        watchDogHandler = new Handler();
+        watchDogHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                // TODO need to be tested
+                mBluetoothConnected.cancel();
+                Log.e(TAG,"Error - watchDogHandler");
+                sendMessageToManager(FAILED_DURING_HAND_SHAKE,null);
+                Log.d(TAG, "Restart Advertisement if needed");
+            }
+        }, time);
+
+    }
 
 
     /**
      * Start handshake process
      */
     private void startHandshake() {
+
+        // todo check if needed refresh data base if needed
+        mDataManager.closeAllDataBase();
+        mDataManager.openAllDataBase();
+        // set my node
+        mMyNode = mDataManager.getNodesDB().getNode(mDataManager.getNodesDB().getMyNodeId());
 
         attachmentsCounter = 0;
         timePerformance.start();
@@ -121,11 +149,12 @@ public class HandShake implements BLConstants {
                     receivedKnownMessage = receivedMetadata.getKnownMessagesList();
                     receivedKnownRelations = receivedMetadata.getKnownRelationsList();
                     timePerformance.start();
-                    checkRankBeforeHandShake(receivedMetadata);
+                    checkRankBeforeHandShake();
                     Log.e(TAG, "TIME TO : " + "checkRankBeforeHandShake" + " " + timePerformance.stop());
                     finalDegree = CalculateFinalRank();
                     timePerformance.start();
                     updateNodeAndRelations = createUpdateNodeAndRelations(finalDegree);
+
                     Log.e(TAG, "TIME TO : " + "createUpdateNodeAndRelations" + " " + timePerformance.stop());
                     if (!mInitiator) {
                         sendPacket(STEP_1_METADATA, JsonConvertor.convertToJson(metadata));
@@ -238,13 +267,15 @@ public class HandShake implements BLConstants {
 
                 case FINISH:
                     Log.e(TAG, "FINISH. Initiator: "+mInitiator );
+                    watchDogHandler.removeCallbacksAndMessages(null);
                     updateSentAttachmentMessages();
                     finishHandshake();
                     break;
             }
         } catch (Exception e) {
             // TODO need to be tested
-            Log.e(TAG,"Error in hand shake");
+            mBluetoothConnected.cancel();
+            Log.e(TAG,"Error in hand shake method");
             sendMessageToManager(FAILED_DURING_HAND_SHAKE,null);
         }
     }
@@ -392,7 +423,6 @@ public class HandShake implements BLConstants {
         }
     }
 
-
     private boolean updateNodeAndRelations
             (DataTransferred.UpdateNodeAndRelations updateNodeAndRelations){
         ArrayList<Node> nodeArrayList = updateNodeAndRelations.getNodeList();
@@ -400,6 +430,18 @@ public class HandShake implements BLConstants {
                 updateNodeAndRelations.getRelationsList();
 
         for ( Node node : nodeArrayList){
+            //  update rank if newer the what I have(add node doesn't do it) TODO
+            if(mDataManager.getNodesDB().isNodeExist(node.getId())){
+                Node oldNode =  mDataManager.getNodesDB().getNode(node.getId());
+                Calendar timeStampRankFromServer = oldNode.getTimeStampRankFromServer();
+
+                // if the timestamp that i have was older, change for the new rank because addNode method doesn't do it
+                if ( timeStampRankFromServer.before(node.getTimeStampRankFromServer())){
+                    mDataManager.getNodesDB().updateNodeRank(node.getId(),
+                            node.getRank(),node.getTimeStampRankFromServer());
+                }
+            }
+            // update the new node without timStamp
             mDataManager.getNodesDB().addNode(node);
         }
         for (DataTransferred.NodeRelations nodeRelations : nodeRelationsArrayList){
@@ -422,8 +464,11 @@ public class HandShake implements BLConstants {
         newNodeIdList = new HashMap<>();
         ArrayList<Node> updateNodeList = new ArrayList<>();
         ArrayList<DataTransferred.NodeRelations> updateRelationsList = new ArrayList<>();
+
         ArrayList<UUID> myNodeList = mDataManager.getNodesDB().getNodesIdList();
 
+        // update the device with my node and relations first
+        updateNodeList.add(mMyNode);
 
         for (UUID nodeId : myNodeList){
 
@@ -433,29 +478,35 @@ public class HandShake implements BLConstants {
                             mDataManager.getNodesDB().getNode(nodeId).getTimeStampNodeDetails(),
                             mDataManager.getGraphRelations().adjacentTo(nodeId));
 
-            // if node is known check if need to update its node and/or relations
-            if (receivedKnownRelations.containsKey(nodeId)){
+            // if node is known check if need to update its node and/or relations and it's not the syncing node
+            if (receivedKnownRelations.containsKey(nodeId) &&
+                    !nodeId.equals(receivedMetadata.getMyNode().getId())){
 
+                // tODO check it
                 // if my node timestamp is newer ' update node and relation
                 if (mDataManager.getNodesDB().getNode(nodeId).getTimeStampNodeDetails().after(
-                        receivedKnownRelations.get(nodeId).getTimeStampNodeDetails())){
-
+                        receivedKnownRelations.get(nodeId).getTimeStampNodeDetails())) {
                     updateNodeList.add(mDataManager.getNodesDB().getNode(nodeId));
-                    updateRelationsList.add(tempRelations);
-                    newNodeIdList.put(nodeId,mDataManager.getNodesDB().getNode(nodeId));
-                }else{
+                    newNodeIdList.put(nodeId, mDataManager.getNodesDB().getNode(nodeId));
+                }
+                if (mDataManager.getNodesDB().getNode(nodeId).getTimeStampNodeRelations().after(
+                        receivedKnownRelations.get(nodeId).getTimeStampNodeRelations())) {
                     // if timestamp relation is newer, update relation
                     updateRelationsList.add(tempRelations);
+                    newNodeIdList.put(nodeId, mDataManager.getNodesDB().getNode(nodeId));
                 }
+
             }
-            // if node is in the share final degree, add it to update nodes and his relations
+            // if node is in the share final degree and it's not the syncing node , add it to update nodes and his relations
             else{
-                if (knownRelations.get(nodeId).getNodeDegree() <= degree){
+                if (knownRelations.get(nodeId).getNodeDegree() <= degree &&
+                        !nodeId.equals(receivedMetadata.getMyNode().getId()) ){
                     updateNodeList.add(mDataManager.getNodesDB().getNode(nodeId));
                     updateRelationsList.add(tempRelations);
                     newNodeIdList.put(nodeId,mDataManager.getNodesDB().getNode(nodeId));
                 }
             }
+
         }
         updateNodeAndRelations = mDataTransferred.createUpdateNodeAndRelations(updateNodeList,
                 updateRelationsList );
@@ -478,17 +529,15 @@ public class HandShake implements BLConstants {
     /**
      * The method will check if my node has an updated rank in the other device. if yes it will update
      * the node rank for the handshake. during the handshake all the node details will be update
-     * @param metadata
      * @return
      */
-    private boolean checkRankBeforeHandShake(DataTransferred.Metadata metadata){
+    private boolean checkRankBeforeHandShake(){
         // check if the device had handshake with me knows me - if yes check if he has update rank for me
-
         if (receivedKnownRelations.containsKey(mMyNode.getId())){
-            if (receivedKnownRelations.get(mMyNode.getId()).getTimeStampNodeDetails()
-                    .after(mMyNode.getTimeStampNodeDetails()));
+            if (receivedKnownRelations.get(mMyNode.getId()).getTimeStampRankFromServer()
+                    .after(mMyNode.getTimeStampRankFromServer()));
                 // update my rank (need to use it) after it will update all node
-                mMyNode.setRank(receivedKnownRelations.get(mMyNode.getId()).getNodeRank());
+                mMyNode.setRank(receivedKnownRelations.get(mMyNode.getId()).getNodeRank(),receivedKnownRelations.get(mMyNode.getId()).getTimeStampRankFromServer());
             return true;
         }
         return false;
@@ -508,8 +557,7 @@ public class HandShake implements BLConstants {
         //  add event in history
         mDataManager.getHandShakeDB().addEventToHandShakeHistoryWith(receivedMetadata.getMyNode().getId());
         //  add edge between node
-        mDataManager.getGraphRelations().addEdge(mMyNode.getId(),
-                receivedMetadata.getMyNode().getId());
+        mDataManager.getGraphRelations().addEdge(mMyNode.getId(), receivedMetadata.getMyNode().getId());
         sendFinishMessageToManager(FINISHED_HANDSHAKE, mBluetoothSocket.getRemoteDevice().getAddress());
         Log.d(TAG, "FINISHED_HANDSHAKE");
 

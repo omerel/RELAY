@@ -7,6 +7,7 @@ import android.os.Message;
 import android.os.Messenger;
 import android.util.Log;
 
+import com.couchbase.lite.CouchbaseLiteException;
 import com.relay.relay.DB.GraphRelations;
 import com.relay.relay.DB.HandShakeDB;
 import com.relay.relay.DB.InboxDB;
@@ -85,6 +86,33 @@ public class DataManager {
         mHandShakeDB.deleteHandShakeDB();
         mGraphRelations.deleteGraph();
         mMessagesDB.deleteMessageDB();
+
+        return true;
+    }
+
+    public boolean closeAllDataBase(){
+
+        mNodesDB.closeNodesDB();
+        mInboxDB.getDatabase().close();
+        mHandShakeDB.getDatabase().close();
+        mGraphRelations.getDatabase().close();
+        mMessagesDB.closeMessageDB();
+        return true;
+
+    }
+
+    public boolean openAllDataBase(){
+        try {
+
+            mNodesDB.openNodesDB();
+            if (! mInboxDB.getDatabase().isOpen() ) mInboxDB.getDatabase().open();
+            if (! mHandShakeDB.getDatabase().isOpen() ) mHandShakeDB.getDatabase().open();
+            if (! mGraphRelations.getDatabase().isOpen() ) mGraphRelations.getDatabase().open();
+            mMessagesDB.openMessageDB();
+
+        } catch (CouchbaseLiteException e) {
+            e.printStackTrace();
+        }
 
         return true;
     }

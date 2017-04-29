@@ -18,6 +18,7 @@ public class Node {
     private UUID mId;
     private Calendar mTimeStampNodeDetails;
     private Calendar mTimeStampNodeRelations;
+    private Calendar mTimeStampRankFromServer;
     private int mRank;
     private String mEmail;
     private String mPhoneNumber;
@@ -41,7 +42,7 @@ public class Node {
      */
     public Node(UUID mId, Calendar mTimeStampNodeDetails, Calendar mTimeStampNodeRelations, int mRank,
                 String mEmail, String mPhoneNumber, String mUserName, String mFullName,
-                byte[] profilePicture, int mResidenceCode) {
+                byte[] profilePicture, int mResidenceCode,Calendar mTimeStampRankFromServer) {
         this.mId = mId;
         this.mTimeStampNodeDetails = mTimeStampNodeDetails;
         this.mTimeStampNodeRelations = mTimeStampNodeRelations;
@@ -52,6 +53,7 @@ public class Node {
         this.mFullName = mFullName;
         this.mProfilePicture = profilePicture;
         this.mResidenceCode = mResidenceCode;
+        this.mTimeStampRankFromServer = mTimeStampRankFromServer;
     }
 
     /**
@@ -94,6 +96,14 @@ public class Node {
         this.mTimeStampNodeRelations = mTimeStampNodeRelations;
     }
 
+    public Calendar getTimeStampRankFromServer() {
+        return mTimeStampRankFromServer;
+    }
+
+    public void setTimeStampRankFromServer(Calendar mTimeStampRankFromServer) {
+        this.mTimeStampRankFromServer = mTimeStampRankFromServer;
+    }
+
     /**
      * Get node rank
      * @return
@@ -106,9 +116,9 @@ public class Node {
      * Set node rank
      * @param rank
      */
-    public void setRank(int rank) {
+    public void setRank(int rank,Calendar timeStampRankFromServer) {
          this.mRank = rank;
-        setTimeStampNodeDetails(Calendar.getInstance());
+        setTimeStampNodeDetails(timeStampRankFromServer);
     }
 
     /**
@@ -159,6 +169,12 @@ public class Node {
     public void setFullName(String mFullName) {
 
         this.mFullName = mFullName;
+        setTimeStampNodeDetails(Calendar.getInstance());
+    }
+
+    public void setUserName(String userName) {
+
+        this.mUserName = userName;
         setTimeStampNodeDetails(Calendar.getInstance());
     }
 

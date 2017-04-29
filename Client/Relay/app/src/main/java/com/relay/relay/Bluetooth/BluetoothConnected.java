@@ -123,6 +123,8 @@ public class BluetoothConnected extends Thread implements BLConstants {
         }
         catch (IOException e) {
             Log.e(TAG, "Error with writePacket ");
+            cancel();
+            sendPacketMessageBluetoothManager(FAILED_DURING_HAND_SHAKE,null);
         }
     }
 

@@ -1,6 +1,7 @@
 package com.relay.relay.DB;
 import android.content.Context;
 
+import com.couchbase.lite.Database;
 import com.relay.relay.Util.JsonConvertor;
 import com.relay.relay.system.Node;
 
@@ -41,6 +42,8 @@ public class GraphRelations {
     public void setNodesDB(NodesDB nodesDB){
         this.mNodesDB = nodesDB;
     }
+
+    public Database getDatabase(){return dbManager.getDatabase();}
 
     /**
      * Add a new node with no neighbors

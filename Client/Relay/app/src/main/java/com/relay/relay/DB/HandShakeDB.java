@@ -2,6 +2,7 @@ package com.relay.relay.DB;
 
 import android.content.Context;
 
+import com.couchbase.lite.Database;
 import com.relay.relay.Util.JsonConvertor;
 import com.relay.relay.system.HandShakeHistory;
 
@@ -153,5 +154,8 @@ public class HandShakeDB {
     public boolean deleteHandShakeDB(){
         return dbManager.deleteDB();
     }
+
+
+    public Database getDatabase(){return dbManager.getDatabase();}
 }
 

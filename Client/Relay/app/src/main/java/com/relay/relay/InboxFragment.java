@@ -74,15 +74,8 @@ import static com.relay.relay.MainActivity.REQUEST_FOR_MANUAL_HAND_SHAKE;
  * create an instance of this fragment.
  */
 public class InboxFragment extends Fragment {
-//    // TODO: Rename parameter arguments, choose names that match
-//    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-//    private static final String ARG_PARAM1 = "param1";
-//    private static final String ARG_PARAM2 = "param2";
-//
-//    // TODO: Rename and change types of parameters
-//    private String mParam1;
-//    private String mParam2;
 
+    private final String TAG = "RELAY_DEBUG: "+ InboxFragment.class.getSimpleName();
 
     private Menu mMenu;
 
@@ -200,12 +193,9 @@ public class InboxFragment extends Fragment {
     public void onResume() {
         super.onResume();
 
-        // reAttach to data base again
-//        mDataManager = new DataManager(getContext());
-//        mDataBase = mDataManager.getInboxDB().getDatabase();
-//        setupLiveQuery();
-//        mAdapter = new ListAdapter(getContext(), listsLiveQuery);
-//        mContactRecyclerView.setAdapter(mAdapter);
+        mDataManager.closeAllDataBase();
+        mDataManager.openAllDataBase();
+        Log.e(TAG,"close and opened data base");
 
         uploadEmptyGif(mDataBase.getView("list/contactList").getCurrentTotalRows());
     }
@@ -228,10 +218,6 @@ public class InboxFragment extends Fragment {
         super.onDetach();
         mListener = null;
         getActivity().unregisterReceiver(mBroadcastReceiver);
-//        if (listsLiveQuery != null) {
-//            listsLiveQuery.stop();
-//            listsLiveQuery = null;
-//        }
 
     }
 
@@ -256,6 +242,7 @@ public class InboxFragment extends Fragment {
         super.onPrepareOptionsMenu(menu);
         menu.findItem(R.id.action_manual_handshake).setVisible(true);
         menu.findItem(R.id.action_search).setVisible(true);
+        menu.findItem(R.id.action_approve).setVisible(false);
 
         // save current menu;
         mMenu = menu;
@@ -402,8 +389,13 @@ public class InboxFragment extends Fragment {
                 holder.userName.setText(node.getFullName()+", @"+node.getUserName());
                 // scale down image quality
                 Bitmap newImage = ImageConverter.convertBytesToBitmap(node.getProfilePicture());
-                newImage = ImageConverter.scaleDown(newImage,100,true);
-                holder.circleImageView.setImageBitmap(newImage);
+                if( newImage == null )
+                    holder.circleImageView.setImageResource(R.drawable.pic_unknown_user);
+                else{
+                    newImage = ImageConverter.scaleDown(newImage,100,true);
+                    holder.circleImageView.setImageBitmap(newImage);
+                }
+
 
             }
 
@@ -699,16 +691,9 @@ public class InboxFragment extends Fragment {
                 switch (action){
 
                     case REFRESH_INBOX_DB:
-                        mDataManager.getNodesDB().getDatabase().close();
-                        mDataManager.getInboxDB().getDatabase().close();
-                        mDataManager.getMessagesDB().getDatabase().close();
-                        try {
-                            mDataManager.getNodesDB().getDatabase().open();
-                            mDataManager.getInboxDB().getDatabase().open();
-                            mDataManager.getMessagesDB().getDatabase().open();
-                        } catch (CouchbaseLiteException e) {
-                            e.printStackTrace();
-                        }
+                        mDataManager.closeAllDataBase();
+                        mDataManager.openAllDataBase();
+                        Log.e(TAG,"close and opened data base");
                         setupLiveQuery();
                         mAdapter.myNotify();
 

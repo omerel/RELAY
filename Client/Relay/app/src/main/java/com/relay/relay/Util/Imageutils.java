@@ -164,7 +164,7 @@ public class Imageutils {
 
             case GALLERY_REQUEST:
                 // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if (grantResults.length > 0 || grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     galley_call();
                 } else {
                     Toast.makeText(current_activity, "Permission denied",Toast.LENGTH_LONG).show();
@@ -172,5 +172,7 @@ public class Imageutils {
                 break;
         }
     }
+
+
 
 }

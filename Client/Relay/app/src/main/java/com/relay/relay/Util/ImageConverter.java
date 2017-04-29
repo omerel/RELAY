@@ -91,17 +91,24 @@ public class ImageConverter {
 
     public static Bitmap scaleDown(Bitmap realImage, float maxImageSize,
                                    boolean filter) {
-        float ratio = Math.min(
-                (float) maxImageSize / realImage.getWidth(),
-                (float) maxImageSize / realImage.getHeight());
-        int width = Math.round((float) ratio * realImage.getWidth());
-        int height = Math.round((float) ratio * realImage.getHeight());
+        Bitmap newBitmap;
+        try {
+            float ratio = Math.min(
+                    (float) maxImageSize / realImage.getWidth(),
+                    (float) maxImageSize / realImage.getHeight());
+            int width = Math.round((float) ratio * realImage.getWidth());
+            int height = Math.round((float) ratio * realImage.getHeight());
 
-        int size = Math.max(height,width);
+            int size = Math.max(height, width);
 
 
-        Bitmap newBitmap = Bitmap.createScaledBitmap(realImage, size,
-                size, filter);
+            newBitmap = Bitmap.createScaledBitmap(realImage, size,
+                    size, filter);
+        }
+        catch (Exception e){
+            Log.e(TAG,"Error in scaleDown");
+            return realImage;
+        }
         return newBitmap;
     }
 

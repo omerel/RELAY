@@ -1,0 +1,229 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.relay.relay.ProfileFragment">
+
+    <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <ImageView
+                android:id="@+id/header_cover_image"
+                android:layout_width="match_parent"
+                android:layout_height="130dp"
+                android:scaleType="centerCrop"
+                android:src="@drawable/relay_icon" />
+
+
+            <de.hdodenhof.circleimageview.CircleImageView
+                xmlns:app="http://schemas.android.com/apk/res-auto"
+                android:id="@+id/profile_fragment_user_profile_photo"
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:layout_below="@+id/header_cover_image"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="-70dp"
+                android:elevation="5dp"
+                android:padding="0dp"
+                android:scaleType="centerCrop"
+                android:src="@drawable/pic_unknown_user"
+                app:civ_border_width="2dp"
+                app:civ_border_color="@color/colorPrimary"/>
+
+            <RelativeLayout
+                android:id="@+id/profile_fragment_profile_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/header_cover_image"
+                android:background="@drawable/profile_background"
+                android:elevation="4dp"
+                android:paddingBottom="12dp">
+
+
+                <ImageView
+                    android:id="@+id/profile_fragment_edit_profile_image"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:padding="5dp"
+                    android:layout_alignParentRight="true"
+                    android:layout_marginLeft="16dp"
+                    android:layout_marginRight="100dp"
+                    android:layout_marginTop="16dp"
+                    android:src="@drawable/ic_edit" />
+
+                <TextView
+                    android:id="@+id/profile_fragment_user_profile_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerHorizontal="true"
+                    android:layout_marginTop="55dp"
+                    android:text="Omer Elgrably"
+                    android:textColor="#fff"
+                    android:textSize="24sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/profile_fragment_user_profile_short"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/profile_fragment_user_profile_name"
+                    android:layout_centerHorizontal="true"
+                    android:layout_marginTop="4dp"
+                    android:text="\@omer85, omer@gmail.com"
+                    android:textColor="#fff"
+                    android:textSize="14sp" />
+            </RelativeLayout>
+
+            <LinearLayout
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/profile_fragment_profile_layout"
+                android:layout_marginTop="5dp"
+                android:orientation="vertical">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="8dp">
+                    <TextView
+                        android:id="@+id/label_full_name"
+                        android:layout_width="100dp"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="5dp"
+                        android:clickable="true"
+                        android:elevation="4dp"
+                        android:padding="15dp"
+                        android:text="Name:" />
+
+                    <TextView
+                        android:id="@+id/text_view_profile_fragment_user_full_name"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="5dp"
+                        android:background="#fff"
+                        android:clickable="true"
+                        android:elevation="4dp"
+                        android:padding="15dp"
+                        android:layout_toRightOf="@+id/label_full_name"
+                        android:text="Omer Elgrably" />
+                </RelativeLayout>
+
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="8dp">
+                    <TextView
+                        android:id="@+id/label_user_name"
+                        android:layout_width="100dp"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="5dp"
+                        android:clickable="true"
+                        android:elevation="4dp"
+                        android:padding="15dp"
+                        android:text="User name:" />
+
+                    <TextView
+                        android:id="@+id/text_view_profile_fragment_user_name"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="5dp"
+                        android:background="#fff"
+                        android:clickable="true"
+                        android:elevation="4dp"
+                        android:padding="15dp"
+                        android:layout_toRightOf="@+id/label_user_name"
+                        android:text="\@omer85" />
+                </RelativeLayout>
+
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="8dp">
+                    <TextView
+                        android:id="@+id/label_email"
+                        android:layout_width="100dp"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="5dp"
+                        android:clickable="true"
+                        android:elevation="4dp"
+                        android:padding="15dp"
+                        android:text="Email:" />
+
+                    <TextView
+                        android:id="@+id/text_view_profile_fragment_user_email"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="5dp"
+                        android:clickable="true"
+                        android:elevation="4dp"
+                        android:padding="15dp"
+                        android:layout_toRightOf="@+id/label_email"
+                        android:text="omer@gmail.com" />
+                </RelativeLayout>
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="8dp">
+                    <TextView
+                        android:id="@+id/label_phone"
+                        android:layout_width="100dp"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="5dp"
+                        android:clickable="true"
+                        android:elevation="4dp"
+                        android:padding="15dp"
+                        android:text="Phone:" />
+
+                    <TextView
+                        android:id="@+id/text_view_profile_fragment_user_phone"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="5dp"
+                        android:clickable="true"
+                        android:elevation="4dp"
+                        android:padding="15dp"
+                        android:layout_toRightOf="@+id/label_phone"
+                        android:text="+972544624544" />
+                </RelativeLayout>
+
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="8dp">
+                    <TextView
+                        android:id="@+id/label_residence"
+                        android:layout_width="100dp"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="5dp"
+                        android:clickable="true"
+                        android:elevation="4dp"
+                        android:padding="15dp"
+                        android:text="Residence:" />
+
+                    <TextView
+                        android:id="@+id/text_view_profile_fragment_user_residence"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="5dp"
+                        android:background="#fff"
+                        android:clickable="true"
+                        android:elevation="4dp"
+                        android:padding="15dp"
+                        android:layout_toRightOf="@+id/label_residence"
+                        android:text="Israel +972" />
+                </RelativeLayout>
+
+            </LinearLayout>
+        </RelativeLayout>
+    </ScrollView>
+
+</FrameLayout>

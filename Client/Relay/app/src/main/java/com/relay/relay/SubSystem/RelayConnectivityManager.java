@@ -81,8 +81,8 @@ public class RelayConnectivityManager extends Service implements BLConstants {
         sharedPreferences = getSharedPreferences(SYSTEM_SETTING,0);
         setConnectivityValues();
         mCurrentMode = NULL_MODE;
-        startConnectivityByPriority();
         createGeneralBroadcastReceiver();
+        startConnectivityByPriority();
         setWakeLock();
         return  START_NOT_STICKY;
     }
@@ -243,6 +243,15 @@ public class RelayConnectivityManager extends Service implements BLConstants {
                             Intent updateActivity = new Intent(MainActivity.REQUEST_FOR_MANUAL_HAND_SHAKE);
                             updateActivity.putExtra("message","Please turn on bluetooth");
                             sendBroadcast(updateActivity);
+                        }else{
+                            // if bluetooth is not available in the app
+                            if (!sharedPreferences.getBoolean(getString(R.string.key_enable_bluetooth),false))
+                            {
+                                //broadcast unavailability to manual sync
+                                Intent updateActivity = new Intent(MainActivity.REQUEST_FOR_MANUAL_HAND_SHAKE);
+                                updateActivity.putExtra("message","Please switch the bluetooth button on in your connection settings");
+                                sendBroadcast(updateActivity);
+                            }
                         }
                         break;
                     // When incoming message received
