@@ -1,19 +1,13 @@
 package com.relay.relay;
 
-import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
@@ -28,7 +22,6 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.relay.relay.SubSystem.DataManager;
 import com.relay.relay.Util.CountryCodeActivityDialog;
@@ -36,14 +29,10 @@ import com.relay.relay.Util.ImageConverter;
 import com.relay.relay.Util.Imageutils;
 import com.relay.relay.Util.ShowActivityFullImage;
 import com.relay.relay.system.Node;
-import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageActivity;
 import com.theartofdev.edmodo.cropper.CropImageOptions;
-import com.theartofdev.edmodo.cropper.CropImageView;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Calendar;
 import java.util.UUID;
 
@@ -73,7 +62,8 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
     private String mUserResidence;
     private String mUserProfileShort;
     private int countryCode;
-
+    private String userUUID; // the user profile
+    private String myUUID;
 
     // answer from dialog
     String inputAnswer;
@@ -105,6 +95,14 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
         // Required empty public constructor
     }
 
+    public static ProfileFragment newInstance(String userUUID) {
+        ProfileFragment fragment = new ProfileFragment();
+        Bundle args = new Bundle();
+        args.putString("userUUID", userUUID);
+        fragment.setArguments(args);
+        return fragment;
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -112,11 +110,16 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
         // To enable editing the tool bar from fragment
         setHasOptionsMenu(true);
 
+        if (getArguments() != null) {
+            userUUID = getArguments().getString("userUUID");
+        }
+
         mDataManager = new DataManager(getContext());
 
         SharedPreferences sharedPreferences =  getActivity().getSharedPreferences(SYSTEM_SETTING,0);
-        String uuid = sharedPreferences.getString("my_uuid",null);
-        userNode = mDataManager.getNodesDB().getNode(UUID.fromString(uuid));
+        myUUID = sharedPreferences.getString("my_uuid",null);
+
+        userNode = mDataManager.getNodesDB().getNode(UUID.fromString(userUUID));
         mUserImage = ImageConverter.convertBytesToBitmap(userNode.getProfilePicture());
         mUserFullname = userNode.getFullName();
         mUserEmail = userNode.getEmail();
@@ -137,7 +140,6 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
         view =  inflater.inflate(R.layout.fragment_profile, container, false);
 
         mEditProfileImage = (ImageView) view.findViewById(R.id.profile_fragment_edit_profile_image);
-        mEditProfileImage.setOnClickListener(this);
 
         mProfileImage =  (de.hdodenhof.circleimageview.CircleImageView) view.findViewById(R.id.profile_fragment_user_profile_photo);
         mProfileImage.setImageBitmap(mUserImage);
@@ -145,27 +147,41 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
 
         mTextViewUserFullname = (TextView) view.findViewById(R.id.text_view_profile_fragment_user_full_name);
         mTextViewUserFullname.setText(mUserFullname);
-        mTextViewUserFullname.setOnClickListener(this);
 
         mTextViewUserEmail = (TextView) view.findViewById(R.id.text_view_profile_fragment_user_email);
         mTextViewUserEmail.setText(mUserEmail);
 
         mTextViewUserName = (TextView) view.findViewById(R.id.text_view_profile_fragment_user_name);
         mTextViewUserName.setText(mUserName);
-        mTextViewUserName.setOnClickListener(this);
 
         mTextViewUserPhone = (TextView) view.findViewById(R.id.text_view_profile_fragment_user_phone);
         mTextViewUserPhone.setText(mUserPhone);
 
         mTextViewUserResidence = (TextView) view.findViewById(R.id.text_view_profile_fragment_user_residence);
         mTextViewUserResidence.setText(mUserResidence );
-        mTextViewUserResidence.setOnClickListener(this);
 
         mTextViewUserProfileName =(TextView) view.findViewById(R.id.profile_fragment_user_profile_name);
         mTextViewUserProfileName.setText(mUserFullname);
 
         mTextViewUserProfileShort = (TextView) view.findViewById(R.id.profile_fragment_user_profile_short);
         mTextViewUserProfileShort.setText(mUserProfileShort);
+
+
+        if (myUUID.equals(userUUID)){
+            mEditProfileImage.setOnClickListener(this);
+            mTextViewUserFullname.setOnClickListener(this);
+            mTextViewUserName.setOnClickListener(this);
+            mTextViewUserResidence.setOnClickListener(this);
+
+        }
+        else{
+            mEditProfileImage.setVisibility(View.GONE);
+            mTextViewUserFullname.setBackgroundResource(android.R.color.transparent);
+            mTextViewUserResidence.setBackgroundResource(android.R.color.transparent);
+            mTextViewUserName.setBackgroundResource(android.R.color.transparent);
+        }
+
+
         return view;
     }
 
@@ -225,7 +241,7 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
         super.onPrepareOptionsMenu(menu);
         menu.findItem(R.id.action_manual_handshake).setVisible(false);
         menu.findItem(R.id.action_search).setVisible(false);
-        menu.findItem(R.id.action_approve).setVisible(true);
+        menu.findItem(R.id.action_approve).setVisible(myUUID.equals(userUUID));
 
         // save current menu;
         mMenu = menu;

@@ -183,7 +183,7 @@ public class InboxFragment extends Fragment {
 
 
     // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(String string) {
+    public void updateMainactivity(String string) {
         if (mListener != null) {
             mListener.onFragmentInteraction(string);
         }
@@ -585,9 +585,15 @@ public class InboxFragment extends Fragment {
                         mAdapter.myNotify();
                     }
                 } else {
-                    Toast.makeText(getContext(), "info", Toast.LENGTH_SHORT).show();
-                    //TODO show info
-                    mAdapter.notifyDataSetChanged();
+                    Document doc =  mAdapter.getItem(position);
+                    if(doc != null) {
+                        Map<String, Object> properties = doc.getProperties();
+                        String uuidString = (String) properties.get("uuid");
+                        updateMainactivity(uuidString);
+                        Toast.makeText(getContext(), "user info", Toast.LENGTH_SHORT).show();
+                        //TODO show info
+//                    mAdapter.notifyDataSetChanged();
+                    }
                 }
 
                 uploadEmptyGif(mDataBase.getView("list/contactList").getCurrentTotalRows());

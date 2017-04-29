@@ -34,9 +34,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.relay.relay.DB.Test;
 import com.relay.relay.SubSystem.DataManager;
 import com.relay.relay.SubSystem.RelayConnectivityManager;
 import com.relay.relay.Util.UuidGenerator;
@@ -81,7 +79,7 @@ public class MainActivity extends AppCompatActivity
 
     private  UUID mMyuuid;
 
-    private UplaodInboxAsyncTask uplaodInboxAsyncTask;
+    private UploadInboxAsyncTask uploadInboxAsyncTask;
 
     private static DataManager mDataManager;
 
@@ -270,10 +268,10 @@ public class MainActivity extends AppCompatActivity
         switch (position) {
             case 0:
                 mContentView.setVisibility(View.INVISIBLE);
-                uplaodInboxAsyncTask = new UplaodInboxAsyncTask();
+                uploadInboxAsyncTask = new UploadInboxAsyncTask();
                 title = getString(R.string.title_home_fragment);
                 mFragment = new InboxFragment();
-                uplaodInboxAsyncTask.execute("");
+                uploadInboxAsyncTask.execute("");
                 // set the toolbar title
                 getSupportActionBar().setTitle(title);
                 break;
@@ -293,7 +291,7 @@ public class MainActivity extends AppCompatActivity
                 break;
             case 2:
                 mContentView.setVisibility(View.INVISIBLE);
-                mFragment = new ProfileFragment();
+                mFragment = ProfileFragment.newInstance( mMyuuid.toString() );
                 title = getString(R.string.title_profile_fragment);
                 if (mFragment != null) {
                     FragmentManager fragmentManager = getSupportFragmentManager();
@@ -491,13 +489,28 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onFragmentInteraction(String string) {
 
-        switch (string){
-            case CHANGE_PRIORITY_F:
-                changePriority();
-                Snackbar.make(this.mContentView, " Changing connection priority " , Snackbar.LENGTH_SHORT)
-                        .setAction("Action", null).show();
-                break;
 
+        if (string.equals(CHANGE_PRIORITY_F)){
+            //Changing connection priority
+            changePriority();
+            Snackbar.make(this.mContentView, " Changing connection priority " , Snackbar.LENGTH_SHORT)
+                    .setAction("Action", null).show();
+
+        }
+        else{
+            // the string is an uuid. open Profile fragment
+            mContentView.setVisibility(View.INVISIBLE);
+            mFragment = ProfileFragment.newInstance( string );
+            String title = getString(R.string.title_profile_fragment);
+            if (mFragment != null) {
+                FragmentManager fragmentManager = getSupportFragmentManager();
+                FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                fragmentTransaction.replace(R.id.content_body, mFragment);
+                fragmentTransaction.commit();
+                // set the toolbar title
+                getSupportActionBar().setTitle(title);
+            }
+            crossfade(mShortAnimationDuration);
         }
     }
 
@@ -506,9 +519,9 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-    private class UplaodInboxAsyncTask extends AsyncTask<String, String, String>{
+    private class UploadInboxAsyncTask extends AsyncTask<String, String, String>{
 
-        public UplaodInboxAsyncTask() {
+        public UploadInboxAsyncTask() {
             super();
         }
 
