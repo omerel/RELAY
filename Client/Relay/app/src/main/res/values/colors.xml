@@ -9,6 +9,14 @@
     <color name="messageBackground">#e2f6ff</color>
     <color name="colorText">#949b9a</color>
     <color name="colorLine">#d9dcdb</color>
-
+    <color name="black">#000000</color>
+    <color name="jet">#222222</color>
+    <color name="oil">#333333</color>
+    <color name="monsoon">#777777</color>
+    <color name="jumbo">#888888</color>
+    <color name="aluminum">#999999</color>
+    <color name="base">#AAAAAA</color>
+    <color name="iron">#CCCCCC</color>
+    <color name="white">#FFFFFF</color>
     <color name="black_overlay">#66000000</color>
 </resources>

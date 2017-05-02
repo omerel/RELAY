@@ -4,7 +4,11 @@
 
     <!-- CAMERA permissions -->
     <uses-permission android:name="android.permission.CAMERA" />
-    <uses-feature android:name="android.hardware.camera" android:required="true" />
+
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="true" />
+
     <uses-permission android:name="ANDROID.PERMISSION.READ_EXTERNAL_STORAGE" />
 
     <!-- Bluetooth permissions -->
@@ -41,15 +45,10 @@
 
         <activity
             android:name=".MainActivity"
+            android:hardwareAccelerated="false"
             android:label="@string/title_activity_main"
             android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.NoActionBar"
-            android:hardwareAccelerated="false">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+            android:theme="@style/AppTheme.NoActionBar">
             <!-- declare the activity that control Wifi data usage -->
             <intent-filter>
                 <action android:name="android.intent.action.MANAGE_NETWORK_USAGE" />
@@ -69,14 +68,26 @@
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_fullscreen"
             android:theme="@style/FullscreenTheme" />
-        <activity android:name=".ComposeMessageActivity"></activity>
-
+        <activity android:name=".ComposeMessageActivity" />
         <activity
             android:name=".Util.CountryCodeActivityDialog"
-            android:theme="@android:style/Theme.Holo.Light.Dialog"
+            android:label="Select your country"
             android:noHistory="true"
-            android:label="Select your country" >
+            android:theme="@android:style/Theme.Holo.Light.Dialog" />
+
+        <activity android:name=".SignupActivity"
+            android:screenOrientation="portrait"/>
+
+        <activity android:name=".LoginActivity"
+            android:label="@string/title_activity_main"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
         </activity>
+
     </application>
 
 </manifest>

@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.UUID;
 
 import static com.relay.relay.DB.InboxDB.DELETE_MESSAGE_CONTENT_FROM_MESSAGE_DB;
+import static com.relay.relay.LoginActivity.CURRENT_UUID_USER;
 
 /**
  * Created by omer on 05/03/2017.
@@ -53,12 +54,26 @@ public class DataManager {
         this.mHandShakeDB = new HandShakeDB(context);
 
         SharedPreferences sharedPreferences = context.getSharedPreferences(MainActivity.SYSTEM_SETTING,0);
-        myUuid = UUID.fromString(sharedPreferences.getString("my_uuid",null));
-        if ( myUuid == null )
-            Log.e(TAG,"Error!, uuid not found");
-        this.mNodesDB.setMyNodeId(myUuid);
-        this.mGraphRelations.setNodesDB(mNodesDB);
-        this.mInboxDB.getMyNodeIdFromNodesDB(mNodesDB);
+        String tempuuid = sharedPreferences.getString(CURRENT_UUID_USER,null);
+
+        if (tempuuid != null ){
+            myUuid = UUID.fromString(tempuuid);
+            try {
+                this.mNodesDB.setMyNodeId(myUuid);
+            }
+            catch ( Exception e){
+                Log.e(TAG, "Error!, uuid not found");
+            }
+            this.mGraphRelations.setNodesDB(mNodesDB);
+            this.mInboxDB.getMyNodeIdFromNodesDB(mNodesDB);
+        }
+        else{
+            myUuid = null;
+        }
+    }
+
+    public boolean isDataManagerSetUp(){
+        return (myUuid != null);
     }
 
     public GraphRelations getGraphRelations() {

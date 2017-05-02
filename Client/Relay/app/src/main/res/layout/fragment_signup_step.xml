@@ -1,0 +1,206 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.relay.relay.SignupStepFragment">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:id="@+id/step_right"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:src="@drawable/ic_right_step"/>
+
+        <TextView android:id="@+id/sign_up_steps"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:text="Step 1 from 7"
+            android:textColor="@color/white"
+            android:gravity="center"
+            android:paddingBottom="6dp"
+            android:layout_alignParentBottom="true"
+            android:textSize="16dip"/>
+
+        <ImageView
+            android:id="@+id/step_left"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentBottom="true"
+            android:src="@drawable/ic_left_step"/>
+
+
+        <de.hdodenhof.circleimageview.CircleImageView
+            xmlns:app="http://schemas.android.com/apk/res-auto"
+            android:id="@+id/user_profile_photo"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_above="@id/step_right"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="8dp"
+            android:elevation="5dp"
+            android:padding="0dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/pic_unknown_user"
+            android:visibility="gone"
+            app:civ_border_width="2dp"
+            app:civ_border_color="@color/colorPrimary" />
+
+        <ImageView
+            android:id="@+id/edit_profile_image"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:padding="5dp"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="8dp"
+            android:visibility="gone"
+            android:layout_toRightOf="@id/user_profile_photo"
+            android:layout_above="@id/step_right"
+            android:src="@drawable/ic_edit" />
+
+        <!--  Email Label -->
+        <android.support.design.widget.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:layout_above="@id/step_right">
+            <EditText android:id="@+id/input_email"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                android:inputType="textEmailAddress"
+                android:textColor="@color/white"
+                android:hint="Email" />
+        </android.support.design.widget.TextInputLayout>
+
+
+        <!--  Phone Label -->
+        <android.support.design.widget.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:layout_above="@id/step_right">
+            <EditText android:id="@+id/input_phone"
+                android:visibility="gone"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="numberDecimal"
+                android:textColor="@color/white"
+                android:hint="Phone number" />
+        </android.support.design.widget.TextInputLayout>
+
+        <!--  User name Label -->
+        <android.support.design.widget.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:layout_above="@id/step_right">
+            <EditText android:id="@+id/input_user_name"
+                android:layout_width="match_parent"
+                android:visibility="gone"
+                android:layout_height="wrap_content"
+                android:inputType="text"
+                android:textColor="@color/white"
+                android:hint="User name" />
+        </android.support.design.widget.TextInputLayout>
+
+        <!--  Full name Label -->
+        <android.support.design.widget.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:layout_above="@id/step_right">
+            <EditText android:id="@+id/input_full_name"
+                android:layout_width="match_parent"
+                android:visibility="gone"
+                android:layout_height="wrap_content"
+                android:inputType="text"
+                android:textColor="@color/white"
+                android:hint="Full name" />
+        </android.support.design.widget.TextInputLayout>
+
+        <!--  Password Label -->
+        <android.support.design.widget.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:layout_above="@id/step_right">
+            <EditText android:id="@+id/input_re_password"
+                android:layout_width="match_parent"
+                android:visibility="gone"
+                android:layout_height="wrap_content"
+                android:inputType="textPassword"
+                android:textColor="@android:color/white"
+                android:hint="Retype password"/>
+        </android.support.design.widget.TextInputLayout>
+
+        <!--  Password Label -->
+        <android.support.design.widget.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:layout_above="@id/input_re_password">
+            <EditText android:id="@+id/input_password"
+                android:layout_width="match_parent"
+                android:visibility="gone"
+                android:layout_height="wrap_content"
+                android:inputType="textPassword"
+                android:textColor="@android:color/white"
+                android:hint="Password"/>
+        </android.support.design.widget.TextInputLayout>
+
+
+        <!--  Confirm code -->
+        <TextView android:id="@+id/input_confirm_code_label"
+            android:layout_width="match_parent"
+            android:visibility="gone"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/white"
+            android:layout_above="@+id/input_confirm_code"
+            android:text="Please enter the confirm code you received in mail "/>
+        <!--  Confirm code -->
+        <android.support.design.widget.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:layout_above="@id/step_right">
+            <EditText android:id="@+id/input_confirm_code"
+                android:layout_width="match_parent"
+                android:visibility="gone"
+                android:layout_height="wrap_content"
+                android:inputType="number"
+                android:textColor="@android:color/white"
+                android:hint="Confirm code"/>
+        </android.support.design.widget.TextInputLayout>
+
+
+        <TextView android:id="@+id/input_residence"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:hint="Choose country"
+            android:layout_above="@id/step_right"
+            android:visibility="gone"
+            android:background="@color/colorPrimaryDark"
+            android:textColor="@color/white"
+            android:gravity="center"
+            android:paddingBottom="6dp"
+            android:layout_marginBottom="8dp"
+            android:textSize="18sp"/>
+
+
+    </RelativeLayout>
+
+
+</FrameLayout>

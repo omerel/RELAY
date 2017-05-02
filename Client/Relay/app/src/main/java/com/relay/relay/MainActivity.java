@@ -42,6 +42,8 @@ import com.relay.relay.Util.UuidGenerator;
 import java.util.UUID;
 
 import static com.relay.relay.DB.InboxDB.REFRESH_INBOX_DB;
+import static com.relay.relay.LoginActivity.CURRENT_UUID_USER;
+import static com.relay.relay.LoginActivity.IS_LOG_IN;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener ,
@@ -83,6 +85,8 @@ public class MainActivity extends AppCompatActivity
 
     private static DataManager mDataManager;
 
+    private SharedPreferences sharedPreferences;
+
 
 
     @Override
@@ -110,29 +114,31 @@ public class MainActivity extends AppCompatActivity
         mShortAnimationDuration = getResources().getInteger(
                 android.R.integer.config_longAnimTime);
 
+        // using sharedPreferences when trying to log out
+        sharedPreferences =  getSharedPreferences(SYSTEM_SETTING,0);
 
-        //TODO delete uuidGenerator when creating login
-        // check if the is a user name
-        SharedPreferences sharedPreferences =  getSharedPreferences(SYSTEM_SETTING,0);
-        String uuid = sharedPreferences.getString("my_uuid",null);
-
-        if (uuid == null){
-            //get my uuid from login and put it in sharedPreferences
-            UuidGenerator uuidGenerator = new UuidGenerator();
-            try {
-                mMyuuid = uuidGenerator.GenerateUUIDFromEmail("Rachael@gmail.com");
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            // saving myuuid into sharedPreferences
-
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putString("my_uuid",mMyuuid.toString());
-            editor.commit();
-        }
-        else{
-            mMyuuid = UUID.fromString(uuid);
-        }
+//        //TODO delete uuidGenerator when creating login
+//        // check if the is a user name
+//        sharedPreferences =  getSharedPreferences(SYSTEM_SETTING,0);
+//        String uuid = sharedPreferences.getString(CURRENT_UUID_USER,null);
+//
+//        if (uuid == null){
+//            //get my uuid from login and put it in sharedPreferences
+//            UuidGenerator uuidGenerator = new UuidGenerator();
+//            try {
+//                mMyuuid = uuidGenerator.GenerateUUIDFromEmail("Rachael@gmail.com");
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+//            // saving myuuid into sharedPreferences
+//
+//            SharedPreferences.Editor editor = sharedPreferences.edit();
+//            editor.putString(CURRENT_UUID_USER,mMyuuid.toString());
+//            editor.commit();
+//        }
+//        else{
+//            mMyuuid = UUID.fromString(uuid);
+//        }
 
 
         // for dubug
@@ -146,14 +152,15 @@ public class MainActivity extends AppCompatActivity
 
         textViewUserName = (TextView) navHeaderView.findViewById(R.id.textView_menu_userName);
         textViewUserEmail = (TextView) navHeaderView.findViewById(R.id.textView_menu_user_mail);
+
         // Update navigator with name and email
         mDataManager = new DataManager(this);
+        mMyuuid = mDataManager.getNodesDB().getMyNodeId();
         String email = mDataManager.getNodesDB().getNode(mMyuuid).getEmail();
         String userName = mDataManager.getNodesDB().getNode(mMyuuid).getUserName();
         String fullName = mDataManager.getNodesDB().getNode(mMyuuid).getFullName();
         textViewUserName.setText("@"+userName+", "+fullName);
         textViewUserEmail.setText(email);
-
 
         startService(new Intent(MainActivity.this,RelayConnectivityManager.class));
         Snackbar.make(this.mContentView, "Start RelayConnectivityManager service", Snackbar.LENGTH_SHORT)
@@ -251,7 +258,7 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.nav_setting) {
 
         } else if (id == R.id.nav_logout) {
-
+            logOutAlertDialog();
         } else if (id == R.id.nav_about_us) {
         }
 
@@ -366,7 +373,7 @@ public class MainActivity extends AppCompatActivity
         alertDialog.setTitle(title);
         alertDialog.setMessage(msg);
         if (toExit){
-            alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, "EXIT",
+            alertDialog.setButton(AlertDialog.BUTTON_NEGATIVE, "EXIT",
                     new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int which) {
                             dialog.dismiss();
@@ -551,5 +558,44 @@ public class MainActivity extends AppCompatActivity
             }
             return null;
         }
+    }
+
+    /**
+     *  Create log out alert dialog
+     */
+    private void logOutAlertDialog () {
+
+        AlertDialog alertDialog = new AlertDialog.Builder(this).create();
+        alertDialog.setTitle("Log out");
+        alertDialog.setMessage("Are you sure you want to log out");
+        alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, "yes",
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+
+                        dialog.dismiss();
+                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                        editor.putBoolean(IS_LOG_IN,false);
+                        editor.commit();
+
+                        // Start the login activity
+                        Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
+                        startActivity(intent);
+                        finish();
+                        overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
+
+                        killService();
+                        unregisterReceiver(mBroadcastReceiver);
+                    }
+                });
+
+        alertDialog.setButton(AlertDialog.BUTTON_NEGATIVE, "no",
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                        navigationView.setCheckedItem(R.id.nav_inbox);
+                    }
+                });
+
+        alertDialog.show();
     }
 }

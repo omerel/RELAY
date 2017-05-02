@@ -37,6 +37,7 @@ import java.util.Calendar;
 import java.util.UUID;
 
 import static android.app.Activity.RESULT_OK;
+import static com.relay.relay.LoginActivity.CURRENT_UUID_USER;
 import static com.relay.relay.MainActivity.SYSTEM_SETTING;
 import static com.relay.relay.Util.CountryCodeActivityDialog.ACTION_OPEN;
 import static com.relay.relay.Util.Imageutils.CAMERA_REQUEST;
@@ -117,7 +118,7 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
         mDataManager = new DataManager(getContext());
 
         SharedPreferences sharedPreferences =  getActivity().getSharedPreferences(SYSTEM_SETTING,0);
-        myUUID = sharedPreferences.getString("my_uuid",null);
+        myUUID = sharedPreferences.getString(CURRENT_UUID_USER,null);
 
         userNode = mDataManager.getNodesDB().getNode(UUID.fromString(userUUID));
         mUserImage = ImageConverter.convertBytesToBitmap(userNode.getProfilePicture());

@@ -472,6 +472,7 @@ public class InboxFragment extends Fragment {
     private void goToComposeActivity() {
         Intent intent = new Intent(getContext(), ComposeMessageActivity.class);
         startActivity(intent);
+        getActivity().overridePendingTransition(R.anim.push_up_start, R.anim.push_up_end);
     }
 
 
@@ -538,6 +539,7 @@ public class InboxFragment extends Fragment {
 
         String name;
         String uuidString;
+
         public MyMenuItemClickListener(String name,String uuidString) {
             this.name = name;
             this.uuidString = uuidString;
@@ -548,6 +550,8 @@ public class InboxFragment extends Fragment {
             switch (menuItem.getItemId()) {
                 case R.id.action_user_info:
                     Toast.makeText(getContext(), "User "+name+" info ", Toast.LENGTH_SHORT).show();
+                    updateMainactivity(uuidString);
+
                     return true;
                 case R.id.action_delete_conversation:
                     mDataManager.getInboxDB().deleteUserAndConversation(UUID.fromString(uuidString),false);
@@ -591,8 +595,6 @@ public class InboxFragment extends Fragment {
                         String uuidString = (String) properties.get("uuid");
                         updateMainactivity(uuidString);
                         Toast.makeText(getContext(), "user info", Toast.LENGTH_SHORT).show();
-                        //TODO show info
-//                    mAdapter.notifyDataSetChanged();
                     }
                 }
 
