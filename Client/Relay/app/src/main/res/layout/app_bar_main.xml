@@ -23,4 +23,6 @@
 
     <include layout="@layout/content_main" />
 
+    <include layout="@layout/status_bar_layout" />
+
 </android.support.design.widget.CoordinatorLayout>

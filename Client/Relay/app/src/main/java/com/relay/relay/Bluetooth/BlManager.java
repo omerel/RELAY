@@ -13,6 +13,7 @@ import com.relay.relay.SubSystem.RelayConnectivityManager;
 import com.relay.relay.SubSystem.DataManager;
 import com.relay.relay.SubSystem.HandShake;
 import com.relay.relay.Util.DataTransferred;
+import com.relay.relay.Util.StatusBar;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -94,26 +95,13 @@ public class BLManager extends Thread implements BLConstants {
     // Start thread
     @Override
     public void run() {
-
-        // Open server socket
-//        mBluetoothServer.start();
-//        checkSupport();
-
         // Start advertising
         mBlePeripheral.startPeripheral();
         checkAdvertiser(60000);
-
         startSearchImmediately();
         Log.d(TAG, "Start thread");
     }
 
-    private void checkSupport() {
-        BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        if(!mBluetoothAdapter.isMultipleAdvertisementSupported()){
-            //Device does not support Bluetooth LE
-        }
-
-    }
 
     private void checkAdvertiser(int time){
         final int newTime = time;
@@ -163,6 +151,7 @@ public class BLManager extends Thread implements BLConstants {
      */
     public void startSearchImmediately(){
         mBLECentral.getBleScan().startScanning();
+        mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_SEARCH);
         mHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -197,6 +186,7 @@ public class BLManager extends Thread implements BLConstants {
      * Start new search with the interval time delayed
      */
     private void intervalSearch(){
+        mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_IDLE);
         mHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -271,6 +261,7 @@ public class BLManager extends Thread implements BLConstants {
     public void startManualSync() {
         stopSearch(RESET_SEARCH_COUNTER);
         mBluetoothScan.startScan();
+        mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_SEARCH);
     }
 
     //  mFilter.addAction(BluetoothAdapter.ACTION_CONNECTION_STATE_CHANGED);
@@ -290,6 +281,7 @@ public class BLManager extends Thread implements BLConstants {
 
                 case DEVICE_CONNECTED_SUCCESSFULLY_TO_BLUETOOTH_SERVER:
                     Log.e(TAG, "DEVICE_CONNECTED_SUCCESSFULLY_TO_BLUETOOTH_SERVER");
+                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_CONNECTING);
                     // this device is the  server. not the Initiator
                     mInitiator = false;
                     // update status
@@ -304,21 +296,20 @@ public class BLManager extends Thread implements BLConstants {
                     // Start handshake
                     mHandShake = new HandShake(bluetoothSocket,mMessenger,mInitiator,
                             mRelayConnectivityManager,mDataManager,metadata);
+                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_HANDSHAKE);
                     break;
 
                 case FAILED_CONNECTING_TO_DEVICE:
                     Log.e(TAG, "FAILED_CONNECTING_TO_DEVICE");
                     // update status
                     mStatus = DISCONNECTED;
-//                    // Open server socket
-//                    mBluetoothServer.cancel();
-//                    mBluetoothServer = new BluetoothServer(mBluetoothAdapter,mMessenger);
-//                    mBluetoothServer.start();
+                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_ERROR);
                     startSearchImmediately();
                     break;
 
                 case SUCCEED_CONNECTING_TO_DEVICE:
                     Log.e(TAG, "SUCCEED_CONNECTING_TO_DEVICE");
+                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_CONNECTING);
                     // this device is the  Initiator
                     mInitiator = true;
                     // update status
@@ -329,6 +320,7 @@ public class BLManager extends Thread implements BLConstants {
                     // Start handshake
                     mHandShake = new HandShake(bluetoothSocket,mMessenger,mInitiator,
                             mRelayConnectivityManager,mDataManager,metadata);
+                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_HANDSHAKE);
 
                     break;
 
@@ -336,6 +328,7 @@ public class BLManager extends Thread implements BLConstants {
                     Log.e(TAG, "FOUND_MAC_ADDRESS");
                     // update status
                     mStatus = CONNECTING;
+                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_CONNECTING);
                     stopSearch(FOUND_NEW_DEVICE);
                     // reset interval search time and counter
                     resetSearch();
@@ -361,9 +354,9 @@ public class BLManager extends Thread implements BLConstants {
 
                 case FINISHED_HANDSHAKE:
                     Log.e(TAG, "FINISHED_HANDSHAKE");
+                    mRelayConnectivityManager.broadCastFlag(0);
                     // update status
                     mStatus = DISCONNECTED;
-
                     // update service finish handshake
                     sendMessageToConnectivityManager(FINISHED_HANDSHAKE,null);
 
@@ -375,28 +368,24 @@ public class BLManager extends Thread implements BLConstants {
                     mHandShake.closeConnection();
                     // update metadata
                     metadata = mDataTransferred.createMetaData();
-                    // Open server socket
                     mBluetoothServer.cancel();
-//                    mBluetoothServer = new BluetoothServer(mBluetoothAdapter,mMessenger);
-                    if (mInitiator)
+                    if (mInitiator) {
+                        mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_IDLE);
                         new Handler().postDelayed(new Runnable() {
                             @Override
                             public void run() {
-                                // TODO sometimes thread is alive. prevent error
-                              //  if (!mBluetoothServer.isAlive())
-                                 //   mBluetoothServer.start();
                                 intervalSearch();
                             }
                         }, DELAY_AFTER_HANDSHAKE);
+                    }
                     else{
-                      //  mBluetoothServer.start();
                         intervalSearch();
                     }
                     break;
 
                 case READ_PACKET:
                     Log.e(TAG, "READ_PACKET");
-                    // Test
+                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_HANDSHAKE);
                     Log.d(TAG, "Read Packet in BLManager");
                     String packet = msg.getData().getString("packet");
                     // update handshake with the new packet
@@ -414,21 +403,22 @@ public class BLManager extends Thread implements BLConstants {
                 case BLE_ADVERTISE_ERROR:
                     Log.e(TAG, "BLE_ADVERTISE_ERROR");
                     mStatus = DISCONNECTED;
+                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_ERROR);
                     sendMessageToConnectivityManager(BLE_ERROR,null);
                     break;
 
                 case BLE_SCAN_ERROR:
                     Log.e(TAG, "BLE_SCAN_ERROR");
                     mStatus = DISCONNECTED;
+                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_ERROR);
                     sendMessageToConnectivityManager(BLE_ERROR,null);
                     break;
 
                 case FOUND_MAC_ADDRESS_FROM_BLSCAN:
-
                     Log.e(TAG, "FOUND_MAC_ADDRESS FROM BL SCAN");
                     // update status
                     mStatus = CONNECTING;
-
+                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_CONNECTING);
                     address = msg.getData().getString("address");
                     Log.d(TAG, "Found MAC device : "+ address);
 
@@ -458,6 +448,7 @@ public class BLManager extends Thread implements BLConstants {
                     Log.e(TAG, "FAILED_DURING_HAND_SHAKE");
                     // update status
                     mStatus = DISCONNECTED;
+                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_ERROR);
                     startSearchImmediately();
                     break;
                 default:

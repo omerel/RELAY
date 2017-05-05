@@ -227,6 +227,8 @@ public class NodesDB {
      */
     public boolean setMyNodeId(UUID nodeId){
         dbManager.putJsonObject(MY_NODE_ID,JsonConvertor.convertToJson(nodeId));
+        // remove node from inboxDB
+        mInboxDB.deleteContactFromDB(nodeId);
         return true;
     }
 

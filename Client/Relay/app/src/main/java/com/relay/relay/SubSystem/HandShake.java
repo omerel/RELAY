@@ -86,7 +86,7 @@ public class HandShake implements BLConstants {
         this.objectMessagesToSend = new ArrayList<>();
         this.metadata = metadata;
         this.mBluetoothConnected.start();
-        handShakeWatchDog(20000);
+        handShakeWatchDog(WATCHDOG_TIMER);
         startHandshake();
 
     }
@@ -97,7 +97,6 @@ public class HandShake implements BLConstants {
      * @param time
      */
     private void handShakeWatchDog(int time){
-        final int newTime = time;
         watchDogHandler = new Handler();
         watchDogHandler.postDelayed(new Runnable() {
             @Override
@@ -139,57 +138,72 @@ public class HandShake implements BLConstants {
      */
 
     public void getPacket(String jsonPacket){
+        int step = 0; // for debugging
         try {
             int command = JsonConvertor.getCommand(jsonPacket);
             switch (command) {
                 case STEP_1_METADATA:
+                    step=1;//1
                     Log.e(TAG, "STEP_1_METADATA. Initiator: "+mInitiator );
                     // receive meta data
                     receivedMetadata = JsonConvertor.getMetadataFromJsonContent(jsonPacket);
                     receivedKnownMessage = receivedMetadata.getKnownMessagesList();
                     receivedKnownRelations = receivedMetadata.getKnownRelationsList();
+                    step=2;//2
                     timePerformance.start();
                     checkRankBeforeHandShake();
                     Log.e(TAG, "TIME TO : " + "checkRankBeforeHandShake" + " " + timePerformance.stop());
                     finalDegree = CalculateFinalRank();
                     timePerformance.start();
+                    step=3;//3
                     updateNodeAndRelations = createUpdateNodeAndRelations(finalDegree);
-
+                    step=31;//3
                     Log.e(TAG, "TIME TO : " + "createUpdateNodeAndRelations" + " " + timePerformance.stop());
                     if (!mInitiator) {
+                        step=4;//4
                         sendPacket(STEP_1_METADATA, JsonConvertor.convertToJson(metadata));
                     } else {
+                        step=5;//5
                         sendPacket(STEP_2_UPDATE_NODES_AND_RELATIONS, JsonConvertor.convertToJson(updateNodeAndRelations));
                     }
                     break;
                 case STEP_2_UPDATE_NODES_AND_RELATIONS:
+                    step=6;///6
                     Log.e(TAG, "STEP_2_UPDATE_NODES_AND_RELATIONS. Initiator: "+mInitiator );
                     receivedUpdateNodeAndRelations =
                             JsonConvertor.getUpdateNodeAndRelationsFromJsonContent(jsonPacket);
+                    step=7;//7
                     timePerformance.start();
                     updateNodeAndRelations(receivedUpdateNodeAndRelations);
                     Log.e(TAG, "TIME TO : " + "updateNodeAndRelations" + " " + timePerformance.stop());
                     timePerformance.start();
+                    step=8;//8
                     updateMessagesAndCreateMessagesListToSend();
                     Log.e(TAG, "TIME TO : " + "updateMessagesAndCreateMessagesListToSend" + " " + timePerformance.stop());
 
                     if (!mInitiator) {
+                        step=9;//9
                         sendPacket(STEP_2_UPDATE_NODES_AND_RELATIONS, JsonConvertor.convertToJson(updateNodeAndRelations));
                     } else {
+                        step=10;//10
                         sendPacket(STEP_3_TEXT_MESSAGES, JsonConvertor.convertToJson(textMessagesToSend));
                     }
                     break;
                 case STEP_3_TEXT_MESSAGES:
+                    step=11;//11
                     Log.e(TAG, "STEP_3_TEXT_MESSAGES. Initiator: "+mInitiator );
                     ArrayList<RelayMessage> relayMessages =
                             JsonConvertor.getRelayMessageListFromJsonContent(jsonPacket);
                     timePerformance.start();
+                    step=12;//12
                     for (RelayMessage relayMessage : relayMessages) {
                         updateReceivedMessage(relayMessage);
                         mDataManager.getMessagesDB().addMessage(relayMessage);
                         // alert device when he gets new message
                         UUID destId = relayMessage.getDestinationId();
+                        step=13;//13
                         if (destId.equals(mMyNode.getId())) {
+                            step=14;//14
                             String msg = relayMessage.getContent();
                             sendMessageToManager(NEW_RELAY_MESSAGE, msg);
                         }
@@ -197,18 +211,22 @@ public class HandShake implements BLConstants {
                     Log.e(TAG, "TIME TO : " + "updateReceivedMessage" + " " + timePerformance.stop());
 
                     if (!mInitiator) {
+                        step=15;//15
                         sendPacket(STEP_3_TEXT_MESSAGES, JsonConvertor.convertToJson(textMessagesToSend));
                     } else {
                         timePerformance.start();
+                        step=16;//16
                         updateSentTextMessages();
                         Log.e(TAG, "TIME TO : " + "updateSentTextMessages" + " " + timePerformance.stop());
                         timePerformance.start();
                         // send first attachment if exist
                         if (objectMessagesToSend.size() > 0) {
+                            step=17;//17
                             Log.e(TAG, "there are  "+objectMessagesToSend.size()+ " objects to send, sending " +attachmentsCounter +" from "+objectMessagesToSend.size() );
                             sendPacket(STEP_4_OBJECT_MESSAGE, JsonConvertor.convertToJson(objectMessagesToSend.get(attachmentsCounter)));
                             attachmentsCounter ++;
                         } else{
+                            step=18;//18
                             Log.e(TAG, "there are  "+objectMessagesToSend.size()+ " objects to send, sending " +attachmentsCounter +" from "+objectMessagesToSend.size() );
                             Log.e(TAG, "TIME TO : " + "objectMessagesToSend" + " " + timePerformance.stop());
                             sendPacket(FINISH_STEP_4, new String("DUMMY"));
@@ -220,18 +238,21 @@ public class HandShake implements BLConstants {
                 case ACK_OBJECT_STEP_4:
                     //while there is attachments, send them one by one
                     if (attachmentsCounter < objectMessagesToSend.size()) {
+
+                        step=19;//19
                         Log.e(TAG, "there are  "+objectMessagesToSend.size()+ " objects to send, sending " +attachmentsCounter +" from "+objectMessagesToSend.size() );
                         sendPacket(STEP_4_OBJECT_MESSAGE, JsonConvertor.convertToJson(objectMessagesToSend.get(attachmentsCounter)));
                         attachmentsCounter ++;
                     }
                     else{
                         if (!mInitiator) {
-
+                            step=20;//20
                             sendPacket(FINISH, new String("DUMMY"));
                             updateSentAttachmentMessages();
                             finishHandshake();
                         }
                         else{
+                            step=21;//21
                             Log.e(TAG, "TIME TO : " + "objectMessagesToSend" + " " + timePerformance.stop());
                             sendPacket(FINISH_STEP_4, new String("DUMMY"));
                         }
@@ -240,6 +261,7 @@ public class HandShake implements BLConstants {
                     break;
 
                 case STEP_4_OBJECT_MESSAGE:
+                    step=22;//22
                     Log.e(TAG, "STEP_4_OBJECT_MESSAGE. Initiator: "+mInitiator );
                     RelayMessage relayMessage = JsonConvertor.getRelayMessageFromJsonContent(jsonPacket);
                     updateReceivedMessage(relayMessage);
@@ -252,12 +274,15 @@ public class HandShake implements BLConstants {
                     Log.e(TAG, "FINISH_STEP_4. Initiator: "+mInitiator );
                     updateSentTextMessages();
                     if (!mInitiator) {
+                        step=23;//23
                         // send first attachment if exist
                         if (objectMessagesToSend.size() > 0) {
+                            step=24;//24
                             sendPacket(STEP_4_OBJECT_MESSAGE, JsonConvertor.convertToJson(objectMessagesToSend.get(attachmentsCounter)));
                             attachmentsCounter ++;
                         }
                         else{
+                            step=25;//25
                             sendPacket(FINISH, new String("DUMMY"));
                             updateSentAttachmentMessages();
                             finishHandshake();
@@ -266,7 +291,9 @@ public class HandShake implements BLConstants {
                     break;
 
                 case FINISH:
+                    step=26;//26
                     Log.e(TAG, "FINISH. Initiator: "+mInitiator );
+                    // initial watchdogHandler
                     watchDogHandler.removeCallbacksAndMessages(null);
                     updateSentAttachmentMessages();
                     finishHandshake();
@@ -275,7 +302,7 @@ public class HandShake implements BLConstants {
         } catch (Exception e) {
             // TODO need to be tested
             mBluetoothConnected.cancel();
-            Log.e(TAG,"Error in hand shake method");
+            Log.e(TAG,"Error in hand shake method, step- "+step);
             sendMessageToManager(FAILED_DURING_HAND_SHAKE,null);
         }
     }
@@ -461,55 +488,64 @@ public class HandShake implements BLConstants {
      */
     private DataTransferred.UpdateNodeAndRelations createUpdateNodeAndRelations(int degree){
 
+
         newNodeIdList = new HashMap<>();
         ArrayList<Node> updateNodeList = new ArrayList<>();
         ArrayList<DataTransferred.NodeRelations> updateRelationsList = new ArrayList<>();
 
-        ArrayList<UUID> myNodeList = mDataManager.getNodesDB().getNodesIdList();
+        try {
+            ArrayList<UUID> myNodeList = mDataManager.getNodesDB().getNodesIdList();
 
-        // update the device with my node and relations first
-        updateNodeList.add(mMyNode);
+            // update the device with my node and relations first
+            updateNodeList.add(mMyNode);
 
-        for (UUID nodeId : myNodeList){
+            for (UUID nodeId : myNodeList) {
 
-            DataTransferred.NodeRelations tempRelations =
-                    mDataTransferred.createNodeRelations(
-                            nodeId,
-                            mDataManager.getNodesDB().getNode(nodeId).getTimeStampNodeDetails(),
-                            mDataManager.getGraphRelations().adjacentTo(nodeId));
+                DataTransferred.NodeRelations tempRelations =
+                        mDataTransferred.createNodeRelations(
+                                nodeId,
+                                mDataManager.getNodesDB().getNode(nodeId).getTimeStampNodeDetails(),
+                                mDataManager.getGraphRelations().adjacentTo(nodeId));
 
-            // if node is known check if need to update its node and/or relations and it's not the syncing node
-            if (receivedKnownRelations.containsKey(nodeId) &&
-                    !nodeId.equals(receivedMetadata.getMyNode().getId())){
+                // if node is known check if need to update its node and/or relations and it's not the syncing node
+                if (receivedKnownRelations.containsKey(nodeId) &&
+                        !nodeId.equals(receivedMetadata.getMyNode().getId())) {
 
-                // tODO check it
-                // if my node timestamp is newer ' update node and relation
-                if (mDataManager.getNodesDB().getNode(nodeId).getTimeStampNodeDetails().after(
-                        receivedKnownRelations.get(nodeId).getTimeStampNodeDetails())) {
-                    updateNodeList.add(mDataManager.getNodesDB().getNode(nodeId));
-                    newNodeIdList.put(nodeId, mDataManager.getNodesDB().getNode(nodeId));
+                    // tODO check it
+                    // if my node timestamp is newer ' update node and relation
+                    if (mDataManager.getNodesDB().getNode(nodeId).getTimeStampNodeDetails().after(
+                            receivedKnownRelations.get(nodeId).getTimeStampNodeDetails())) {
+                        updateNodeList.add(mDataManager.getNodesDB().getNode(nodeId));
+                        newNodeIdList.put(nodeId, mDataManager.getNodesDB().getNode(nodeId));
+                    }
+                    if (mDataManager.getNodesDB().getNode(nodeId).getTimeStampNodeRelations().after(
+                            receivedKnownRelations.get(nodeId).getTimeStampNodeRelations())) {
+                        // if timestamp relation is newer, update relation
+                        updateRelationsList.add(tempRelations);
+                        newNodeIdList.put(nodeId, mDataManager.getNodesDB().getNode(nodeId));
+                    }
+
                 }
-                if (mDataManager.getNodesDB().getNode(nodeId).getTimeStampNodeRelations().after(
-                        receivedKnownRelations.get(nodeId).getTimeStampNodeRelations())) {
-                    // if timestamp relation is newer, update relation
-                    updateRelationsList.add(tempRelations);
-                    newNodeIdList.put(nodeId, mDataManager.getNodesDB().getNode(nodeId));
+                // if node is in the share final degree and it's not the syncing node , add it to update nodes and his relations
+                else {
+                    // TODO fix
+                    if(knownRelations.get(nodeId) != null)
+                        if (knownRelations.get(nodeId).getNodeDegree() <= degree &&
+                                !nodeId.equals(receivedMetadata.getMyNode().getId())) {
+                            updateNodeList.add(mDataManager.getNodesDB().getNode(nodeId));
+                            updateRelationsList.add(tempRelations);
+                            newNodeIdList.put(nodeId, mDataManager.getNodesDB().getNode(nodeId));
+                        }
                 }
 
             }
-            // if node is in the share final degree and it's not the syncing node , add it to update nodes and his relations
-            else{
-                if (knownRelations.get(nodeId).getNodeDegree() <= degree &&
-                        !nodeId.equals(receivedMetadata.getMyNode().getId()) ){
-                    updateNodeList.add(mDataManager.getNodesDB().getNode(nodeId));
-                    updateRelationsList.add(tempRelations);
-                    newNodeIdList.put(nodeId,mDataManager.getNodesDB().getNode(nodeId));
-                }
-            }
+            updateNodeAndRelations = mDataTransferred.createUpdateNodeAndRelations(updateNodeList,
+                    updateRelationsList);
+            return updateNodeAndRelations;
+        }catch(Exception e){
 
+            Log.e(TAG,"something wrong here- "+e.getMessage());
         }
-        updateNodeAndRelations = mDataTransferred.createUpdateNodeAndRelations(updateNodeList,
-                updateRelationsList );
         return updateNodeAndRelations;
     }
 
@@ -559,7 +595,9 @@ public class HandShake implements BLConstants {
         //  add edge between node
         mDataManager.getGraphRelations().addEdge(mMyNode.getId(), receivedMetadata.getMyNode().getId());
         sendFinishMessageToManager(FINISHED_HANDSHAKE, mBluetoothSocket.getRemoteDevice().getAddress());
+        watchDogHandler.removeCallbacksAndMessages(null);
         Log.d(TAG, "FINISHED_HANDSHAKE");
+
 
     }
 

@@ -200,6 +200,7 @@ public class BLECentral implements BLConstants {
                 case BLE_SCAN_ERROR:
                     mBleScan.stopScanning();
                     sendResultToManager(BLE_SCAN_ERROR,null);
+                    Log.e(TAG, "Error -  BLE_SCAN_ERROR ");
                     break;
 
                 default:

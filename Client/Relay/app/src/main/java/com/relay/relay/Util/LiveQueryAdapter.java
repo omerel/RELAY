@@ -27,10 +27,10 @@ public class LiveQueryAdapter extends RecyclerView.Adapter<InboxFragment.Contact
     public QueryEnumerator enumerator;
     private Context context;
 
-
     public LiveQueryAdapter(Context context, LiveQuery query) {
         this.context = context;
         this.query = query;
+        this.enumerator = query.getRows();
 
         query.addChangeListener(new LiveQuery.ChangeListener() {
             @Override

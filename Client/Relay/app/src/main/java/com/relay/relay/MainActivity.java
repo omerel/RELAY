@@ -37,6 +37,7 @@ import android.widget.TextView;
 
 import com.relay.relay.SubSystem.DataManager;
 import com.relay.relay.SubSystem.RelayConnectivityManager;
+import com.relay.relay.Util.StatusBar;
 import com.relay.relay.Util.UuidGenerator;
 
 import java.util.UUID;
@@ -88,12 +89,13 @@ public class MainActivity extends AppCompatActivity
     private SharedPreferences sharedPreferences;
 
 
+    private StatusBar mStatusBar;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
 
         Toolbar  toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -116,37 +118,6 @@ public class MainActivity extends AppCompatActivity
 
         // using sharedPreferences when trying to log out
         sharedPreferences =  getSharedPreferences(SYSTEM_SETTING,0);
-
-//        //TODO delete uuidGenerator when creating login
-//        // check if the is a user name
-//        sharedPreferences =  getSharedPreferences(SYSTEM_SETTING,0);
-//        String uuid = sharedPreferences.getString(CURRENT_UUID_USER,null);
-//
-//        if (uuid == null){
-//            //get my uuid from login and put it in sharedPreferences
-//            UuidGenerator uuidGenerator = new UuidGenerator();
-//            try {
-//                mMyuuid = uuidGenerator.GenerateUUIDFromEmail("Rachael@gmail.com");
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
-//            // saving myuuid into sharedPreferences
-//
-//            SharedPreferences.Editor editor = sharedPreferences.edit();
-//            editor.putString(CURRENT_UUID_USER,mMyuuid.toString());
-//            editor.commit();
-//        }
-//        else{
-//            mMyuuid = UUID.fromString(uuid);
-//        }
-
-
-        // for dubug
-//        Test t = new Test(this);
-//        t.startTest();
-        //
-
-        // todo delete up to here
 
         navHeaderView= navigationView.getHeaderView(0);
 
@@ -177,6 +148,9 @@ public class MainActivity extends AppCompatActivity
 
         // start on inbox
         displayFragment(0);
+
+        // initial status bar
+        mStatusBar = new StatusBar(this);
 
     }
 
@@ -211,6 +185,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        mStatusBar.close();
     }
 
     @Override
@@ -502,6 +477,7 @@ public class MainActivity extends AppCompatActivity
             changePriority();
             Snackbar.make(this.mContentView, " Changing connection priority " , Snackbar.LENGTH_SHORT)
                     .setAction("Action", null).show();
+            mStatusBar.clear();
 
         }
         else{

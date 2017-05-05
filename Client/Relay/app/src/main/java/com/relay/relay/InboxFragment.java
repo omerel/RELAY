@@ -53,6 +53,7 @@ import com.relay.relay.Util.LiveQueryAdapter;
 import com.relay.relay.Util.SearchContactAdapter;
 import com.relay.relay.Util.SearchUser;
 import com.relay.relay.Util.ShowActivityFullImage;
+import com.relay.relay.Util.StatusBar;
 import com.relay.relay.Util.UuidGenerator;
 import com.relay.relay.system.Node;
 import com.relay.relay.system.RelayMessage;
@@ -157,8 +158,6 @@ public class InboxFragment extends Fragment {
             }
         });
 
-        mGifImageView = (GifImageView)view.findViewById(R.id.gif_empty);
-        mGifImageView.setGifImageResource(R.drawable.empty);
 
         // init contacts view
         mContactRecyclerView = (RecyclerView) view.findViewById(R.id.recycler_view_contacts);
@@ -176,6 +175,12 @@ public class InboxFragment extends Fragment {
         mSearchContactRecyclerView.setItemAnimator(new DefaultItemAnimator());
         mSearchContactRecyclerView.setVisibility(View.GONE);
         mSearchContactRecyclerView.setItemViewCacheSize(20);
+
+
+//        if (test == 0) {
+//            mGifImageView = (GifImageView) view.findViewById(R.id.gif_empty);
+//            mGifImageView.setGifImageResource(R.drawable.empty);
+//        }
 
         return view;
     }
@@ -197,7 +202,6 @@ public class InboxFragment extends Fragment {
         mDataManager.openAllDataBase();
         Log.e(TAG,"close and opened data base");
 
-        uploadEmptyGif(mDataBase.getView("list/contactList").getCurrentTotalRows());
     }
 
 
@@ -327,8 +331,8 @@ public class InboxFragment extends Fragment {
                 @Override
                 public void map(Map<String, Object> document, Emitter emitter) {
                     String type = (String) document.get("type");
-                    boolean disappear = (boolean) document.get("disappear");
-                    if ("contact".equals(type) && !disappear) {
+                    if ("contact".equals(type)) {
+                        if (!(boolean) document.get("disappear"))
                         emitter.emit(document.get("time"), null);
                     }
                 }
@@ -340,13 +344,6 @@ public class InboxFragment extends Fragment {
         listsLiveQuery = query.toLiveQuery();
     }
 
-    private void uploadEmptyGif(int listCounter) {
-
-        if (listCounter == 0)
-            mGifImageView.setVisibility(View.VISIBLE);
-        else
-            mGifImageView.setVisibility(View.GONE);
-    }
 
     private class ListAdapter extends LiveQueryAdapter {
 
@@ -395,8 +392,6 @@ public class InboxFragment extends Fragment {
                     newImage = ImageConverter.scaleDown(newImage,100,true);
                     holder.circleImageView.setImageBitmap(newImage);
                 }
-
-
             }
 
             // set updates and new messages icon
@@ -587,6 +582,7 @@ public class InboxFragment extends Fragment {
                         mDataManager.getInboxDB().deleteUserAndConversation(UUID.fromString(uuidString),true);
                         Toast.makeText(getContext(), "user was deleted", Toast.LENGTH_SHORT).show();
                         mAdapter.myNotify();
+
                     }
                 } else {
                     Document doc =  mAdapter.getItem(position);
@@ -597,8 +593,6 @@ public class InboxFragment extends Fragment {
                         Toast.makeText(getContext(), "user info", Toast.LENGTH_SHORT).show();
                     }
                 }
-
-                uploadEmptyGif(mDataBase.getView("list/contactList").getCurrentTotalRows());
             }
 
             @Override
@@ -705,7 +699,6 @@ public class InboxFragment extends Fragment {
                         setupLiveQuery();
                         mAdapter.myNotify();
 
-                        uploadEmptyGif(mDataBase.getView("list/contactList").getCurrentTotalRows());
 
                         break;
 

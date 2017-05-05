@@ -21,7 +21,7 @@ public interface BLConstants {
     UUID MAC_ADDRESS_UUID = UUID.fromString("00002A19-0000-1000-8000-00805f9b34fb");
 
     // Delimiter in bluetoothConnected
-    String DELIMITER = "<!-@-!>";
+    String DELIMITER = "<!-12341234@12341234-!>";
 
     // Message from BluetoothServer
     int DEVICE_CONNECTED_SUCCESSFULLY_TO_BLUETOOTH_SERVER = 10;
@@ -43,12 +43,12 @@ public interface BLConstants {
     int SCAN_FAILED = 41;
 
     // Constants used in BLManager
-    int TIME_RELAY_SEARCH_INTERVAL = 60*SECOND;
-    int TIME_RELAY_SEARCH_INTERVAL_POWER_MODE = 60*SECOND;
-    int TIME_RELAY_SCAN = 20*SECOND;
-    int TIME_RELAY_KEEPS_FOUND_DEVICE_IN_LIST = 20*SECOND;
-    int TIME_RELAY_KEEPS_FOUND_DEVICE_IN_LIST_POWER_MODE =5*SECOND;//20
-    int DELAY_AFTER_HANDSHAKE = 30*SECOND;
+    int TIME_RELAY_SEARCH_INTERVAL = 30*SECOND;//60
+    int TIME_RELAY_SEARCH_INTERVAL_POWER_MODE = 30*SECOND;//60
+    int TIME_RELAY_SCAN = 10*SECOND;//20
+    int TIME_RELAY_KEEPS_FOUND_DEVICE_IN_LIST = 5*SECOND;//20
+    int TIME_RELAY_KEEPS_FOUND_DEVICE_IN_LIST_POWER_MODE = 5*SECOND;//20
+    int DELAY_AFTER_HANDSHAKE = 10*SECOND;//30
     int SCAN_FINISHED_WITHOUT_CHANGES = 50;
     int RESET_SEARCH_COUNTER = 51;
     int BLE_ERROR = 32;
@@ -61,6 +61,8 @@ public interface BLConstants {
     int CONNECTED = 51;
     int DISCONNECTED = 52;
     int CONNECTING = 53;
+    int HANDSHAKE_FLAG = 54;
+    int ERROR_FLAG = 54;
 
     // Message from BluetoothConnected
     int READ_PACKET = 60;
@@ -69,6 +71,7 @@ public interface BLConstants {
     int FINISHED_HANDSHAKE = 70;
     int  NEW_RELAY_MESSAGE = 71;
     int FAILED_DURING_HAND_SHAKE = 72;
+    int WATCHDOG_TIMER = 60*SECOND;
 
     // Message from BLECentral
     int FOUND_MAC_ADDRESS = 80;

@@ -27,6 +27,7 @@ import com.relay.relay.Bluetooth.*;
 import com.relay.relay.DB.InboxDB;
 import com.relay.relay.MainActivity;
 import com.relay.relay.R;
+import com.relay.relay.Util.StatusBar;
 
 import static com.relay.relay.MainActivity.SYSTEM_SETTING;
 
@@ -215,6 +216,14 @@ public class RelayConnectivityManager extends Service implements BLConstants {
     }
 
 
+    public void broadCastFlag(int flag) {
+
+        // BroadCast relay message to activity
+        Intent updateActivity = new Intent(StatusBar.STATUS_BAR_RELAY);
+        updateActivity.putExtra("flag", flag);
+        sendBroadcast(updateActivity);
+    }
+
     /**
      *  General BroadcastReceiver
      */
@@ -287,6 +296,7 @@ public class RelayConnectivityManager extends Service implements BLConstants {
                             // refresh fragment
                             Intent updateActivity = new Intent(MainActivity.FRESH_FRAGMENT);
                             sendBroadcast(updateActivity);
+                            broadCastFlag(0);
                         }
                         break;
                     // When the device in bluetooth and wifi switch in and connected to internet

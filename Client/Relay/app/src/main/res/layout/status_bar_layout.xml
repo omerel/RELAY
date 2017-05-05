@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:id="@+id/flag_search"
+        android:layout_width="15dp"
+        android:layout_height="15dp"
+        android:layout_centerHorizontal="true"
+        android:layout_margin="4dp"
+        android:layout_alignParentBottom="true"
+        android:src="@drawable/ic_flag_search"/>
+    <ImageView
+        android:id="@+id/flag_connecting"
+        android:layout_width="15dp"
+        android:layout_height="15dp"
+        android:layout_toRightOf="@id/flag_search"
+        android:layout_margin="4dp"
+        android:layout_alignParentBottom="true"
+        android:src="@drawable/ic_flag_connecting"/>
+    <ImageView
+        android:id="@+id/flag_idle"
+        android:layout_width="15dp"
+        android:layout_height="15dp"
+        android:layout_margin="4dp"
+        android:layout_alignParentBottom="true"
+        android:layout_toLeftOf="@id/flag_search"
+        android:src="@drawable/ic_flag_idle"/>
+
+
+    <ImageView
+        android:id="@+id/flag_handshake"
+        android:layout_width="15dp"
+        android:layout_height="15dp"
+        android:layout_margin="4dp"
+        android:layout_alignParentBottom="true"
+        android:layout_toRightOf="@id/flag_connecting"
+        android:src="@drawable/ic_flag_handshake"/>
+
+    <ImageView
+        android:id="@+id/flag_error"
+        android:layout_width="15dp"
+        android:layout_height="15dp"
+        android:layout_margin="4dp"
+        android:layout_alignParentBottom="true"
+        android:layout_toLeftOf="@id/flag_idle"
+        android:src="@drawable/ic_flag_error"/>
+
+</RelativeLayout>

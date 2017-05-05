@@ -55,12 +55,16 @@ public class BLEAdvertising implements BLConstants {
             // setup device respond when found
             AdvertiseData dataRes = buildAdvertiseScanResponse();
 
-            // set custom callback to get information about the connection status
-            mAdvertiseCallback = new CustomAdvertiseCallback();
-
-            if (mBluetoothLeAdvertiser != null && mBluetoothAdapter.isEnabled()) {
-                mBluetoothLeAdvertiser.startAdvertising(settings, data, dataRes, mAdvertiseCallback);
-                Log.d(TAG, "Starting Advertising");
+            try {
+                // set custom callback to get information about the connection status
+                mAdvertiseCallback = new CustomAdvertiseCallback();
+                if (mBluetoothLeAdvertiser != null && mBluetoothAdapter.isEnabled()) {
+                    mBluetoothLeAdvertiser.startAdvertising(settings, data, dataRes, mAdvertiseCallback);
+                    Log.d(TAG, "Starting Advertising");
+                }
+            }catch(Exception e){
+                Log.e(TAG,e.getMessage());
+                // do nothing
             }
 
         }
