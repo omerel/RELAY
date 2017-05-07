@@ -15,48 +15,27 @@ import java.util.zip.GZIPOutputStream;
 
 public class Gzip {
 
-    public static byte[] zip(final String str) {
-        if ((str == null) || (str.length() == 0)) {
-            throw new IllegalArgumentException("Cannot zip null or empty string");
-        }
-
-        try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
-            try (GZIPOutputStream gzipOutputStream = new GZIPOutputStream(byteArrayOutputStream)) {
-                gzipOutputStream.write(str.getBytes(StandardCharsets.UTF_8));
-            }
-            return byteArrayOutputStream.toByteArray();
-        } catch(IOException e) {
-            throw new RuntimeException("Failed to zip content", e);
-        }
+    public static byte[] compress(String string) throws IOException {
+        ByteArrayOutputStream os = new ByteArrayOutputStream(string.length());
+        GZIPOutputStream gos = new GZIPOutputStream(os);
+        gos.write(string.getBytes());
+        gos.close();
+        byte[] compressed = os.toByteArray();
+        os.close();
+        return compressed;
     }
 
-    public static String unzip(final byte[] compressed) {
-        if ((compressed == null) || (compressed.length == 0)) {
-            throw new IllegalArgumentException("Cannot unzip null or empty bytes");
+    public static String decompress(byte[] compressed) throws IOException {
+        final int BUFFER_SIZE = 32;
+        ByteArrayInputStream is = new ByteArrayInputStream(compressed);
+        GZIPInputStream gis = new GZIPInputStream(is, BUFFER_SIZE);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        byte[] data = new byte[BUFFER_SIZE];
+        int bytesRead;
+        while ((bytesRead = gis.read(data)) != -1) {
+            baos.write(data, 0, bytesRead);
         }
-        if (!isZipped(compressed)) {
-            return new String(compressed);
-        }
-
-        try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(compressed)) {
-            try (GZIPInputStream gzipInputStream = new GZIPInputStream(byteArrayInputStream)) {
-                try (InputStreamReader inputStreamReader = new InputStreamReader(gzipInputStream, StandardCharsets.UTF_8)) {
-                    try (BufferedReader bufferedReader = new BufferedReader(inputStreamReader)) {
-                        StringBuilder output = new StringBuilder();
-                        String line;
-                        while((line = bufferedReader.readLine()) != null){
-                            output.append(line);
-                        }
-                        return output.toString();
-                    }
-                }
-            }
-        } catch(IOException e) {
-            throw new RuntimeException("Failed to unzip content", e);
-        }
-    }
-
-    public static boolean isZipped(final byte[] compressed) {
-        return (compressed[0] == (byte) (GZIPInputStream.GZIP_MAGIC)) && (compressed[1] == (byte) (GZIPInputStream.GZIP_MAGIC >> 8));
+        gis.close();
+        return baos.toString("UTF-8");
     }
 }

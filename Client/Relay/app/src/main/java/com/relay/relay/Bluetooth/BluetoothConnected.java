@@ -12,6 +12,7 @@ import com.relay.relay.Util.Gzip;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 
 /**
  * Created by omer on 11/12/2016.
@@ -65,36 +66,42 @@ public class BluetoothConnected extends Thread implements BLConstants {
                 bytes = mmInStream.read(initialBuffer);
                 Log.e(TAG, "receiving  first package of the Packet that include the header. size: "+bytes);
 
-                // convert to string
-                String firstDeliver = new String(initialBuffer,0,bytes);
+                // the part of the size of packet
+                byte[] packetSizeInByte = new byte[20];
+                System.arraycopy(initialBuffer,0,packetSizeInByte,0,packetSizeInByte.length);
+                // the part of the first delivery of packet
+                byte[] firstDeliveryPacket = new byte[bytes - 20];
+                System.arraycopy(initialBuffer,20,firstDeliveryPacket,0,firstDeliveryPacket.length);
 
-                // take the header and convert to integer
-                int packetSize = Integer.valueOf((firstDeliver.split(DELIMITER))[0]);
+
+                // convert bytes to integer
+                int packetSize = java.nio.ByteBuffer.wrap(packetSizeInByte).getInt();
+                Log.e(TAG,"packet size is "+packetSize);
 
                 // create packet with the original size + buffer
-                byte[] packetBuffer = new byte[packetSize + 2*bufferSize];
+                byte[] packetBuffer = new byte[packetSize + bufferSize];
 
                 // if the first delivery is all of the packet
                 if (bytes >= packetSize){
-//                    sendPacketToBluetoothManager(READ_PACKET, (firstDeliver.split(DELIMITER))[1]);
-                    String stringPacket = (firstDeliver.split(DELIMITER))[1];
-                    stringPacket = stringPacket.substring(0,packetSize);
+                    byte[] finalPacket = new byte[packetSize];
+                    System.arraycopy(firstDeliveryPacket,0,finalPacket,0,finalPacket.length);
+                    String stringPacket = Gzip.decompress(finalPacket);
                     sendPacketToBluetoothManager(READ_PACKET, stringPacket);
-
                 }
                 else {
-                    counter = bytes;
-                    while (packetSize >= counter - DELIMITER.length()) {
-                        counter += mmInStream.read(packetBuffer, counter, bufferSize);
+                    counter = bytes-packetSizeInByte.length;
+                    int sum;
+                    byte[] buffer = new byte[1000];
+                    byte[] finalPacket = new byte[packetSize];
+                    System.arraycopy(firstDeliveryPacket,0,finalPacket,0,firstDeliveryPacket.length);
+                    while (packetSize > counter ) {
+                        sum = mmInStream.read(buffer,0,buffer.length);
+                        System.arraycopy(buffer,0,finalPacket,counter,sum);
+                        counter += sum;
                     }
 
-                    // convert  packet buffer to string
-                    String tempString = new String(packetBuffer);
-                    // add the header to the packet buffer
-                    String stringPacketWithHeader = firstDeliver + tempString.substring(firstDeliver.length());
-                    // the sent packet without header
-                    String stringPacket = (stringPacketWithHeader.split(DELIMITER))[1];
-                    stringPacket = stringPacket.substring(0,packetSize);
+
+                    String stringPacket = Gzip.decompress(finalPacket);
                     sendPacketToBluetoothManager(READ_PACKET, stringPacket);
                 }
 
@@ -116,17 +123,23 @@ public class BluetoothConnected extends Thread implements BLConstants {
      */
     public void writePacket(String packetString) {
         try {
-            // get how many bytes
-            int sumBytes = packetString.getBytes().length;
-            //
-            String sumBytesInString = String.valueOf(sumBytes);
-            //
-            String packetStringWithHeader  = sumBytesInString +DELIMITER + packetString;
 
-            mmOutStream.write(packetStringWithHeader.getBytes());
+            // zip packetString
+            byte[] zip = Gzip.compress(packetString);
+            int sumBytes = zip.length;
 
+            // allocate 20 bytes for packet size
+            ByteBuffer byteBuffer = ByteBuffer.allocate(20);
+            byteBuffer.putInt(sumBytes);
+            byte[] packetSize = byteBuffer.array();
+            Log.e(TAG,"packet size is sent "+sumBytes);
 
+            byte[] packet = new byte[packetSize.length + zip.length];
 
+            System.arraycopy(packetSize,0,packet,0,packetSize.length);
+            System.arraycopy(zip,0,packet,packetSize.length,zip.length);
+
+            mmOutStream.write(packet);
         }
         catch (IOException e) {
             Log.e(TAG, "Error with writePacket ");
