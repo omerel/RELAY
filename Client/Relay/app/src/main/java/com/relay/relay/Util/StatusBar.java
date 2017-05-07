@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.CountDownTimer;
-import android.os.Handler;
 import android.view.View;
 import android.widget.ImageView;
 
@@ -20,7 +19,10 @@ import com.relay.relay.R;
 public class StatusBar {
 
     public static final String STATUS_BAR_RELAY = "relay.BroadcastReceiver.STATUS_BAR_RELAY";
-    public static final int FLAG_IDLE = 11;
+    public static final int FLAG_ADVERTISEMENT = 11;
+    public static final int STOP_ADVERTISEMENT = 113;
+    public static final int FLAG_STOP_SCAN = 111;
+    public static final int FLAG_CLOSE_CONNECTION = 112;
     public static final int FLAG_SEARCH = 12;
     public static final int FLAG_CONNECTING = 13;
     public static final int FLAG_HANDSHAKE = 14;
@@ -28,7 +30,7 @@ public class StatusBar {
 
 
     private Activity mActivity;
-    private ImageView mIdleFlag;
+    private ImageView mAdvertisementFlag;
     private ImageView mSearchFlag;
     private ImageView mConnectingFlag;
     private ImageView mHandShakeFlag;
@@ -42,8 +44,8 @@ public class StatusBar {
     public StatusBar(Activity activity){
         this.mActivity = activity;
 
-        this.mIdleFlag = (ImageView) mActivity.findViewById(R.id.flag_idle);
-        mIdleFlag.setImageDrawable(mActivity.getDrawable(R.drawable.ic_flag_non));
+        this.mAdvertisementFlag = (ImageView) mActivity.findViewById(R.id.flag_advertise);
+        mAdvertisementFlag.setImageDrawable(mActivity.getDrawable(R.drawable.ic_flag_non));
         this.mSearchFlag = (ImageView) mActivity.findViewById(R.id.flag_search);
         mSearchFlag.setImageDrawable(mActivity.getDrawable(R.drawable.ic_flag_non));
         this.mConnectingFlag = (ImageView) mActivity.findViewById(R.id.flag_connecting);
@@ -88,18 +90,23 @@ public class StatusBar {
     private void turnOnFlag(int flag) {
 
         switch (flag){
-            case FLAG_IDLE :
+            case FLAG_STOP_SCAN:
                 mSearchFlag.setImageDrawable(mActivity.getDrawable(R.drawable.ic_flag_non));
+                break;
+            case FLAG_CLOSE_CONNECTION:
                 mConnectingFlag.setImageDrawable(mActivity.getDrawable(R.drawable.ic_flag_non));
-                mIdleFlag.setImageDrawable(mActivity.getDrawable(R.drawable.ic_flag_idle));
+                break;
+            case FLAG_ADVERTISEMENT:
+                mAdvertisementFlag.setImageDrawable(mActivity.getDrawable(R.drawable.ic_flag_advertise));
+                break;
+            case STOP_ADVERTISEMENT:
+                mAdvertisementFlag.setImageDrawable(mActivity.getDrawable(R.drawable.ic_flag_non));
                 break;
             case FLAG_SEARCH :
-                mIdleFlag.setImageDrawable(mActivity.getDrawable(R.drawable.ic_flag_non));
                 mConnectingFlag.setImageDrawable(mActivity.getDrawable(R.drawable.ic_flag_non));
                 mSearchFlag.setImageDrawable(mActivity.getDrawable(R.drawable.ic_flag_search));
                 break;
             case FLAG_CONNECTING :
-                mIdleFlag.setImageDrawable(mActivity.getDrawable(R.drawable.ic_flag_non));
                 mSearchFlag.setImageDrawable(mActivity.getDrawable(R.drawable.ic_flag_non));
                 mConnectingFlag.setImageDrawable(mActivity.getDrawable(R.drawable.ic_flag_connecting));
                 break;
@@ -110,7 +117,7 @@ public class StatusBar {
                 blinkFlag(FLAG_ERROR);
                 break;
             case 0 :
-                mIdleFlag.setImageDrawable(mActivity.getDrawable(R.drawable.ic_flag_non));
+                mAdvertisementFlag.setImageDrawable(mActivity.getDrawable(R.drawable.ic_flag_non));
                 mSearchFlag.setImageDrawable(mActivity.getDrawable(R.drawable.ic_flag_non));
                 mConnectingFlag.setImageDrawable(mActivity.getDrawable(R.drawable.ic_flag_non));
                 break;
@@ -146,7 +153,7 @@ public class StatusBar {
     }
 
     public void clear() {
-        mIdleFlag.setImageDrawable(mActivity.getDrawable(R.drawable.ic_flag_non));
+        mAdvertisementFlag.setImageDrawable(mActivity.getDrawable(R.drawable.ic_flag_non));
         mSearchFlag.setImageDrawable(mActivity.getDrawable(R.drawable.ic_flag_non));
         mConnectingFlag.setImageDrawable(mActivity.getDrawable(R.drawable.ic_flag_non));
     }

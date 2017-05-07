@@ -70,6 +70,7 @@
                 android:layout_marginTop="8dp"
                 android:layout_marginRight="4dp"
                 android:layout_toRightOf="@id/textView_item_contact_name"
+                android:visibility="gone"
                 android:id="@+id/imageView_item_message_updates"/>
 
             <ImageView

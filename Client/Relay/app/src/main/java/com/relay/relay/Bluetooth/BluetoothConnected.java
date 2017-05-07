@@ -6,6 +6,9 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
+
+import com.relay.relay.Util.Gzip;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -50,18 +53,17 @@ public class BluetoothConnected extends Thread implements BLConstants {
     // Start thread
     public void run() {
         Log.d(TAG, "Start Thread");
-        int bytes;
+        int bytes = 0;
         int counter;
-        int bufferSize  = 1024;
+        int bufferSize  = 1000;
         byte[] initialBuffer = new byte[1000];
 
         // Keep listening to the InputStream while connected
         while (mBluetoothSocket.isConnected()) {
             try {
-
                 // read the first sent data of packet that includes the header
                 bytes = mmInStream.read(initialBuffer);
-                Log.d(TAG, "receiving  first package of the Packet that include the header");
+                Log.e(TAG, "receiving  first package of the Packet that include the header. size: "+bytes);
 
                 // convert to string
                 String firstDeliver = new String(initialBuffer,0,bytes);
@@ -70,17 +72,22 @@ public class BluetoothConnected extends Thread implements BLConstants {
                 int packetSize = Integer.valueOf((firstDeliver.split(DELIMITER))[0]);
 
                 // create packet with the original size + buffer
-                byte[] packetBuffer = new byte[packetSize + bufferSize];
+                byte[] packetBuffer = new byte[packetSize + 2*bufferSize];
 
                 // if the first delivery is all of the packet
                 if (bytes >= packetSize){
-                    sendPacketToBluetoothManager(READ_PACKET, (firstDeliver.split(DELIMITER))[1]);
+//                    sendPacketToBluetoothManager(READ_PACKET, (firstDeliver.split(DELIMITER))[1]);
+                    String stringPacket = (firstDeliver.split(DELIMITER))[1];
+                    stringPacket = stringPacket.substring(0,packetSize);
+                    sendPacketToBluetoothManager(READ_PACKET, stringPacket);
+
                 }
                 else {
                     counter = bytes;
-                    while (packetSize >= counter) {
+                    while (packetSize >= counter - DELIMITER.length()) {
                         counter += mmInStream.read(packetBuffer, counter, bufferSize);
                     }
+
                     // convert  packet buffer to string
                     String tempString = new String(packetBuffer);
                     // add the header to the packet buffer
@@ -92,12 +99,11 @@ public class BluetoothConnected extends Thread implements BLConstants {
                 }
 
             } catch (IOException e) {
-                Log.e(TAG, "Error - got out from read packet loop ");
+                Log.e(TAG, "Error - got out from read packet loop\n"+e.getMessage());
                 break;
             }
             catch (Exception e) {
-                // TODO testing it
-                Log.e(TAG, "Error - Problem with reading data");
+                Log.e(TAG, "Error - Problem with reading data\n"+e.getMessage());
                 cancel();
                 sendPacketMessageBluetoothManager(FAILED_DURING_HAND_SHAKE,null);
             }
@@ -115,10 +121,11 @@ public class BluetoothConnected extends Thread implements BLConstants {
             //
             String sumBytesInString = String.valueOf(sumBytes);
             //
-            String packetStringWithHeader  = sumBytesInString +DELIMITER+ packetString;
+            String packetStringWithHeader  = sumBytesInString +DELIMITER + packetString;
 
             mmOutStream.write(packetStringWithHeader.getBytes());
-            Log.d(TAG, "Packet delivered");
+
+
 
         }
         catch (IOException e) {

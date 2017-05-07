@@ -64,7 +64,11 @@ public class BluetoothScan implements BLConstants{
             public void run() {
                 stopScan();
                 if(!isDeviceFound) // if not found or if the device was the server
+                try {
                     mRelayConnectivityManager.unregisterReceiver(mBroadcastReceiver);
+                }catch (Exception e){
+                    Log.e(TAG,e.getMessage());
+                }
                     sendMessageToBluetoothManager(NOT_FOUND_ADDRESS_FROM_BLSCAN,null);
             }
         }, SCAN_TIME);
@@ -82,43 +86,49 @@ public class BluetoothScan implements BLConstants{
      */
     private  void createBroadcastReceiver() {
 
-        mFilter = new IntentFilter();
-        // Add all all the actions to filter
-        mFilter.addAction(BluetoothDevice.ACTION_FOUND);
 
-        mBroadcastReceiver = new BroadcastReceiver() {
+            mFilter = new IntentFilter();
+            // Add all all the actions to filter
+            mFilter.addAction(BluetoothDevice.ACTION_FOUND);
 
-            @Override
-            public void onReceive(Context context, Intent intent) {
+            mBroadcastReceiver = new BroadcastReceiver() {
 
-                String action = intent.getAction();
+                @Override
+                public void onReceive(Context context, Intent intent) {
 
-                switch (action) {
-                    // When discovery finds a device
-                    case BluetoothDevice.ACTION_FOUND:
-                        // Get the BluetoothDevice object from the Intent
-                        BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                        Log.e(TAG, "ACTION_FOUND "+device.getName());
+                    String action = intent.getAction();
 
-                        String[] split = null;
-                        if (device.getName()!= null)
-                            split = device.getName().split("_");
-                        if (split!= null && split.length>0){
-                            if (split[0].equals("relay")) {
-                                isDeviceFound = true;
-                                stopScan();
-                                mRelayConnectivityManager.unregisterReceiver(mBroadcastReceiver);
-                                sendMessageToBluetoothManager(FOUND_MAC_ADDRESS_FROM_BLSCAN, device.getAddress());
+                    switch (action) {
+                        // When discovery finds a device
+                        case BluetoothDevice.ACTION_FOUND:
+                            // Get the BluetoothDevice object from the Intent
+                            BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                            Log.e(TAG, "ACTION_FOUND " + device.getName());
+
+                            String[] split = null;
+                            if (device.getName() != null)
+                                split = device.getName().split("_");
+                            if (split != null && split.length > 0) {
+                                if (split[0].equals("relay")) {
+                                    isDeviceFound = true;
+                                    stopScan();
+                                    try {
+                                        mRelayConnectivityManager.unregisterReceiver(mBroadcastReceiver);
+                                        sendMessageToBluetoothManager(FOUND_MAC_ADDRESS_FROM_BLSCAN, device.getAddress());
+                                    }catch (Exception e){
+                                        Log.e(TAG,e.getMessage());
+
+                                    }
+                                }
+                            } else {
+                                mBluetoothAdapter.startDiscovery();
                             }
-                        }
-                        else{
-                            mBluetoothAdapter.startDiscovery();
-                        }
-                        break;
+                            break;
+                    }
                 }
-            }
-        };
-        mRelayConnectivityManager.registerReceiver(mBroadcastReceiver, mFilter);
+            };
+            mRelayConnectivityManager.registerReceiver(mBroadcastReceiver, mFilter);
+
     }
 
     /**

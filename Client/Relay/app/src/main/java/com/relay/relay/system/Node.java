@@ -118,7 +118,7 @@ public class Node {
      */
     public void setRank(int rank,Calendar timeStampRankFromServer) {
          this.mRank = rank;
-        setTimeStampNodeDetails(timeStampRankFromServer);
+        setTimeStampRankFromServer(timeStampRankFromServer);
     }
 
     /**
@@ -190,9 +190,10 @@ public class Node {
      * set node's profile picture
      * @param mProfilePicture
      */
-    public void setProfilePicture(byte[] mProfilePicture) {
+    public void setProfilePicture(byte[] mProfilePicture,boolean withTimeChange) {
         this.mProfilePicture = mProfilePicture;
-        setTimeStampNodeDetails(Calendar.getInstance());
+        if(withTimeChange)
+            setTimeStampNodeDetails(Calendar.getInstance());
     }
 
     /**

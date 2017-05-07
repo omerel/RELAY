@@ -14,6 +14,7 @@ import java.util.zip.GZIPOutputStream;
  */
 
 public class Gzip {
+
     public static byte[] zip(final String str) {
         if ((str == null) || (str.length() == 0)) {
             throw new IllegalArgumentException("Cannot zip null or empty string");

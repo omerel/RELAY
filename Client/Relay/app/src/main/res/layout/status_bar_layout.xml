@@ -21,13 +21,13 @@
         android:layout_alignParentBottom="true"
         android:src="@drawable/ic_flag_connecting"/>
     <ImageView
-        android:id="@+id/flag_idle"
+        android:id="@+id/flag_advertise"
         android:layout_width="15dp"
         android:layout_height="15dp"
         android:layout_margin="4dp"
         android:layout_alignParentBottom="true"
         android:layout_toLeftOf="@id/flag_search"
-        android:src="@drawable/ic_flag_idle"/>
+        android:src="@drawable/ic_flag_advertise"/>
 
 
     <ImageView
@@ -45,7 +45,7 @@
         android:layout_height="15dp"
         android:layout_margin="4dp"
         android:layout_alignParentBottom="true"
-        android:layout_toLeftOf="@id/flag_idle"
+        android:layout_toLeftOf="@id/flag_advertise"
         android:src="@drawable/ic_flag_error"/>
 
 </RelativeLayout>

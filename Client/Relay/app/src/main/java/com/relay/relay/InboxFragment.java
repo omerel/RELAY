@@ -399,10 +399,11 @@ public class InboxFragment extends Fragment {
                 holder.newMsgs.setVisibility(View.VISIBLE);
             else
                 holder.newMsgs.setVisibility(View.INVISIBLE);
-            if (updates)
-                holder.updates.setVisibility(View.VISIBLE);
-            else
-                holder.updates.setVisibility(View.INVISIBLE);
+            // todo disable update - do not delete
+//            if (updates)
+//                holder.updates.setVisibility(View.VISIBLE);
+//            else
+//                holder.updates.setVisibility(View.INVISIBLE);
 
             // set time
             time = convertTimeToReadableString(time);
@@ -487,7 +488,8 @@ public class InboxFragment extends Fragment {
         public TextView lastMsg;
         public TextView time;
         public ImageView settingContact;
-        public ImageView updates;
+        // todo disable update - do not delete
+       // public ImageView updates;
         public ImageView newMsgs;
         public de.hdodenhof.circleimageview.CircleImageView circleImageView;
 
@@ -499,7 +501,8 @@ public class InboxFragment extends Fragment {
             lastMsg = (TextView) view.findViewById(R.id.textView_item_contact_last_message);
             time = (TextView) view.findViewById(R.id.textView_item_contact_last_time);
             settingContact = (ImageView) view.findViewById(R.id.imageView_setting_contact);
-            updates = (ImageView) view.findViewById(R.id.imageView_item_contact_updates);
+            // todo disable update - do not delete
+           // updates = (ImageView) view.findViewById(R.id.imageView_item_contact_updates);
             newMsgs = (ImageView) view.findViewById(R.id.imageView_item_contact_new_messages);
             circleImageView = (de.hdodenhof.circleimageview.CircleImageView)
                     view.findViewById(R.id.dialog_image);

@@ -275,6 +275,7 @@ public class RelayConnectivityManager extends Service implements BLConstants {
                             unregisterReceiver(mModeBroadcastReceiver);
                             Log.e(TAG, " Bluetooth switch turned off ");
                         }else if (mCurrentMode == WIFI_MODE){
+                            broadCastFlag(0);
                             // TODO stop wifi mode
                             unregisterReceiver(mModeBroadcastReceiver);
                             Log.e(TAG, " Wifi turned off ");
@@ -394,6 +395,7 @@ public class RelayConnectivityManager extends Service implements BLConstants {
                                 SharedPreferences.Editor editor = sharedPreferences.edit();
                                 editor.putBoolean(getString(R.string.key_enable_bluetooth),false);
                                 editor.commit();
+                                broadCastFlag(0);
                                 // refresh fragment
                                 Intent updateActivity = new Intent(MainActivity.FRESH_FRAGMENT);
                                 sendBroadcast(updateActivity);
@@ -402,6 +404,7 @@ public class RelayConnectivityManager extends Service implements BLConstants {
                                 startConnectivityByPriority();
                                 break;
                             case BluetoothAdapter.STATE_TURNING_OFF:
+                                broadCastFlag(0);
                                 // stop bluetooth mode
                                 stopBluetoothMode();
                                 break;
@@ -516,6 +519,7 @@ public class RelayConnectivityManager extends Service implements BLConstants {
                     break;
 
                 case BLE_ERROR:
+                    // TODO not need to work right now. maybe disable it
                     mBluetoothManager.cancel();
                     // make sure bluetooth enable
                     BluetoothAdapter.getDefaultAdapter().disable();

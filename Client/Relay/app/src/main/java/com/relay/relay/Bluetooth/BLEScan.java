@@ -1,6 +1,7 @@
 package com.relay.relay.Bluetooth;
 
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanFilter;
@@ -17,6 +18,10 @@ import com.relay.relay.SubSystem.RelayConnectivityManager;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+
+import static android.bluetooth.le.ScanSettings.MATCH_NUM_FEW_ADVERTISEMENT;
+import static android.bluetooth.le.ScanSettings.MATCH_NUM_MAX_ADVERTISEMENT;// todo added
 import static android.bluetooth.le.ScanSettings.MATCH_NUM_ONE_ADVERTISEMENT;
 
 /**
@@ -36,6 +41,9 @@ public class BLEScan implements BLConstants {
     private Messenger mMessenger;
     private RelayConnectivityManager mRelayConnectivityManager;
 
+    private List<BluetoothDevice> listBluetoothDeviceResults;
+    private int resultPosition;
+
     public BLEScan(BluetoothAdapter bluetoothAdapter,Messenger messenger,RelayConnectivityManager relayConnectivityManager) {
         this.mBluetoothAdapter = bluetoothAdapter;
         this.mScanCallback = null;
@@ -49,6 +57,7 @@ public class BLEScan implements BLConstants {
      * Start scanning for BLE Advertisements.
      */
     public void startScanning() {
+        clearResults();
         mScanCallback = new CustomScanCallback();
         if (mBluetoothAdapter.isEnabled()) {
             mBluetoothLeScanner.startScan(buildScanFilters(), buildScanSettings(), mScanCallback);
@@ -80,16 +89,39 @@ public class BLEScan implements BLConstants {
         return scanFilters;
     }
 
+
     /**
      * Return an object set to use low power (to preserve battery life).
      */
     private ScanSettings buildScanSettings() {
         ScanSettings.Builder builder = new ScanSettings.Builder();
         builder.setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY);
+        builder.setReportDelay(0);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            builder.setNumOfMatches(MATCH_NUM_ONE_ADVERTISEMENT);
+            builder.setNumOfMatches(MATCH_NUM_FEW_ADVERTISEMENT );
         }
         return builder.build();
+    }
+
+    public void checkResults(){
+        if (isResultsInQueue()){
+            sendResultToBLECentral(FOUND_NEW_DEVICE,listBluetoothDeviceResults.get(resultPosition));
+            Log.e(TAG, "sendResultToBLECentral" );
+                resultPosition++;
+            }
+    }
+
+    public boolean isResultsInQueue(){
+        if (listBluetoothDeviceResults.size() != 0)
+            if ( resultPosition < listBluetoothDeviceResults.size())
+                return true;
+        Log.e(TAG,"There are no devices in queue");
+        return false;
+    }
+
+    public void clearResults(){
+        listBluetoothDeviceResults = new ArrayList<>();
+        resultPosition = 0;
     }
 
     /**
@@ -101,22 +133,31 @@ public class BLEScan implements BLConstants {
         @Override
         public void onBatchScanResults(List<ScanResult> results) {
             super.onBatchScanResults(results);
+//            clearResults();
+//            for(ScanResult res : results) {
+//                if (!listResults.contains(res))
+//                    listResults.add(res);
+//                Log.e(TAG, "Found new result FROM BATCH - " + "Name :  " + res.getDevice().getName() +
+//                        " ,Mac device : " + res.getDevice().getAddress());
+//            }
+//            checkResults();
         }
+
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
             super.onScanResult(callbackType, result);
-            stopScanning();
-            sendResultToBLECentral(FOUND_NEW_DEVICE,result);
-            Log.d(TAG, "Found new result - "+"Name :  "+result.getDevice().getName() +
-                    " ,Mac device : "+result.getDevice().getAddress());
-
+            if (!listBluetoothDeviceResults.contains(result.getDevice())) {
+                listBluetoothDeviceResults.add(result.getDevice());
+                Log.e(TAG, "Found new result - "+"Name :  "+result.getDevice().getName() +
+                        " ,Mac device : "+result.getDevice().getAddress());
+            }
         }
+
         @Override
         public void onScanFailed(int errorCode) {
             super.onScanFailed(errorCode);
-            // TODO
             stopScanning();
-            //sendResultToBLECentral(BLE_SCAN_ERROR,null);
+            sendResultToBLECentral(BLE_SCAN_ERROR,null);
             Log.e(TAG, "Error - Scan failed with error: "+ errorCode);
         }
     }
@@ -124,7 +165,7 @@ public class BLEScan implements BLConstants {
     /**
      * Send scan result value to BLECentral
      */
-    private void sendResultToBLECentral(int m, ScanResult result)  {
+    private void sendResultToBLECentral(int m, BluetoothDevice result)  {
 
         // Send data
         Bundle bundle = new Bundle();
@@ -138,5 +179,4 @@ public class BLEScan implements BLConstants {
             Log.e(TAG, "Error with sendResultToBLECentral ");
         }
     }
-
 }

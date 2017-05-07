@@ -1,12 +1,12 @@
 package com.relay.relay.Util;
 
+import android.util.Log;
+
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.relay.relay.system.HandShakeHistory;
 import com.relay.relay.system.Node;
 import com.relay.relay.system.RelayMessage;
-
-import java.lang.reflect.Array;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -28,7 +28,9 @@ public class JsonConvertor {
         Map<Integer,String> map = new HashMap<>();
         map.put(COMMAND,String.valueOf(command));
         map.put(CONTENT,jsonContent);
-        return  convertToJson(map);
+        String jsonString = convertToJson(map);
+        isJSONValid(jsonString);
+        return  jsonString;
     }
 
     public static int getCommand(String jsonString){
@@ -116,4 +118,15 @@ public class JsonConvertor {
         return gson.fromJson(jsonString, type);
     }
 
+
+    public static boolean isJSONValid(String jsonContent) {
+        try {
+            getCommand(jsonContent);
+            getJsonContent(jsonContent);
+        } catch (Exception ex) {
+            String TAG = "RELAY_DEBUG: "+ JsonConvertor.class.getSimpleName();
+            Log.e(TAG,"Error in JsonConvertor: \n ex.getMessage()");
+        }
+        return true;
+    }
 }

@@ -374,7 +374,7 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
     }
 
     public void updateProfileImage(Bitmap image) {
-        userNode.setProfilePicture(ImageConverter.ConvertBitmapToBytes(image));
+        userNode.setProfilePicture(ImageConverter.ConvertBitmapToBytes(image),true);
     }
 
     public Bitmap uriToBitmap(Uri uri){

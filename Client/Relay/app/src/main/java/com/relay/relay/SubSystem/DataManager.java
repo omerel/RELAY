@@ -76,6 +76,8 @@ public class DataManager {
         return (myUuid != null);
     }
 
+    public UUID getMyUuid(){return myUuid; }
+
     public GraphRelations getGraphRelations() {
         return mGraphRelations;
     }

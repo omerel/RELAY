@@ -35,9 +35,12 @@ public class BLECentral implements BLConstants {
     // Handler for incoming messages from BleScan
     private final Messenger mMessenger = new Messenger(new IncomingHandler());
     private BluetoothAdapter mBluetoothAdapter;
+
     private BluetoothGatt mBluetoothGatt;
     List<BluetoothGattService>  mBluetoothGattService;
     List<BluetoothGattCharacteristic>  mBluetoothGattCharacteristic;
+
+    private Handler mConnectionHandler;
 
 
     /**
@@ -48,7 +51,7 @@ public class BLECentral implements BLConstants {
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
 
             if (newState == BluetoothProfile.STATE_CONNECTED) {
-                Log.e(TAG, "Connected to GATT server.(CLIENT SIDE)");
+                Log.d(TAG, "Connected to GATT server.(CLIENT SIDE)");
                 // Attempts to discover services after successful connection.
                 Log.d(TAG, "Attempting to start service discovery:" + mBluetoothGatt.discoverServices());
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
@@ -67,16 +70,15 @@ public class BLECentral implements BLConstants {
                     if (mBluetoothGattService.get(i).getUuid().equals(RELAY_SERVICE_UUID))
                         mBluetoothGattCharacteristic = mBluetoothGattService.get(i).getCharacteristics();
                 }
-                Log.d(TAG, "Get Characteristic ");
+                Log.e(TAG, "Get Characteristic ");
                 // read Characteristic
                 // relay BlePeripheral has only one Characteristic ==> index 0
                 for (int i = 0; i < mBluetoothGattCharacteristic.size(); i++ ){
                     if (mBluetoothGattCharacteristic.get(i).getUuid().equals(MAC_ADDRESS_UUID)) {
                         gatt.readCharacteristic(mBluetoothGattCharacteristic.get(i));
-                        Log.d(TAG, "Read Characteristic");
+                        Log.e(TAG, "Read Characteristic");
                     }
                 }
-
             } else {
                 Log.d(TAG, "onServicesDiscovered received: " + status);
             }
@@ -87,7 +89,7 @@ public class BLECentral implements BLConstants {
                                          BluetoothGattCharacteristic characteristic,
                                          int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                Log.d(TAG, "On Characteristic Read ");
+                Log.e(TAG, "On Characteristic Read ");
                 if (MAC_ADDRESS_UUID.equals(characteristic.getUuid())) {
 
                     // get address value
@@ -96,12 +98,14 @@ public class BLECentral implements BLConstants {
                     // Check if the device is new and we did'nt sync with it
                     if (!mLastConnectedDevices.contains(address)) {
                         sendResultToManager(FOUND_MAC_ADDRESS, address);
-                        Log.d(TAG, "Found new device that not in connected list :" + address);
+                        Log.e(TAG, "Found new device that not in connected list :" + address);
                     }
                     else{
                         Log.e(TAG, "Found device that is in the connected list :" + address+
                                 "\n restart scan.");
-                        // Wait to the next interval with scanning and let others find you
+                        // try the next device in results
+                        mBleScan.checkResults();
+                        mConnectionHandler.removeCallbacks(null); // clear watchdog
                     }
                 }
             }
@@ -132,10 +136,14 @@ public class BLECentral implements BLConstants {
      * @return true
      */
     public boolean connect(BluetoothDevice bluetoothDevice) {
+        Log.e(TAG, "Connect");
         if (mBluetoothAdapter.isEnabled()) {
+            mBluetoothGatt = null;
             // disable connection automatically
             mBluetoothGatt = bluetoothDevice.connectGatt(mRelayConnectivityManager, false, mGattCallback);
-            Log.d(TAG, "Connecting to gatt server ");
+            Log.e(TAG, "Connecting to gatt server ");
+          //  connectionWatchDog(10000);
+          //  Log.e(TAG, "Starting connection watchdog for 10 seconds");
         }
         return true;
     }
@@ -149,6 +157,7 @@ public class BLECentral implements BLConstants {
             Log.e(TAG, "BluetoothGatt not initialized");
             return;
         }
+//        mConnectionHandler.removeCallbacks(null);
         mBleScan.stopScanning();
         if (mBluetoothAdapter.isEnabled())
             mBluetoothGatt.close();
@@ -183,6 +192,21 @@ public class BLECentral implements BLConstants {
         return mBleScan;
     }
 
+
+    // todo from some reason it making problems
+    private void connectionWatchDog(int time){
+        mConnectionHandler = new Handler();
+        mConnectionHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                // TODO need to be tested
+                close();
+                Log.e(TAG,"Error - mBluetoothGatt didn't get any respond");
+                sendResultToManager(FAILED_CONNECTING_TO_DEVICE,null);
+            }
+        }, time);
+
+    }
     /**
      * Handler of incoming messages from BleScan
      */
@@ -193,12 +217,11 @@ public class BLECentral implements BLConstants {
             switch (msg.what) {
 
                 case FOUND_NEW_DEVICE:
-                    ScanResult result = msg.getData().getParcelable("result");
+                    BluetoothDevice device = msg.getData().getParcelable("result");
                     // connect to gat server device
-                    connect(result.getDevice());
+                    connect(device);
                     break;
                 case BLE_SCAN_ERROR:
-                    mBleScan.stopScanning();
                     sendResultToManager(BLE_SCAN_ERROR,null);
                     Log.e(TAG, "Error -  BLE_SCAN_ERROR ");
                     break;

@@ -17,6 +17,8 @@ import com.relay.relay.Util.TimePerformance;
 import com.relay.relay.system.Node;
 import com.relay.relay.system.RelayMessage;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -28,16 +30,19 @@ import java.util.UUID;
  * HandShake using bluetooth connection
  */
 
+
 public class HandShake implements BLConstants {
 
-    private final String TAG = "RELAY_DEBUG: "+ HandShake.class.getSimpleName();
+    private final String TAG = "RELAY_DEBUG: "+ HandShake.class.getSimpleName();;
 
+    final String FORMATTER_DATE = "yyyyMMddHHmmss";
 
     // commands
     private final int STEP_1_METADATA = 1;
     private final int FINISH_STEP_1 = 2;
     private final int STEP_2_UPDATE_NODES_AND_RELATIONS = 3;
     private final int STEP_3_TEXT_MESSAGES = 5;
+    private final int STEP_3_SKIP = 55;
     private final int STEP_4_OBJECT_MESSAGE = 6;
     private final int ACK_OBJECT_STEP_4 = 9;
     private final int FINISH_STEP_4 = 7;
@@ -121,7 +126,7 @@ public class HandShake implements BLConstants {
         mDataManager.closeAllDataBase();
         mDataManager.openAllDataBase();
         // set my node
-        mMyNode = mDataManager.getNodesDB().getNode(mDataManager.getNodesDB().getMyNodeId());
+        mMyNode = mDataManager.getNodesDB().getNode(mDataManager.getMyUuid());
 
         attachmentsCounter = 0;
         timePerformance.start();
@@ -139,6 +144,8 @@ public class HandShake implements BLConstants {
 
     public void getPacket(String jsonPacket){
         int step = 0; // for debugging
+        Log.e(TAG,"JsonString received size is : "+jsonPacket.length());
+        JsonConvertor.isJSONValid(jsonPacket);
         try {
             int command = JsonConvertor.getCommand(jsonPacket);
             switch (command) {
@@ -186,9 +193,44 @@ public class HandShake implements BLConstants {
                         sendPacket(STEP_2_UPDATE_NODES_AND_RELATIONS, JsonConvertor.convertToJson(updateNodeAndRelations));
                     } else {
                         step=10;//10
-                        sendPacket(STEP_3_TEXT_MESSAGES, JsonConvertor.convertToJson(textMessagesToSend));
+                        Log.e(TAG,"textMessagesToSend size: "+textMessagesToSend.size());
+                        // if there is no new messages to update, skip step
+                        if(textMessagesToSend.size() == 0)
+                            sendPacket(STEP_3_SKIP, new String("DUMMY"));
+                        else
+                            sendPacket(STEP_3_TEXT_MESSAGES, JsonConvertor.convertToJson(textMessagesToSend));
                     }
                     break;
+
+                case STEP_3_SKIP:
+                    if (!mInitiator) {
+                        step=15;//15
+                        // if there is no new messages to update, skip step
+                        if(textMessagesToSend.size() == 0)
+                            sendPacket(STEP_3_SKIP, new String("DUMMY"));
+                        else
+                            sendPacket(STEP_3_TEXT_MESSAGES, JsonConvertor.convertToJson(textMessagesToSend));
+                    } else {
+                        timePerformance.start();
+                        step=16;//16
+                        updateSentTextMessages();
+                        Log.e(TAG, "TIME TO : " + "updateSentTextMessages" + " " + timePerformance.stop());
+                        timePerformance.start();
+                        // send first attachment if exist
+                        if (objectMessagesToSend.size() > 0) {
+                            step=17;//17
+                            Log.e(TAG, "there are  "+objectMessagesToSend.size()+ " objects to send, sending " +attachmentsCounter +" from "+objectMessagesToSend.size() );
+                            sendPacket(STEP_4_OBJECT_MESSAGE, JsonConvertor.convertToJson(objectMessagesToSend.get(attachmentsCounter)));
+                            attachmentsCounter ++;
+                        } else{
+                            step=18;//18
+                            Log.e(TAG, "there are  "+objectMessagesToSend.size()+ " objects to send, sending " +attachmentsCounter +" from "+objectMessagesToSend.size() );
+                            Log.e(TAG, "TIME TO : " + "objectMessagesToSend" + " " + timePerformance.stop());
+                            sendPacket(FINISH_STEP_4, new String("DUMMY"));
+                        }
+                    }
+                    break;
+
                 case STEP_3_TEXT_MESSAGES:
                     step=11;//11
                     Log.e(TAG, "STEP_3_TEXT_MESSAGES. Initiator: "+mInitiator );
@@ -300,9 +342,8 @@ public class HandShake implements BLConstants {
                     break;
             }
         } catch (Exception e) {
-            // TODO need to be tested
             mBluetoothConnected.cancel();
-            Log.e(TAG,"Error in hand shake method, step- "+step);
+            Log.e(TAG,"Error in hand shake method,error-"+e.getMessage()+", step- "+step);
             sendMessageToManager(FAILED_DURING_HAND_SHAKE,null);
         }
     }
@@ -456,21 +497,15 @@ public class HandShake implements BLConstants {
         ArrayList<DataTransferred.NodeRelations> nodeRelationsArrayList =
                 updateNodeAndRelations.getRelationsList();
 
-        for ( Node node : nodeArrayList){
-            //  update rank if newer the what I have(add node doesn't do it) TODO
-            if(mDataManager.getNodesDB().isNodeExist(node.getId())){
-                Node oldNode =  mDataManager.getNodesDB().getNode(node.getId());
-                Calendar timeStampRankFromServer = oldNode.getTimeStampRankFromServer();
+        Log.e(TAG,"updateNodeAndRelations: node to update- "+nodeArrayList.size()+
+                "\n relations to update- "+nodeRelationsArrayList.size());
 
-                // if the timestamp that i have was older, change for the new rank because addNode method doesn't do it
-                if ( timeStampRankFromServer.before(node.getTimeStampRankFromServer())){
-                    mDataManager.getNodesDB().updateNodeRank(node.getId(),
-                            node.getRank(),node.getTimeStampRankFromServer());
-                }
-            }
+        for ( Node node : nodeArrayList){
+
             // update the new node without timStamp
             mDataManager.getNodesDB().addNode(node);
         }
+
         for (DataTransferred.NodeRelations nodeRelations : nodeRelationsArrayList){
             ArrayList<UUID> uuidArrayList = nodeRelations.getRelations();
             for (UUID uuid : uuidArrayList){
@@ -510,25 +545,24 @@ public class HandShake implements BLConstants {
                 // if node is known check if need to update its node and/or relations and it's not the syncing node
                 if (receivedKnownRelations.containsKey(nodeId) &&
                         !nodeId.equals(receivedMetadata.getMyNode().getId())) {
-
-                    // tODO check it
                     // if my node timestamp is newer ' update node and relation
                     if (mDataManager.getNodesDB().getNode(nodeId).getTimeStampNodeDetails().after(
                             receivedKnownRelations.get(nodeId).getTimeStampNodeDetails())) {
+
                         updateNodeList.add(mDataManager.getNodesDB().getNode(nodeId));
                         newNodeIdList.put(nodeId, mDataManager.getNodesDB().getNode(nodeId));
                     }
+
                     if (mDataManager.getNodesDB().getNode(nodeId).getTimeStampNodeRelations().after(
                             receivedKnownRelations.get(nodeId).getTimeStampNodeRelations())) {
+
                         // if timestamp relation is newer, update relation
                         updateRelationsList.add(tempRelations);
                         newNodeIdList.put(nodeId, mDataManager.getNodesDB().getNode(nodeId));
                     }
-
                 }
                 // if node is in the share final degree and it's not the syncing node , add it to update nodes and his relations
                 else {
-                    // TODO fix
                     if(knownRelations.get(nodeId) != null)
                         if (knownRelations.get(nodeId).getNodeDegree() <= degree &&
                                 !nodeId.equals(receivedMetadata.getMyNode().getId())) {
@@ -537,10 +571,11 @@ public class HandShake implements BLConstants {
                             newNodeIdList.put(nodeId, mDataManager.getNodesDB().getNode(nodeId));
                         }
                 }
-
             }
             updateNodeAndRelations = mDataTransferred.createUpdateNodeAndRelations(updateNodeList,
                     updateRelationsList);
+            Log.e(TAG,"createUpdateNodeAndRelations:\n node sent to update: "+updateNodeList.size()+
+            "\n relations to update: "+updateRelationsList.size());
             return updateNodeAndRelations;
         }catch(Exception e){
 
@@ -581,7 +616,9 @@ public class HandShake implements BLConstants {
 
     private void sendPacket(int command,String jsonContent){
         String jsonPacket = JsonConvertor.createJsonWithCommand(command,jsonContent);
+        JsonConvertor.isJSONValid(jsonPacket);
         mBluetoothConnected.writePacket(jsonPacket);
+        Log.e(TAG,"JsonString sent size is : "+jsonContent.length());
     }
 
 
@@ -641,6 +678,13 @@ public class HandShake implements BLConstants {
     }
 
     public void closeConnection(){
+
         mBluetoothConnected.cancel();
+    }
+
+    private String convertCalendarToFormattedString(Calendar cal){
+
+        DateFormat date = new SimpleDateFormat(FORMATTER_DATE);
+        return (date.format(cal.getTime()));
     }
 }

@@ -62,7 +62,7 @@ public class NodesDB {
             if (node.getProfilePicture() != null){
                 // separate image from node. add node to node db
                 bytes = node.getProfilePicture();
-                node.setProfilePicture(null);
+                node.setProfilePicture(null,false);
             }
 
             // add node to nodesDB
@@ -86,23 +86,32 @@ public class NodesDB {
             return true;
         }
         else{
+
             Log.e(TAG,"update node without rankServer");
             Node oldNode = getNode(node.getId());
             int oldRank = oldNode.getRank();
             Calendar oldTimeStampRank = oldNode.getTimeStampRankFromServer();
-            node.setRank(oldRank,oldTimeStampRank);
 
             // separate image from node. add node to node db
             byte[]  bytes = node.getProfilePicture();
-            node.setProfilePicture(null);
-
-            Log.e(TAG,"Update node to nodeDB");
-            dbManager.putJsonObject(node.getId(), JsonConvertor.convertToJson(node));
+            node.setProfilePicture(null,false);
 
             // update attachmentDB
             if (bytes != null) {
                 Log.e(TAG,"Add Attachment to DB ");
                 mAttachmentsDB.addAttachment(node.getId(), new ByteArrayInputStream(bytes));
+            }
+
+            if (node.getTimeStampRankFromServer().after(oldTimeStampRank)){
+                // update node include rank
+                Log.e(TAG,"Update node to nodeDB");
+                dbManager.putJsonObject(node.getId(), JsonConvertor.convertToJson(node));
+            }
+            else{
+                // update node without rank
+                node.setRank(oldRank,oldTimeStampRank);
+                Log.e(TAG,"Update node to nodeDB");
+                dbManager.putJsonObject(node.getId(), JsonConvertor.convertToJson(node));
             }
 
             // update inboxDB
@@ -114,20 +123,21 @@ public class NodesDB {
             //mInboxDB.updateContactItem(node.getId(),"",false,false,false,true);
             return true;
         }
-    }
 
-    public boolean updateNodeRank(UUID nodeID,int rank,Calendar timeStampRankFromServer){
-        Log.e(TAG,"update node rank");
-        if (dbManager.isKeyExist(nodeID)) {
-            Node node = getNode(nodeID);
-            node.setRank(rank,timeStampRankFromServer);
-            // remove attachment
-            node.setProfilePicture(null);
-            dbManager.putJsonObject(node.getId(), JsonConvertor.convertToJson(node));
-            return true;
-        }
-        return false;
     }
+//
+//    public boolean updateNodeRank(UUID nodeID,int rank,Calendar timeStampRankFromServer){
+//        Log.e(TAG,"update node rank");
+//        if (dbManager.isKeyExist(nodeID)) {
+//            Node node = getNode(nodeID);
+//            node.setRank(rank,timeStampRankFromServer);
+//            // remove attachment
+//            node.setProfilePicture(null);
+//            dbManager.putJsonObject(node.getId(), JsonConvertor.convertToJson(node));
+//            return true;
+//        }
+//        return false;
+//    }
 
     public boolean isNodeExist(UUID nodeId){
          return dbManager.isKeyExist(nodeId);
@@ -142,7 +152,7 @@ public class NodesDB {
         if (dbManager.isKeyExist(uuid)){
             Node node = JsonConvertor.JsonToNode(dbManager.getJsonObject(uuid));
             if (mAttachmentsDB.getAttachment(uuid) != null)
-                node.setProfilePicture(ImageConverter.convertInputStreamToByteArray(mAttachmentsDB.getAttachment(uuid)));
+                node.setProfilePicture(ImageConverter.convertInputStreamToByteArray(mAttachmentsDB.getAttachment(uuid)),false);
             return  node;
         }
         else

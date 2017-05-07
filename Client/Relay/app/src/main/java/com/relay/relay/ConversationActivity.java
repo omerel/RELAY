@@ -487,11 +487,12 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
                 holder.cardView.setCardBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.messageBackground));
             }
 
-            // set update message
-            if (update)
-                holder.updates.setVisibility(View.VISIBLE);
-            else
-                holder.updates.setVisibility(View.GONE);
+            // todo disable update - do not delete
+//            // set update message
+//            if (update)
+//                holder.updates.setVisibility(View.VISIBLE);
+//            else
+//                holder.updates.setVisibility(View.GONE);
 
             // set text message and picture
             if (relayMessage.getType() == relayMessage.TYPE_MESSAGE_TEXT){
@@ -537,14 +538,15 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
                 holder.status.setImageResource(R.drawable.ic_status_cloud);
             }
 
-            // listener to card message
-            holder.cardAlignment.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    if (holder.updates.getVisibility() == View.VISIBLE)
-                        mDataManager.getInboxDB().setMessageSeenByUser((UUID.fromString(uuidString)));
-                }
-            });
+            // todo disable update - do not delete
+//            // listener to card message
+//            holder.cardAlignment.setOnClickListener(new View.OnClickListener() {
+//                @Override
+//                public void onClick(View view) {
+//                    if (holder.updates.getVisibility() == View.VISIBLE)
+//                        mDataManager.getInboxDB().setMessageSeenByUser((UUID.fromString(uuidString)));
+//                }
+//            });
 
             // listener to  picture
             holder.pictureAttachment.setOnClickListener(new View.OnClickListener() {
@@ -562,7 +564,8 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
         public TextView textMessage;
         public TextView time;
         public ImageView pictureAttachment;
-        public ImageView updates;
+        // todo disable update - do not delete
+      //  public ImageView updates;
         public ImageView status;
         public LinearLayout cardAlignment;
         public android.support.v7.widget.CardView cardView;
@@ -576,7 +579,8 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
             textMessage = (TextView) view.findViewById(R.id.textView_item_contact_message);
             time = (TextView) view.findViewById(R.id.textView_item_message_time);
             pictureAttachment = (ImageView) view.findViewById(R.id.image_view_picture_attachment);
-            updates = (ImageView) view.findViewById(R.id.imageView_item_message_updates);
+            // todo disable update - do not delete
+            //updates = (ImageView) view.findViewById(R.id.imageView_item_message_updates);
             status = (ImageView) view.findViewById(R.id.imageView_item_message_status);
             cardView = (android.support.v7.widget.CardView ) view.findViewById(R.id.message_card);
         }

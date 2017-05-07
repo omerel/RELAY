@@ -97,7 +97,6 @@ public class BLEPeripheral implements BLConstants {
      * close GattServer
      */
     public void close() {
-
         if (mBluetoothAdapter.isEnabled()) {
             if (mGattServer != null) {
                 disconnectFromDevices();
@@ -146,9 +145,6 @@ public class BLEPeripheral implements BLConstants {
         // check mBleAdvertising not null
         if(mBleAdvertising != null)
             mBleAdvertising.startAdvertising();
-        //else
-            // TODO why does I get null sometimes?
-           // sendResultToManager(BLE_ADVERTISE_ERROR);
 
 
     }

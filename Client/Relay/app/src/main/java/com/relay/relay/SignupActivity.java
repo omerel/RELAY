@@ -337,7 +337,6 @@ public class SignupActivity extends AppCompatActivity implements SignupStepFragm
         dataManager.getNodesDB().setMyNodeId(node.getId());
 
 
-
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString(CURRENT_UUID_USER,uuid.toString());
         editor.commit();

@@ -37,7 +37,6 @@ public interface BLConstants {
     // Message from BLEPERIPHERAL
     int GET_BLUETOOTH_SERVER_READY = 32;
 
-
     // Message from BLEScan
     int FOUND_NEW_DEVICE = 40;
     int SCAN_FAILED = 41;
@@ -45,9 +44,9 @@ public interface BLConstants {
     // Constants used in BLManager
     int TIME_RELAY_SEARCH_INTERVAL = 30*SECOND;//60
     int TIME_RELAY_SEARCH_INTERVAL_POWER_MODE = 30*SECOND;//60
-    int TIME_RELAY_SCAN = 10*SECOND;//20
-    int TIME_RELAY_KEEPS_FOUND_DEVICE_IN_LIST = 5*SECOND;//20
-    int TIME_RELAY_KEEPS_FOUND_DEVICE_IN_LIST_POWER_MODE = 5*SECOND;//20
+    int TIME_RELAY_SCAN = 10*SECOND;//
+    int TIME_RELAY_KEEPS_FOUND_DEVICE_IN_LIST = 20*SECOND;//20
+    int TIME_RELAY_KEEPS_FOUND_DEVICE_IN_LIST_POWER_MODE = 20*SECOND;//20
     int DELAY_AFTER_HANDSHAKE = 10*SECOND;//30
     int SCAN_FINISHED_WITHOUT_CHANGES = 50;
     int RESET_SEARCH_COUNTER = 51;
@@ -61,8 +60,6 @@ public interface BLConstants {
     int CONNECTED = 51;
     int DISCONNECTED = 52;
     int CONNECTING = 53;
-    int HANDSHAKE_FLAG = 54;
-    int ERROR_FLAG = 54;
 
     // Message from BluetoothConnected
     int READ_PACKET = 60;
