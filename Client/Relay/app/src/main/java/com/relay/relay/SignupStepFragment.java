@@ -24,8 +24,10 @@ import android.widget.Toast;
 import com.relay.relay.Util.CountryCodeActivityDialog;
 import com.relay.relay.Util.ImageConverter;
 import com.relay.relay.Util.Imageutils;
+import com.relay.relay.Util.UuidGenerator;
 
 import java.io.IOException;
+import java.util.UUID;
 
 import static android.app.Activity.RESULT_OK;
 import static com.relay.relay.SignupActivity.STEP_1_FULL_NAME;
@@ -116,11 +118,14 @@ public class SignupStepFragment extends Fragment {
 
         textViewStepLabel = (TextView) view.findViewById(R.id.sign_up_steps);
         imageViewStepRight = (ImageView) view.findViewById(R.id.step_right);
-
-        if (step == STEP_7_FINISH )
-            imageViewStepRight.setVisibility(View.INVISIBLE);
-
         imageViewStepLeft = (ImageView) view.findViewById(R.id.step_left);
+
+
+        if (step == STEP_7_FINISH ){
+            imageViewStepRight.setVisibility(View.INVISIBLE);
+        }
+
+
         if (step == STEP_1_FULL_NAME )
             imageViewStepLeft.setVisibility(View.INVISIBLE);
 
@@ -220,31 +225,31 @@ public class SignupStepFragment extends Fragment {
                 });
                 break;
             case STEP_7_FINISH:
-                textViewStepLabel.setText("");
-                textViewConfirmLabel = (TextView) view.findViewById(R.id.input_confirm_code_label);
-                textViewConfirmLabel.setVisibility(View.VISIBLE);
-                editTextInput = (EditText) view.findViewById(R.id.input_confirm_code);
-                editTextInput.setVisibility(View.VISIBLE);
-                editTextInput.addTextChangedListener(new TextWatcher() {
-                    @Override
-                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                    }
-                    @Override
-                    public void onTextChanged(CharSequence s, int start, int before, int count) {
-                        String code = editTextInput.getText().toString();
-                        if (code.isEmpty() || code.length() != 4) {
-                            editTextInput.setError("code with 4 digits only");
-                        } else {
-                            editTextInput.setError(null);
-                            inputText = code;
-                            onButtonPressed(STEP_NEXT,inputText);
-
-                        }
-                    }
-                    @Override
-                    public void afterTextChanged(Editable s) {
-                    }
-                });
+                textViewStepLabel.setText("You are ready to sign up!");
+//                textViewConfirmLabel = (TextView) view.findViewById(R.id.input_confirm_code_label);
+//                textViewConfirmLabel.setVisibility(View.VISIBLE);
+//                editTextInput = (EditText) view.findViewById(R.id.input_confirm_code);
+//                editTextInput.setVisibility(View.VISIBLE);
+//                editTextInput.addTextChangedListener(new TextWatcher() {
+//                    @Override
+//                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+//                    }
+//                    @Override
+//                    public void onTextChanged(CharSequence s, int start, int before, int count) {
+//                        String code = editTextInput.getText().toString();
+//                        if (code.isEmpty() || code.length() != 4) {
+//                            editTextInput.setError("code with 4 digits only");
+//                        } else {
+//                            editTextInput.setError(null);
+//                            inputText = code;
+//                            onButtonPressed(STEP_NEXT,inputText);
+//
+//                        }
+//                    }
+//                    @Override
+//                    public void afterTextChanged(Editable s) {
+//                    }
+//                });
                 break;
         }
         return view;
@@ -311,6 +316,16 @@ public class SignupStepFragment extends Fragment {
                     inputText = email;
                     valid = true;
                 }
+                // check if email can be genrate
+                UuidGenerator uuidGenerator = new UuidGenerator();
+                try {
+                    UUID uuid = uuidGenerator.GenerateUUIDFromEmail(email);
+                } catch (Exception e) {
+                    valid = false;
+                    editTextInput.setError("this email can't be generate");
+                    e.printStackTrace();
+                }
+
                 break;
 
             case STEP_4_PASSWORD:

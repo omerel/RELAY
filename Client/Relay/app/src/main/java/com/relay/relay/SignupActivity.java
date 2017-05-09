@@ -2,11 +2,17 @@ package com.relay.relay;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
+import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.net.wifi.WifiManager;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -18,6 +24,11 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.relay.relay.SubSystem.DataManager;
 import com.relay.relay.Util.ImageConverter;
 import com.relay.relay.Util.UuidGenerator;
@@ -26,13 +37,16 @@ import com.relay.relay.system.Node;
 import java.util.Calendar;
 import java.util.UUID;
 
-import static com.relay.relay.LoginActivity.CURRENT_UUID_USER;
-import static com.relay.relay.LoginActivity.IS_LOG_IN;
+import static com.relay.relay.SignInActivity.CURRENT_UUID_PASSWORD;
+import static com.relay.relay.SignInActivity.CURRENT_UUID_USER;
+import static com.relay.relay.SignInActivity.IS_LOG_IN;
 import static com.relay.relay.MainActivity.SYSTEM_SETTING;
 
 public class SignupActivity extends AppCompatActivity implements SignupStepFragment.OnFragmentInteractionListener {
 
     private final String TAG = "RELAY_DEBUG: "+ SignupActivity.class.getSimpleName();
+
+    public static final String FIRST_TIME_LOGIN = "ca22c0d0-afac-11de-8a39-0801110c9a66";
     public  static  final int STEP_1_FULL_NAME = 1;
     public static final int STEP_2_USER_NAME = 2;
     public static final int STEP_3_EMAIL = 3;
@@ -70,6 +84,10 @@ public class SignupActivity extends AppCompatActivity implements SignupStepFragm
 
     private SharedPreferences sharedPreferences;
 
+    // firebase
+    private FirebaseAuth mAuth;
+    private FirebaseAuth.AuthStateListener mAuthListener;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,6 +97,8 @@ public class SignupActivity extends AppCompatActivity implements SignupStepFragm
         sharedPreferences =  getSharedPreferences(SYSTEM_SETTING,0);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putBoolean(IS_LOG_IN,false);
+        editor.putString(CURRENT_UUID_USER,"");
+        editor.putString(CURRENT_UUID_PASSWORD,"");
         editor.commit();
 
         mFullName = null;
@@ -110,6 +130,10 @@ public class SignupActivity extends AppCompatActivity implements SignupStepFragm
             @Override
             public void onClick(View v) {
                 signup();
+//                if( !mConfimCode.equals("1234"))
+//                    onSignupFailed("Confirmation code incorrect,\nplease look for the code in the sent mail");
+//                else
+//                    onSignupSuccess();
             }
         });
 
@@ -117,14 +141,44 @@ public class SignupActivity extends AppCompatActivity implements SignupStepFragm
             @Override
             public void onClick(View v) {
                 // Finish the registration screen and return to the Login activity
-                Intent intent = new Intent(getApplicationContext(),LoginActivity.class);
+                Intent intent = new Intent(getApplicationContext(),SignInActivity.class);
                 startActivity(intent);
                 finish();
                 overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
             }
         });
+
+        mAuth = FirebaseAuth.getInstance();
+
+        mAuthListener = new FirebaseAuth.AuthStateListener() {
+            @Override
+            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                FirebaseUser user = firebaseAuth.getCurrentUser();
+                if (user != null) {
+                    // User is signed in
+                    Log.d(TAG, "onAuthStateChanged:signed_in:" + user.getUid());
+                } else {
+                    // User is signed out
+                    Log.d(TAG, "onAuthStateChanged:signed_out");
+                }
+                // ...
+            }
+        };
     }
 
+    @Override
+    public void onStart() {
+        super.onStart();
+        mAuth.addAuthStateListener(mAuthListener);
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        if (mAuthListener != null) {
+            mAuth.removeAuthStateListener(mAuthListener);
+        }
+    }
 
     private void displayFragment(int step,Object input) {
 
@@ -282,11 +336,19 @@ public class SignupActivity extends AppCompatActivity implements SignupStepFragm
 
     public void signup() {
         Log.d(TAG, "Signup");
-        validateWithServer();
+        // check if connected to internet todo
+        boolean connected = isWifiAvailable() && isWifiConnected();
+        if (connected){
+            validateWithServer();
+        }
+        else{
+            onSignupFailed("Connection to internet is necessary to sign up a new user");
+        }
+
     }
 
     public void onSignupFailed(String msg) {
-        createAlertDialog("Server error",msg);
+        createAlertDialog("Sign up error",msg);
        // mButtonSignUp.setVisibility(View.INVISIBLE);
     }
 
@@ -299,24 +361,43 @@ public class SignupActivity extends AppCompatActivity implements SignupStepFragm
         progressDialog.setMessage("Authenticating...");
         progressDialog.show();
 
-        new android.os.Handler().postDelayed(
-                new Runnable() {
-                    public void run() {
+
+        mAuth.createUserWithEmailAndPassword(mEmail, mPassword)
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        Log.d(TAG, "createUserWithEmail:onComplete:" + task.isSuccessful());
                         progressDialog.dismiss();
-                        boolean answerFromServer = true;
-                        if (answerFromServer && mConfimCode.equals("1234")){
-                            onSignupSuccess();
+                        // If sign in fails, display a message to the user. If sign in succeeds
+                        // the auth state listener will be notified and logic to handle the
+                        // signed in user can be handled in the listener.
+                        if (!task.isSuccessful()) {
+                            onSignupFailed(task.getException().getMessage());
                         }
                         else{
-                            if(!answerFromServer)
-                                onSignupFailed("Email is already occupied , please change mail");
-                            if( !mConfimCode.equals("1234"))
-                                onSignupFailed("Confirmation code not correct, please try again");
+                            sendEmailVerification();
+                            Toast.makeText(getBaseContext(), "Sign up Success", Toast.LENGTH_LONG).show();
                         }
                     }
-                }, 3000);
+                });
 
     }
+
+    public void sendEmailVerification(){
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+
+        user.sendEmailVerification()
+                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+                            onSignupSuccess();
+                            Log.d(TAG, "Email sent.");
+                        }
+                    }
+                });
+    }
+
     public void onSignupSuccess() {
         //TODO create new node and set it up as my node!
 
@@ -338,14 +419,14 @@ public class SignupActivity extends AppCompatActivity implements SignupStepFragm
 
 
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString(CURRENT_UUID_USER,uuid.toString());
+        editor.putString(CURRENT_UUID_USER,FIRST_TIME_LOGIN);
         editor.commit();
 
         finish();
-        Intent intent = new Intent(this, LoginActivity.class);
+        Intent intent = new Intent(this, SignInActivity.class);
         startActivity(intent);
         overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
-        Toast.makeText(getBaseContext(), "Signup Success", Toast.LENGTH_LONG).show();
+        Toast.makeText(getBaseContext(), "Go to login", Toast.LENGTH_LONG).show();
     }
 
     /**
@@ -364,5 +445,21 @@ public class SignupActivity extends AppCompatActivity implements SignupStepFragm
                 });
 
         alertDialog.show();
+    }
+
+    @SuppressLint("WifiManagerLeak")
+    private boolean isWifiAvailable() {
+        return ((WifiManager)getSystemService(Context.WIFI_SERVICE)).isWifiEnabled();
+    }
+
+    private boolean isWifiConnected() {
+
+        ConnectivityManager connMgr = (ConnectivityManager)
+                getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connMgr.getActiveNetworkInfo();
+        boolean isWifiConnection =  activeNetworkInfo != null && activeNetworkInfo.isConnected() &&
+                activeNetworkInfo.getType() == ConnectivityManager.TYPE_WIFI;
+        Log.e(TAG, "Wifi connected: " + isWifiConnection);
+        return isWifiConnection;
     }
 }

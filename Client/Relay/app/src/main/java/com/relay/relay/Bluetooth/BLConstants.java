@@ -66,7 +66,7 @@ public interface BLConstants {
 
     // Message from HandShake
     int FINISHED_HANDSHAKE = 70;
-    int  NEW_RELAY_MESSAGE = 71;
+    int NEW_RELAY_MESSAGE = 71;
     int FAILED_DURING_HAND_SHAKE = 72;
     int WATCHDOG_TIMER = 60*SECOND;
 

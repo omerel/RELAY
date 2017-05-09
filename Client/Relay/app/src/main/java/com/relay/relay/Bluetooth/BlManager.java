@@ -271,6 +271,7 @@ public class BLManager extends Thread implements BLConstants {
         openBluetoothServerSocketConnection();
         stopSearch(RESET_SEARCH_COUNTER);
         mBluetoothScan.startScan();
+        Log.e(TAG, "Start Bluetooth scan ");
         mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_SEARCH);
     }
 
@@ -500,7 +501,7 @@ public class BLManager extends Thread implements BLConstants {
 
                 case NOT_FOUND_ADDRESS_FROM_BLSCAN:
                     Log.d(TAG, "NOT_FOUND_ADDRESS_FROM_BLSCAN");
-                   // mStatus = DISCONNECTED;
+                    mStatus = DISCONNECTED;
                     intervalSearch();
                     break;
 

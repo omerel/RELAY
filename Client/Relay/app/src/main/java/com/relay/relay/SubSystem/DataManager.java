@@ -22,7 +22,7 @@ import java.util.HashMap;
 import java.util.UUID;
 
 import static com.relay.relay.DB.InboxDB.DELETE_MESSAGE_CONTENT_FROM_MESSAGE_DB;
-import static com.relay.relay.LoginActivity.CURRENT_UUID_USER;
+import static com.relay.relay.SignInActivity.CURRENT_UUID_USER;
 
 /**
  * Created by omer on 05/03/2017.
@@ -54,9 +54,9 @@ public class DataManager {
         this.mHandShakeDB = new HandShakeDB(context);
 
         SharedPreferences sharedPreferences = context.getSharedPreferences(MainActivity.SYSTEM_SETTING,0);
-        String tempuuid = sharedPreferences.getString(CURRENT_UUID_USER,null);
+        String tempuuid = sharedPreferences.getString(CURRENT_UUID_USER,"");
 
-        if (tempuuid != null ){
+        if (tempuuid != "" ){
             myUuid = UUID.fromString(tempuuid);
             try {
                 this.mNodesDB.setMyNodeId(myUuid);

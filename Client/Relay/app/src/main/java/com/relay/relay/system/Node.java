@@ -172,6 +172,12 @@ public class Node {
         setTimeStampNodeDetails(Calendar.getInstance());
     }
 
+    public void setPhoneNumber(String number) {
+
+        this.mPhoneNumber = number;
+        setTimeStampNodeDetails(Calendar.getInstance());
+    }
+
     public void setUserName(String userName) {
 
         this.mUserName = userName;

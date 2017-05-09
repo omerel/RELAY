@@ -37,7 +37,7 @@ import java.util.Calendar;
 import java.util.UUID;
 
 import static android.app.Activity.RESULT_OK;
-import static com.relay.relay.LoginActivity.CURRENT_UUID_USER;
+import static com.relay.relay.SignInActivity.CURRENT_UUID_USER;
 import static com.relay.relay.MainActivity.SYSTEM_SETTING;
 import static com.relay.relay.Util.CountryCodeActivityDialog.ACTION_OPEN;
 import static com.relay.relay.Util.Imageutils.CAMERA_REQUEST;
@@ -52,6 +52,7 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
 
     private final int CODE_FULL_NAME = 11;
     private final int CODE_USER_NAME = 14;
+    private final int CODE_USER_PHONE = 16;
 
     private Menu mMenu;
     private Node userNode;
@@ -173,6 +174,7 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
             mTextViewUserFullname.setOnClickListener(this);
             mTextViewUserName.setOnClickListener(this);
             mTextViewUserResidence.setOnClickListener(this);
+            mTextViewUserPhone.setOnClickListener(this);
 
         }
         else{
@@ -180,6 +182,7 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
             mTextViewUserFullname.setBackgroundResource(android.R.color.transparent);
             mTextViewUserResidence.setBackgroundResource(android.R.color.transparent);
             mTextViewUserName.setBackgroundResource(android.R.color.transparent);
+            mTextViewUserPhone.setBackgroundResource(android.R.color.transparent);
         }
 
 
@@ -227,6 +230,10 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
 
             case R.id.text_view_profile_fragment_user_name:
                 openDialogWithInputText("Edit user name",mUserName,CODE_USER_NAME);
+                break;
+
+            case R.id.text_view_profile_fragment_user_phone:
+                openDialogWithInputText("Edit phone number",mUserPhone,CODE_USER_PHONE);
                 break;
 
         }
@@ -416,6 +423,9 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
                         case CODE_USER_NAME:
                             userNode.setUserName(mUserName);
                             break;
+                        case CODE_USER_PHONE:
+                            userNode.setPhoneNumber(mUserPhone);
+                            break;
                     }
                     //update nodeDB
                     mTextViewUserFullname.setText(mUserFullname);
@@ -424,6 +434,7 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
                     mTextViewUserName.setText(mUserName);
                     mUserProfileShort = "@"+mUserName.toLowerCase()+",  "+mUserEmail;
                     mTextViewUserProfileShort.setText(mUserProfileShort);
+                    mTextViewUserPhone.setText(mUserPhone);
                 }
             }
         });
@@ -466,7 +477,7 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
 
             case CODE_USER_NAME:
                 if (input.trim().length() == 0){
-                    createAlertDialog("Input error","please user name");
+                    createAlertDialog("Input error","please enter user name");
                     return false;
                 }
                 newInput = "";
@@ -476,6 +487,16 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
                     return false;
                 }
                 mUserName = input;
+                return true;
+
+            case CODE_USER_PHONE:
+                // todo fix the check
+                if (input.trim().length() == 0){
+                    createAlertDialog("Input error","please phone numver");
+                    return false;
+                }
+                newInput = "";
+                mUserPhone = input;
                 return true;
         }
 

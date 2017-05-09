@@ -38,13 +38,11 @@ import android.widget.TextView;
 import com.relay.relay.SubSystem.DataManager;
 import com.relay.relay.SubSystem.RelayConnectivityManager;
 import com.relay.relay.Util.StatusBar;
-import com.relay.relay.Util.UuidGenerator;
 
 import java.util.UUID;
 
 import static com.relay.relay.DB.InboxDB.REFRESH_INBOX_DB;
-import static com.relay.relay.LoginActivity.CURRENT_UUID_USER;
-import static com.relay.relay.LoginActivity.IS_LOG_IN;
+import static com.relay.relay.SignInActivity.IS_LOG_IN;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener ,
@@ -553,8 +551,8 @@ public class MainActivity extends AppCompatActivity
                         editor.putBoolean(IS_LOG_IN,false);
                         editor.commit();
 
-                        // Start the login activity
-                        Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
+                        // Start the signIn activity
+                        Intent intent = new Intent(getApplicationContext(), SignInActivity.class);
                         startActivity(intent);
                         finish();
                         overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);

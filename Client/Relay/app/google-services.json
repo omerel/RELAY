@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "772977995896",
+    "firebase_url": "https://relay-e7961.firebaseio.com",
+    "project_id": "relay-e7961",
+    "storage_bucket": "relay-e7961.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:772977995896:android:26ea10325f849309",
+        "android_client_info": {
+          "package_name": "com.relay.relay"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "772977995896-qufa9ggacj5fa35a8n34e6b6fd4kki5r.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.relay.relay",
+            "certificate_hash": "d5cfb3dc5d2fc65050ab6929315c16d0bf6141aa"
+          }
+        },
+        {
+          "client_id": "772977995896-okqcncb940g0mg6snphhq0d637mu94l1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB8n5QLs8nJcSi14spSF6S-0DcOVSLB1ek"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "772977995896-okqcncb940g0mg6snphhq0d637mu94l1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
