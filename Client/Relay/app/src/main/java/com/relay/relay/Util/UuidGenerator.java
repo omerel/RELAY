@@ -18,6 +18,8 @@ public class UuidGenerator {
     private final String COMRESSED = "1";
     private final String NOT_COMRESSED = "2";
     private static final String DOMAIN[] = {
+            /* demo domains*/
+            "relay.com",
             /* Default domains included */
             "aol.com", "att.net", "comcast.net", "facebook.com", "gmail.com", "gmx.com", "googlemail.com",
             "google.com", "hotmail.com", "hotmail.co.uk", "mac.com", "me.com", "mail.com", "msn.com",

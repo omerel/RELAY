@@ -111,7 +111,7 @@ public class SignInActivity extends AppCompatActivity {
                     onSignInFailed();
                     return;
                 }
-                mButtonSignIn.setEnabled(false);
+               // mButtonSignIn.setEnabled(false);
                 String email = mEditTextInputEmail.getText().toString();
                 String password = mEditTextInputPassword.getText().toString();
 
@@ -242,8 +242,22 @@ public class SignInActivity extends AppCompatActivity {
                                 signIn(true,userUUID,password);
                             }
                             else{
-                                createAlertDialog("Sign in error","Please check your email and verify the user first" );
-                                onSignInFailed();
+                                // backdoor to users that create on fire base
+                                 if( email.split("@")[1].equals("relay.com") ){
+                                     String userUUID = "";
+                                     try {
+                                         userUUID = uuidGenerator.GenerateUUIDFromEmail(email).toString();
+                                     } catch (Exception e) {
+                                         e.printStackTrace();
+                                     }
+                                     signIn(true,userUUID,password);
+                                }
+                                // if not verified
+                                else{
+                                    createAlertDialog("Sign in error","Please check your email and verify the user first" );
+                                    onSignInFailed();
+                                }
+
                             }
                         }
                     }
@@ -370,8 +384,8 @@ public class SignInActivity extends AppCompatActivity {
 
         AlertDialog alertDialog = new AlertDialog.Builder(this).create();
         alertDialog.setTitle("Warning");
-        alertDialog.setMessage("Going to sign up page will delete all history data of current user.\n" +
-                "Connection to internet is necessary to signup new user ");
+        alertDialog.setMessage("Going to sign up page will delete all history data of existing users.\n" +
+                "Connection to internet is necessary to sign up new user ");
         alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, "continue",
                 new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {

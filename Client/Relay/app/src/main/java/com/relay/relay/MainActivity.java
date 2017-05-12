@@ -4,7 +4,9 @@ import android.Manifest;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.app.Notification;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -35,12 +37,17 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.relay.relay.SubSystem.DataManager;
 import com.relay.relay.SubSystem.RelayConnectivityManager;
 import com.relay.relay.Util.StatusBar;
+import com.relay.relay.Util.UuidGenerator;
 
 import java.util.UUID;
 
+import static android.app.Notification.VISIBILITY_PUBLIC;
+import static com.relay.relay.Bluetooth.BLConstants.DELIMITER;
 import static com.relay.relay.DB.InboxDB.REFRESH_INBOX_DB;
 import static com.relay.relay.SignInActivity.IS_LOG_IN;
 
@@ -86,14 +93,30 @@ public class MainActivity extends AppCompatActivity
 
     private SharedPreferences sharedPreferences;
 
-
     private StatusBar mStatusBar;
 
+    private boolean mIsInFront;
+
+
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        mIsInFront = false;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        mIsInFront = true;
+
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
 
         Toolbar  toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -150,6 +173,7 @@ public class MainActivity extends AppCompatActivity
         // initial status bar
         mStatusBar = new StatusBar(this);
 
+        mIsInFront = true;
     }
 
     @Override
@@ -179,6 +203,7 @@ public class MainActivity extends AppCompatActivity
         Intent updateActivity = new Intent(REFRESH_INBOX_DB);
         sendBroadcast(updateActivity);
     }
+
 
     @Override
     protected void onDestroy() {
@@ -229,7 +254,7 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.nav_debug_screen) {
 
         } else if (id == R.id.nav_setting) {
-
+            displayFragment(4);
         } else if (id == R.id.nav_logout) {
             logOutAlertDialog();
         } else if (id == R.id.nav_about_us) {
@@ -273,6 +298,20 @@ public class MainActivity extends AppCompatActivity
                 mContentView.setVisibility(View.INVISIBLE);
                 mFragment = ProfileFragment.newInstance( mMyuuid.toString() );
                 title = getString(R.string.title_profile_fragment);
+                if (mFragment != null) {
+                    FragmentManager fragmentManager = getSupportFragmentManager();
+                    FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                    fragmentTransaction.replace(R.id.content_body, mFragment);
+                    fragmentTransaction.commit();
+                    // set the toolbar title
+                    getSupportActionBar().setTitle(title);
+                }
+                crossfade(mShortAnimationDuration);
+                break;
+            case 4:
+                mContentView.setVisibility(View.INVISIBLE);
+                mFragment = SettingsFragment.newInstance( mMyuuid.toString() );
+                title = getString(R.string.title_settings_fragment);
                 if (mFragment != null) {
                     FragmentManager fragmentManager = getSupportFragmentManager();
                     FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
@@ -396,9 +435,9 @@ public class MainActivity extends AppCompatActivity
                 switch (action){
                     // When incoming message received
                     case MESSAGE_RECEIVED:
-                        //String relayMessage = intent.getStringExtra("relayMessage");
+                        String relayMessage = intent.getStringExtra("relayMessage");
                         //createAlertDialog("New message",relayMessage,false);
-                        notifyMessageArrived(); //create sound
+                        notifyMessageArrived(relayMessage); //create sound
                         break;
                     case FRESH_FRAGMENT:
                         refreshFragment(mFragment);
@@ -419,13 +458,62 @@ public class MainActivity extends AppCompatActivity
     /**
      *  Notify when new message arrived
      */
-    public void notifyMessageArrived(){
+    public void notifyMessageArrived(String msg){
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            //Define Notification Manager
-            NotificationManager notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
-            //Define sound URI
-            Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+//        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+//            //Define Notification Manager
+//            NotificationManager notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
+//            //Define sound URI
+//            Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+//            NotificationCompat.Builder mBuilder = (NotificationCompat.Builder) new NotificationCompat.Builder(getApplicationContext())
+//                    .setSound(soundUri); //This sets the sound to play
+//            //Display notification
+//            notificationManager.notify(0, mBuilder.build());
+//        }
+
+        //For Custom Sound:
+//        Notification notification = builder.build();
+//        notification.sound = Uri.parse("android.resource://"
+//                + context.getPackageName() + "/" + R.raw.siren);
+
+//        For Default Sound:
+//        notification.defaults |= Notification.DEFAULT_SOUND;
+
+//        For Custom Vibrate:
+//        long[] vibrate = { 0, 100, 200, 300 };
+//        notification.vibrate = vibrate;
+
+//        For Default Vibrate :
+//        notification.defaults |= Notification.DEFAULT_VIBRATE;
+
+////////////////////
+
+        //Define Notification Manager
+        NotificationManager notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
+
+        //Define sound URI
+        Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+        if (!mIsInFront) {
+            // set notification
+            Intent notificationIntent = new Intent(this, MainActivity.class);
+            notificationIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+
+            PendingIntent intent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
+            NotificationCompat.Builder mBuilder = (NotificationCompat.Builder) new NotificationCompat.Builder(getApplicationContext())
+                    .setSmallIcon(R.drawable.relay_icon)
+                    .setContentTitle(msg.split(DELIMITER)[0])
+                    .setContentText(msg.split(DELIMITER)[1])
+                    .setDefaults(Notification.DEFAULT_ALL)
+                    .setVisibility(VISIBILITY_PUBLIC)
+                    .setPriority(Notification.PRIORITY_HIGH)
+                    .setSound(soundUri)
+                    .setContentIntent(intent);
+
+            //Display notification
+            notificationManager.notify(0, mBuilder.build());
+        }
+        else{
             NotificationCompat.Builder mBuilder = (NotificationCompat.Builder) new NotificationCompat.Builder(getApplicationContext())
                     .setSound(soundUri); //This sets the sound to play
             //Display notification
@@ -533,6 +621,7 @@ public class MainActivity extends AppCompatActivity
             return null;
         }
     }
+
 
     /**
      *  Create log out alert dialog

@@ -421,10 +421,10 @@ public class InboxFragment extends Fragment {
                 }
             });
 
-            // listener to contact click area
-            holder.lastMsg.setOnClickListener(new View.OnClickListener() {
+
+            holder.itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
-                public void onClick(View view) {
+                public void onClick(View v) {
                     mDataManager.getInboxDB().setContactSeenByUser(UUID.fromString(uuidString));
                     if (node != null)
                         goToConversationActivity(UUID.fromString(uuidString),node.getFullName());
@@ -433,29 +433,42 @@ public class InboxFragment extends Fragment {
                                 new UuidGenerator().GenerateEmailFromUUID(UUID.fromString(uuidString)));
                 }
             });
-            holder.userName.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    mDataManager.getInboxDB().setContactSeenByUser(UUID.fromString(uuidString));
-                    if (node != null)
-                        goToConversationActivity(UUID.fromString(uuidString),node.getFullName());
-                    else
-                        goToConversationActivity(UUID.fromString(uuidString),
-                                new UuidGenerator().GenerateEmailFromUUID(UUID.fromString(uuidString)));
 
-                }
-            });
+//            // listener to contact click area
+//            holder.lastMsg.setOnClickListener(new View.OnClickListener() {
+//                @Override
+//                public void onClick(View view) {
+//                    mDataManager.getInboxDB().setContactSeenByUser(UUID.fromString(uuidString));
+//                    if (node != null)
+//                        goToConversationActivity(UUID.fromString(uuidString),node.getFullName());
+//                    else
+//                        goToConversationActivity(UUID.fromString(uuidString),
+//                                new UuidGenerator().GenerateEmailFromUUID(UUID.fromString(uuidString)));
+//                }
+//            });
+//            holder.userName.setOnClickListener(new View.OnClickListener() {
+//                @Override
+//                public void onClick(View view) {
+//                    mDataManager.getInboxDB().setContactSeenByUser(UUID.fromString(uuidString));
+//                    if (node != null)
+//                        goToConversationActivity(UUID.fromString(uuidString),node.getFullName());
+//                    else
+//                        goToConversationActivity(UUID.fromString(uuidString),
+//                                new UuidGenerator().GenerateEmailFromUUID(UUID.fromString(uuidString)));
+//
+//                }
+//            });
 
-            // listener to profile picture
-            holder.circleImageView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    if ( node == null)
-                        new ShowActivityFullImage(null,getActivity());
-                    else
-                        new ShowActivityFullImage(ImageConverter.convertBytesToBitmap(node.getProfilePicture()),getActivity());
-                }
-            });
+//            // listener to profile picture
+//            holder.circleImageView.setOnClickListener(new View.OnClickListener() {
+//                @Override
+//                public void onClick(View view) {
+//                    if ( node == null)
+//                        new ShowActivityFullImage(null,getActivity());
+//                    else
+//                        new ShowActivityFullImage(ImageConverter.convertBytesToBitmap(node.getProfilePicture()),getActivity());
+//                }
+//            });
         }
     }
 
@@ -547,9 +560,15 @@ public class InboxFragment extends Fragment {
         public boolean onMenuItemClick(MenuItem menuItem) {
             switch (menuItem.getItemId()) {
                 case R.id.action_user_info:
-                    Toast.makeText(getContext(), "User "+name+" info ", Toast.LENGTH_SHORT).show();
-                    updateMainactivity(uuidString);
 
+                    if ( mDataManager.getNodesDB().isNodeExist(UUID.fromString(uuidString)) ){
+                        updateMainactivity(uuidString);
+                        Toast.makeText(getContext(), "user info", Toast.LENGTH_SHORT).show();
+                    }
+                    else{
+                        Toast.makeText(getContext(), "The contact is not a user", Toast.LENGTH_LONG).show();
+                        mContactRecyclerView.setAdapter(mAdapter);
+                    }
                     return true;
                 case R.id.action_delete_conversation:
                     mDataManager.getInboxDB().deleteUserAndConversation(UUID.fromString(uuidString),false);
@@ -592,8 +611,16 @@ public class InboxFragment extends Fragment {
                     if(doc != null) {
                         Map<String, Object> properties = doc.getProperties();
                         String uuidString = (String) properties.get("uuid");
-                        updateMainactivity(uuidString);
-                        Toast.makeText(getContext(), "user info", Toast.LENGTH_SHORT).show();
+                        // check if the contact is an email or user
+                        if ( mDataManager.getNodesDB().isNodeExist(UUID.fromString(uuidString)) ){
+                            updateMainactivity(uuidString);
+                            Toast.makeText(getContext(), "user info", Toast.LENGTH_SHORT).show();
+                        }
+                        else{
+                            Toast.makeText(getContext(), "The contact is not a user", Toast.LENGTH_LONG).show();
+                            mContactRecyclerView.setAdapter(mAdapter);
+                        }
+
                     }
                 }
             }

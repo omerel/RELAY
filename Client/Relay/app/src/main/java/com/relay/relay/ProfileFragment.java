@@ -19,6 +19,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -87,6 +88,10 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
     private TextView mTextViewUserResidence;
     private TextView mTextViewUserProfileName;
     private TextView mTextViewUserProfileShort;
+    private Button mSetFullname;
+    private Button mSetUserName;
+    private Button mSetPhone;
+    private Button mSetResidence;
 
     // database
     DataManager mDataManager;
@@ -149,18 +154,22 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
 
         mTextViewUserFullname = (TextView) view.findViewById(R.id.text_view_profile_fragment_user_full_name);
         mTextViewUserFullname.setText(mUserFullname);
+        mSetFullname = (Button)  view.findViewById(R.id.button_profile_fragment_user_full_name);
 
         mTextViewUserEmail = (TextView) view.findViewById(R.id.text_view_profile_fragment_user_email);
         mTextViewUserEmail.setText(mUserEmail);
 
         mTextViewUserName = (TextView) view.findViewById(R.id.text_view_profile_fragment_user_name);
         mTextViewUserName.setText(mUserName);
+        mSetUserName = (Button)  view.findViewById(R.id.button_profile_fragment_user_name);
 
         mTextViewUserPhone = (TextView) view.findViewById(R.id.text_view_profile_fragment_user_phone);
         mTextViewUserPhone.setText(mUserPhone);
+        mSetPhone = (Button)  view.findViewById(R.id.button_profile_fragment_user_phone);
 
         mTextViewUserResidence = (TextView) view.findViewById(R.id.text_view_profile_fragment_user_residence);
         mTextViewUserResidence.setText(mUserResidence );
+        mSetResidence = (Button)  view.findViewById(R.id.button_profile_fragment_user_residence);
 
         mTextViewUserProfileName =(TextView) view.findViewById(R.id.profile_fragment_user_profile_name);
         mTextViewUserProfileName.setText(mUserFullname);
@@ -169,12 +178,17 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
         mTextViewUserProfileShort.setText(mUserProfileShort);
 
 
+
         if (myUUID.equals(userUUID)){
             mEditProfileImage.setOnClickListener(this);
             mTextViewUserFullname.setOnClickListener(this);
             mTextViewUserName.setOnClickListener(this);
             mTextViewUserResidence.setOnClickListener(this);
             mTextViewUserPhone.setOnClickListener(this);
+            mSetFullname.setOnClickListener(this);
+            mSetUserName.setOnClickListener(this);
+            mSetPhone.setOnClickListener(this);
+            mSetResidence.setOnClickListener(this);
 
         }
         else{
@@ -183,6 +197,10 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
             mTextViewUserResidence.setBackgroundResource(android.R.color.transparent);
             mTextViewUserName.setBackgroundResource(android.R.color.transparent);
             mTextViewUserPhone.setBackgroundResource(android.R.color.transparent);
+            mSetFullname.setVisibility(View.INVISIBLE);
+            mSetUserName.setVisibility(View.INVISIBLE);
+            mSetPhone.setVisibility(View.INVISIBLE);
+            mSetResidence.setVisibility(View.INVISIBLE);
         }
 
 
@@ -220,18 +238,32 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
                 new ShowActivityFullImage(mUserImage,getActivity());
                 break;
 
+
+            case R.id.button_profile_fragment_user_full_name:
+                openDialogWithInputText("Edit full name",mUserFullname,CODE_FULL_NAME);
+                break;
+
             case R.id.text_view_profile_fragment_user_full_name:
                 openDialogWithInputText("Edit full name",mUserFullname,CODE_FULL_NAME);
                 break;
 
+            case R.id.button_profile_fragment_user_residence:
+                openListDialog();
+                break;
             case R.id.text_view_profile_fragment_user_residence:
                 openListDialog();
                 break;
 
+            case R.id.button_profile_fragment_user_name:
+                openDialogWithInputText("Edit user name",mUserName,CODE_USER_NAME);
+                break;
             case R.id.text_view_profile_fragment_user_name:
                 openDialogWithInputText("Edit user name",mUserName,CODE_USER_NAME);
                 break;
 
+            case R.id.button_profile_fragment_user_phone:
+                openDialogWithInputText("Edit phone number",mUserPhone,CODE_USER_PHONE);
+                break;
             case R.id.text_view_profile_fragment_user_phone:
                 openDialogWithInputText("Edit phone number",mUserPhone,CODE_USER_PHONE);
                 break;

@@ -246,7 +246,7 @@ public class HandShake implements BLConstants {
                         step=13;//13
                         if (destId.equals(mMyNode.getId())) {
                             step=14;//14
-                            String msg = relayMessage.getContent();
+                            String msg = "@"+receivedMetadata.getMyNode().getUserName()+DELIMITER+relayMessage.getContent();
                             sendMessageToManager(NEW_RELAY_MESSAGE, msg);
                         }
                     }
