@@ -251,13 +251,12 @@ public class MainActivity extends AppCompatActivity
             displayFragment(1);
         } else if (id == R.id.nav_user_properties) {
             displayFragment(2);
-        } else if (id == R.id.nav_debug_screen) {
-
         } else if (id == R.id.nav_setting) {
             displayFragment(4);
         } else if (id == R.id.nav_logout) {
             logOutAlertDialog();
         } else if (id == R.id.nav_about_us) {
+            goToAboutActivity();
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -515,7 +514,8 @@ public class MainActivity extends AppCompatActivity
         }
         else{
             NotificationCompat.Builder mBuilder = (NotificationCompat.Builder) new NotificationCompat.Builder(getApplicationContext())
-                    .setSound(soundUri); //This sets the sound to play
+                    .setSound(soundUri)
+                    .setSmallIcon(R.drawable.relay_icon); //This sets the sound to play
             //Display notification
             notificationManager.notify(0, mBuilder.build());
         }
@@ -660,5 +660,12 @@ public class MainActivity extends AppCompatActivity
                 });
 
         alertDialog.show();
+    }
+
+    private void goToAboutActivity() {
+        // Start the signIn activity
+        Intent intent = new Intent(getApplicationContext(), AboutActivity.class);
+        startActivity(intent);
+        overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
     }
 }

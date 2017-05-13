@@ -162,7 +162,7 @@ public class InboxFragment extends Fragment {
         // init contacts view
         mContactRecyclerView = (RecyclerView) view.findViewById(R.id.recycler_view_contacts);
         mContactRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-        mContactRecyclerView.addItemDecoration(new GridSpacingItemDecoration(1, dpToPx(1), true));
+        mContactRecyclerView.addItemDecoration(new GridSpacingItemDecoration(1, dpToPx(0), true));
         mContactRecyclerView.setItemAnimator(new DefaultItemAnimator());
         mContactRecyclerView.setAdapter(mAdapter);
         mContactRecyclerView.setItemViewCacheSize(20);

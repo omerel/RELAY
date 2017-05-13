@@ -40,6 +40,37 @@
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="title_activity_about">About relay</string>
+    <string name="large_text">
+        "The relay project.\n\n"
+
+        "In the last two decades the Internet has become an essential means of communication between"
+        "people and communities around the world. The Internet helps us to connect with each other,"
+        "to share knowledge and thereby facilitates the improvement and innovation of education,"
+        "health and economy. Despite the exponentially growing rate of internet penetration more "
+        "than 50 per cent[1] of the world population still doesn’t have access to the Internet.\n\n"
+
+        "One of the main obstacles to internet access is poverty, most of the world’s developing"
+        "countries cannot afford to build the Internet infrastructure. Wireless Internet solutions"
+        "without proper infrastructure are expensive. This creates a reality in which people living "
+        "in rural areas of the developing world, who already have limited resources, also have no"
+        "access to the Internet.\n\n"
+
+        "The primary objective of this project is to provide a simple and low cost solution for this"
+        "complex problem by creating an application that provides network infrastructure via mobile"
+        "devices to users who live in remote locations where there is limited or no access to the"
+        "internet.\n\n"
+
+        "Who are we. \n\n"
+        "We are two Software Engineering from "AFEKA academic college of engineering" base in Tel Aviv.\n\n"
+        "contact us if you want to join our revolution:"
+        "elomer@gmail.com, Github: omerel\n"
+        "barrinbar@gmail.com, Github: barrinbar"
+
+
+
+    </string>
+    <string name="action_settings">Settings</string>
 
 
 </resources>

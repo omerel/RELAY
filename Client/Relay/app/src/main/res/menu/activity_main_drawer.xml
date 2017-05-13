@@ -24,16 +24,12 @@
             android:title="Log Out" />
     </group>
 
-    <item android:title="Developers">
+    <item android:title="About">
         <menu>
-            <item
-                android:id="@+id/nav_debug_screen"
-                android:icon="@drawable/ic_debug"
-                android:title="Debug screen" />
             <item
                 android:id="@+id/nav_about_us"
                 android:icon="@drawable/ic_about_us"
-                android:title="About Us" />
+                android:title="About relay" />
         </menu>
     </item>
 

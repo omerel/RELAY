@@ -158,8 +158,8 @@ public class HandShake implements BLConstants {
                     receivedKnownRelations = receivedMetadata.getKnownRelationsList();
                     step=2;//2
                     timePerformance.start();
-                    checkRankBeforeHandShake();
-                    Log.e(TAG, "TIME TO : " + "checkRankBeforeHandShake" + " " + timePerformance.stop());
+                    checkSyncNodeRankBeforeHandShake();
+                    Log.e(TAG, "TIME TO : " + "checkSyncNodeRankBeforeHandShake" + " " + timePerformance.stop());
                     finalDegree = CalculateFinalRank();
                     timePerformance.start();
                     step=3;//3
@@ -531,8 +531,9 @@ public class HandShake implements BLConstants {
         try {
             ArrayList<UUID> myNodeList = mDataManager.getNodesDB().getNodesIdList();
 
-            // update the device with my node and relations first
-            updateNodeList.add(mMyNode);
+//            // todo delete
+//            // update the device with my node and relations first
+//            updateNodeList.add(mMyNode);
 
             for (UUID nodeId : myNodeList) {
 
@@ -543,8 +544,9 @@ public class HandShake implements BLConstants {
                                 mDataManager.getGraphRelations().adjacentTo(nodeId));
 
                 // if node is known check if need to update its node and/or relations and it's not the syncing node
-                if (receivedKnownRelations.containsKey(nodeId) &&
-                        !nodeId.equals(receivedMetadata.getMyNode().getId())) {
+//                if (receivedKnownRelations.containsKey(nodeId) &&
+//                        !nodeId.equals(receivedMetadata.getMyNode().getId())) {
+                    if (receivedKnownRelations.containsKey(nodeId)) {
                     // if my node timestamp is newer ' update node and relation
                     if (mDataManager.getNodesDB().getNode(nodeId).getTimeStampNodeDetails().after(
                             receivedKnownRelations.get(nodeId).getTimeStampNodeDetails())) {
@@ -561,11 +563,12 @@ public class HandShake implements BLConstants {
                         newNodeIdList.put(nodeId, mDataManager.getNodesDB().getNode(nodeId));
                     }
                 }
-                // if node is in the share final degree and it's not the syncing node , add it to update nodes and his relations
+                // if node is in the share final degree and it's not the syncing node, add it to update nodes and his relations
                 else {
                     if(knownRelations.get(nodeId) != null)
-                        if (knownRelations.get(nodeId).getNodeDegree() <= degree &&
-                                !nodeId.equals(receivedMetadata.getMyNode().getId())) {
+//                        if (knownRelations.get(nodeId).getNodeDegree() <= degree &&
+//                                !nodeId.equals(receivedMetadata.getMyNode().getId())) {
+                            if (knownRelations.get(nodeId).getNodeDegree() <= degree) {
                             updateNodeList.add(mDataManager.getNodesDB().getNode(nodeId));
                             updateRelationsList.add(tempRelations);
                             newNodeIdList.put(nodeId, mDataManager.getNodesDB().getNode(nodeId));
@@ -602,9 +605,10 @@ public class HandShake implements BLConstants {
      * the node rank for the handshake. during the handshake all the node details will be update
      * @return
      */
-    private boolean checkRankBeforeHandShake(){
+    private boolean checkSyncNodeRankBeforeHandShake(){
         // check if the device had handshake with me knows me - if yes check if he has update rank for me
         if (receivedKnownRelations.containsKey(mMyNode.getId())){
+
             if (receivedKnownRelations.get(mMyNode.getId()).getTimeStampRankFromServer()
                     .after(mMyNode.getTimeStampRankFromServer()));
                 // update my rank (need to use it) after it will update all node

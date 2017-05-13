@@ -42,7 +42,9 @@ public class BLEScan implements BLConstants {
     private RelayConnectivityManager mRelayConnectivityManager;
 
     private List<BluetoothDevice> listBluetoothDeviceResults;
-    private int resultPosition;
+
+    private boolean firstScan; // to flag the first time of finding device. to start checkResults
+
 
     public BLEScan(BluetoothAdapter bluetoothAdapter,Messenger messenger,RelayConnectivityManager relayConnectivityManager) {
         this.mBluetoothAdapter = bluetoothAdapter;
@@ -50,6 +52,8 @@ public class BLEScan implements BLConstants {
         this.mMessenger = messenger;
         this.mRelayConnectivityManager = relayConnectivityManager;
         mBluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
+
+        this.firstScan = false;
         Log.d(TAG, "Class created");
     }
 
@@ -105,15 +109,16 @@ public class BLEScan implements BLConstants {
 
     public void checkResults(){
         if (isResultsInQueue()){
-            sendResultToBLECentral(FOUND_NEW_DEVICE,listBluetoothDeviceResults.get(resultPosition));
+            // get the last address (2 reasons -
+            // 1. its more update and there is bigger chance to connect it.
+            // 2. give a chance to devices that are with farther
+            sendResultToBLECentral(FOUND_NEW_DEVICE,listBluetoothDeviceResults.get(listBluetoothDeviceResults.size()-1));
             Log.e(TAG, "sendResultToBLECentral" );
-                resultPosition++;
             }
     }
 
     public boolean isResultsInQueue(){
         if (listBluetoothDeviceResults.size() != 0)
-            if ( resultPosition < listBluetoothDeviceResults.size())
                 return true;
         Log.e(TAG,"There are no devices in queue");
         return false;
@@ -121,7 +126,7 @@ public class BLEScan implements BLConstants {
 
     public void clearResults(){
         listBluetoothDeviceResults = new ArrayList<>();
-        resultPosition = 0;
+        firstScan = true;
     }
 
     /**
@@ -146,8 +151,15 @@ public class BLEScan implements BLConstants {
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
             super.onScanResult(callbackType, result);
-            if (!listBluetoothDeviceResults.contains(result.getDevice())) {
+            // if mac address is not in the list and there no more
+            // than 3 device(the reason of 3 is that the devices are changing their
+            // dynamic address every few seconds)
+            if (!listBluetoothDeviceResults.contains(result.getDevice()) && listBluetoothDeviceResults.size() < 3) {
                 listBluetoothDeviceResults.add(result.getDevice());
+                if(firstScan){
+                    checkResults();
+                    firstScan = false;
+                }
                 Log.e(TAG, "Found new result - "+"Name :  "+result.getDevice().getName() +
                         " ,Mac device : "+result.getDevice().getAddress());
             }

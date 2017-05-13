@@ -64,11 +64,11 @@ public class BluetoothServer extends Thread implements BLConstants {
         // Keep listening until exception occurs or a socket is returned
         while (true) {
             try {
-                Log.d(TAG, "Waiting to mmServerSocket.accept() ");
+                Log.e(TAG, "Waiting to mmServerSocket.accept() ");
                 socket = mmServerSocket.accept();
-                Log.d(TAG, "SUCCESSFULLY CONNECTED");
+                Log.e(TAG, "SUCCESSFULLY CONNECTED");
             } catch (IOException e) {
-                Log.e(TAG, "Problem with mmServerSocket.accept() ");
+                Log.e(TAG, "Problem with mmServerSocket.accept() "+e.getMessage());
                 break;
             }catch (NullPointerException e){
                 Log.e(TAG, "Problem with mmServerSocket.accept() [null] ");

@@ -19,6 +19,8 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
+
+
             <de.hdodenhof.circleimageview.CircleImageView
                 xmlns:app="http://schemas.android.com/apk/res-auto"
                 android:id="@+id/dialog_image"
@@ -94,7 +96,14 @@
                 android:layout_marginRight="10dp"
                 android:id="@+id/imageView_item_contact_new_messages"/>
 
-
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0.5dp"
+                android:layout_alignParentTop="true"
+                android:background="@color/colorLine"
+                android:layout_marginEnd="10dp"
+                android:layout_alignStart="@id/textView_item_contact_name">
+            </View>
 
         </RelativeLayout>
         </android.support.v7.widget.CardView>

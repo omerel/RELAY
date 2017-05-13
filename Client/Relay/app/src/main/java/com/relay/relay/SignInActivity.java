@@ -354,11 +354,11 @@ public class SignInActivity extends AppCompatActivity {
 
                             // set up new node with limit info and oldest date. when connected to relay server,
                             // the node will be update from the server
-                            Calendar calendar = Calendar.getInstance();
-                            calendar.setTime(new Date(Long.MIN_VALUE));
-                            Node node = new Node(UUID.fromString(userUUID), calendar,calendar,
-                                    2,uuidGenerator.GenerateEmailFromUUID(UUID.fromString(userUUID)),"temp","temp","Temp Temp", null,
-                                    0,calendar);
+                            Calendar oldCalendarTime = Calendar.getInstance();
+                            oldCalendarTime.set(Calendar.YEAR, 1999);
+                            Node node = new Node(UUID.fromString(userUUID), oldCalendarTime,oldCalendarTime,
+                                    2,uuidGenerator.GenerateEmailFromUUID(UUID.fromString(userUUID)),"...","...","...", null,
+                                    0,oldCalendarTime);
                             dataManager.getNodesDB().addNode(node);
                             dataManager.getNodesDB().setMyNodeId(node.getId());
 

@@ -149,7 +149,10 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
         mEditProfileImage = (ImageView) view.findViewById(R.id.profile_fragment_edit_profile_image);
 
         mProfileImage =  (de.hdodenhof.circleimageview.CircleImageView) view.findViewById(R.id.profile_fragment_user_profile_photo);
-        mProfileImage.setImageBitmap(mUserImage);
+        if (mUserImage != null)
+            mProfileImage.setImageBitmap(mUserImage);
+        else
+            mProfileImage.setImageDrawable(getResources().getDrawable(R.drawable.pic_unknown_user));
         mProfileImage.setOnClickListener(this);
 
         mTextViewUserFullname = (TextView) view.findViewById(R.id.text_view_profile_fragment_user_full_name);
