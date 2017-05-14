@@ -15,6 +15,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.media.MediaPlayer;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -513,11 +514,16 @@ public class MainActivity extends AppCompatActivity
             notificationManager.notify(0, mBuilder.build());
         }
         else{
-            NotificationCompat.Builder mBuilder = (NotificationCompat.Builder) new NotificationCompat.Builder(getApplicationContext())
-                    .setSound(soundUri)
-                    .setSmallIcon(R.drawable.relay_icon); //This sets the sound to play
-            //Display notification
-            notificationManager.notify(0, mBuilder.build());
+
+            // play sound
+            final MediaPlayer sound = MediaPlayer.create(this,soundUri);
+            sound.start();
+//
+//            NotificationCompat.Builder mBuilder = (NotificationCompat.Builder) new NotificationCompat.Builder(getApplicationContext())
+//                    .setSound(soundUri)
+//                    .setSmallIcon(R.drawable.relay_icon); //This sets the sound to play
+//            //Display notification
+//            notificationManager.notify(0, mBuilder.build());
         }
     }
 

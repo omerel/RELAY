@@ -43,8 +43,6 @@ public class BLEScan implements BLConstants {
 
     private List<BluetoothDevice> listBluetoothDeviceResults;
 
-    private boolean firstScan; // to flag the first time of finding device. to start checkResults
-
 
     public BLEScan(BluetoothAdapter bluetoothAdapter,Messenger messenger,RelayConnectivityManager relayConnectivityManager) {
         this.mBluetoothAdapter = bluetoothAdapter;
@@ -53,7 +51,6 @@ public class BLEScan implements BLConstants {
         this.mRelayConnectivityManager = relayConnectivityManager;
         mBluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
 
-        this.firstScan = false;
         Log.d(TAG, "Class created");
     }
 
@@ -113,6 +110,7 @@ public class BLEScan implements BLConstants {
             // 1. its more update and there is bigger chance to connect it.
             // 2. give a chance to devices that are with farther
             sendResultToBLECentral(FOUND_NEW_DEVICE,listBluetoothDeviceResults.get(listBluetoothDeviceResults.size()-1));
+            listBluetoothDeviceResults.remove(listBluetoothDeviceResults.size()-1);
             Log.e(TAG, "sendResultToBLECentral" );
             }
     }
@@ -126,7 +124,6 @@ public class BLEScan implements BLConstants {
 
     public void clearResults(){
         listBluetoothDeviceResults = new ArrayList<>();
-        firstScan = true;
     }
 
     /**
@@ -156,10 +153,6 @@ public class BLEScan implements BLConstants {
             // dynamic address every few seconds)
             if (!listBluetoothDeviceResults.contains(result.getDevice()) && listBluetoothDeviceResults.size() < 3) {
                 listBluetoothDeviceResults.add(result.getDevice());
-                if(firstScan){
-                    checkResults();
-                    firstScan = false;
-                }
                 Log.e(TAG, "Found new result - "+"Name :  "+result.getDevice().getName() +
                         " ,Mac device : "+result.getDevice().getAddress());
             }

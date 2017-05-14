@@ -20,7 +20,7 @@ public class StatusBar {
 
     public static final String STATUS_BAR_RELAY = "relay.BroadcastReceiver.STATUS_BAR_RELAY";
     public static final int FLAG_ADVERTISEMENT = 11;
-    public static final int STOP_ADVERTISEMENT = 113;
+    public static final int FLAG_STOP_ADVERTISEMENT = 113;
     public static final int FLAG_STOP_SCAN = 111;
     public static final int FLAG_CLOSE_CONNECTION = 112;
     public static final int FLAG_SEARCH = 12;
@@ -99,7 +99,7 @@ public class StatusBar {
             case FLAG_ADVERTISEMENT:
                 mAdvertisementFlag.setImageDrawable(mActivity.getDrawable(R.drawable.ic_flag_advertise));
                 break;
-            case STOP_ADVERTISEMENT:
+            case FLAG_STOP_ADVERTISEMENT:
                 mAdvertisementFlag.setImageDrawable(mActivity.getDrawable(R.drawable.ic_flag_non));
                 break;
             case FLAG_SEARCH :

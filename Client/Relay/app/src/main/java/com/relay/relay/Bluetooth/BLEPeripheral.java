@@ -22,6 +22,7 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
 import com.relay.relay.SubSystem.RelayConnectivityManager;
+import com.relay.relay.Util.StatusBar;
 
 
 public class BLEPeripheral implements BLConstants {
@@ -50,13 +51,14 @@ public class BLEPeripheral implements BLConstants {
                     mGattServer.connect(device,false);
                     // Stop advertising
                     mBleAdvertising.stopAdvertising();
+                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_STOP_ADVERTISEMENT);
                     Log.e(TAG, "Connected to device(SERVER SIDE): " + device.getAddress());
 
                 } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
                     Log.d(TAG, "Disconnected from device");
-                    // create new advertising to others device TODO maybe i need here only mBleAdvertising.start
-                    stopPeripheral();
-                    startPeripheral();
+//                    // create new advertising to others device
+//                    close();
+//                    startPeripheral();
                 }
             } else {
                 Log.e(TAG, "Error when connecting: " + status);
@@ -105,19 +107,19 @@ public class BLEPeripheral implements BLConstants {
             mBleAdvertising.stopAdvertising();
         }
     }
-
-
-    /**
-     * Stop Peripheral - disconnect from all devices and stop advertising
-     */
-    public void stopPeripheral(){
-
-        if (mGattServer != null) {
-           disconnectFromDevices(); //TODO do i need it? is there any limit for it?
-            mGattServer.close();
-        }
-        mBleAdvertising.stopAdvertising();
-    }
+//
+//
+//    /**
+//     * Stop Peripheral - disconnect from all devices and stop advertising
+//     */
+//    public void stopPeripheral(){
+//
+//        if (mGattServer != null) {
+//           disconnectFromDevices(); //TODO do i need it? is there any limit for it?
+//            mGattServer.close();
+//        }
+//        mBleAdvertising.stopAdvertising();
+//    }
 
     /**
      * Start Peripheral - start advertising
@@ -143,11 +145,12 @@ public class BLEPeripheral implements BLConstants {
         mGattServer.addService(mBluetoothGattService);
 
         // check mBleAdvertising not null
-        if(mBleAdvertising != null)
+        if(mBleAdvertising != null) {
             mBleAdvertising.startAdvertising();
-
-
+            mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_ADVERTISEMENT);
+        }
     }
+
 
     /**
      * Disconnect From Devices

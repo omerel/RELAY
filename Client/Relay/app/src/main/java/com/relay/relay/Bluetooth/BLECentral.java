@@ -193,20 +193,20 @@ public class BLECentral implements BLConstants {
     }
 
 
-    // todo from some reason it making problems
-    private void connectionWatchDog(int time){
-        mConnectionHandler = new Handler();
-        mConnectionHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                // TODO need to be tested
-                close();
-                Log.e(TAG,"Error - mBluetoothGatt didn't get any respond");
-                sendResultToManager(FAILED_CONNECTING_TO_DEVICE,null);
-            }
-        }, time);
+//    // todo from some reason it making problems
+//    private void connectionWatchDog(int time){
+//        mConnectionHandler = new Handler();
+//        mConnectionHandler.postDelayed(new Runnable() {
+//            @Override
+//            public void run() {
+//                // TODO need to be tested
+//                close();
+//                Log.e(TAG,"Error - mBluetoothGatt didn't get any respond");
+//                sendResultToManager(FAILED_CONNECTING_TO_DEVICE,null);
+//            }
+//        }, time);
+//    }
 
-    }
     /**
      * Handler of incoming messages from BleScan
      */
