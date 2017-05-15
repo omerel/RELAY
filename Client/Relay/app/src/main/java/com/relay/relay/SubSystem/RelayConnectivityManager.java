@@ -24,6 +24,7 @@ import android.util.Log;
 
 import com.relay.relay.Bluetooth.BLConstants;
 import com.relay.relay.Bluetooth.*;
+import com.relay.relay.DB.BlConnectionLogDB;
 import com.relay.relay.DB.InboxDB;
 import com.relay.relay.MainActivity;
 import com.relay.relay.R;
@@ -76,9 +77,19 @@ public class RelayConnectivityManager extends Service implements BLConstants {
     private DataManager mDataManager;
     private SharedPreferences sharedPreferences;
 
+    private BlConnectionLogDB mLogger;
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "Service started");
+
+        // create new log db and delete history
+        mLogger = new BlConnectionLogDB(this);
+        mLogger.openDB();
+        // clear history
+        mLogger.deleteDB();
+        mLogger.openDB();
+
         // get values from sharedPreferences
         sharedPreferences = getSharedPreferences(SYSTEM_SETTING,0);
         setConnectivityValues();
@@ -86,6 +97,7 @@ public class RelayConnectivityManager extends Service implements BLConstants {
         createGeneralBroadcastReceiver();
         startConnectivityByPriority();
         setWakeLock();
+
         return  START_NOT_STICKY;
     }
 
@@ -216,7 +228,15 @@ public class RelayConnectivityManager extends Service implements BLConstants {
     }
 
 
-    public void broadCastFlag(int flag) {
+    public void broadCastFlag(final int flag, final String logMsg) {
+
+//        if (mCurrentMode == BLUETOOTH_MODE){
+//
+//        }
+        new Thread(new Runnable() {
+            public void run() {
+                mLogger.addToLog(flag,logMsg);
+            } }).start();
 
         // BroadCast relay message to activity
         Intent updateActivity = new Intent(StatusBar.STATUS_BAR_RELAY);
@@ -275,7 +295,7 @@ public class RelayConnectivityManager extends Service implements BLConstants {
                             unregisterReceiver(mModeBroadcastReceiver);
                             Log.e(TAG, " Bluetooth switch turned off ");
                         }else if (mCurrentMode == WIFI_MODE){
-                            broadCastFlag(0);
+                            broadCastFlag(0,"Wifi mode turned on");
                             // TODO stop wifi mode
                             unregisterReceiver(mModeBroadcastReceiver);
                             Log.e(TAG, " Wifi turned off ");
@@ -297,7 +317,7 @@ public class RelayConnectivityManager extends Service implements BLConstants {
                             // refresh fragment
                             Intent updateActivity = new Intent(MainActivity.FRESH_FRAGMENT);
                             sendBroadcast(updateActivity);
-                            broadCastFlag(0);
+                            broadCastFlag(0,"State was changed");
                         }
                         break;
                     // When the device in bluetooth and wifi switch in and connected to internet
@@ -395,7 +415,7 @@ public class RelayConnectivityManager extends Service implements BLConstants {
                                 SharedPreferences.Editor editor = sharedPreferences.edit();
                                 editor.putBoolean(getString(R.string.key_enable_bluetooth),false);
                                 editor.commit();
-                                broadCastFlag(0);
+                                broadCastFlag(0,"Bluetooth is off");
                                 // refresh fragment
                                 Intent updateActivity = new Intent(MainActivity.FRESH_FRAGMENT);
                                 sendBroadcast(updateActivity);
@@ -404,7 +424,7 @@ public class RelayConnectivityManager extends Service implements BLConstants {
                                 startConnectivityByPriority();
                                 break;
                             case BluetoothAdapter.STATE_TURNING_OFF:
-                                broadCastFlag(0);
+                                broadCastFlag(0,"Bluetooth turned off");
                                 // stop bluetooth mode
                                 stopBluetoothMode();
                                 break;

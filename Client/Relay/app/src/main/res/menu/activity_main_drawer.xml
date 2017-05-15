@@ -24,12 +24,16 @@
             android:title="Log Out" />
     </group>
 
-    <item android:title="About">
+    <item android:title="More">
         <menu>
             <item
                 android:id="@+id/nav_about_us"
                 android:icon="@drawable/ic_about_us"
                 android:title="About relay" />
+            <item
+                android:id="@+id/nav_debug_screen"
+                android:icon="@drawable/ic_debug"
+                android:title="Debug screen" />
         </menu>
     </item>
 

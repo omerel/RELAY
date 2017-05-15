@@ -9,8 +9,6 @@
         android:name="android.hardware.camera"
         android:required="true" />
 
-    <uses-permission android:name="ANDROID.PERMISSION.READ_EXTERNAL_STORAGE" />
-
     <!-- Bluetooth permissions -->
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
@@ -25,6 +23,7 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <!-- permissions to keep bluetooth working when phone locked -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+
 
     <application
         android:allowBackup="true"
@@ -92,7 +91,11 @@
         <activity
             android:name=".AboutActivity"
             android:label="@string/title_activity_about"
-            android:theme="@style/AppTheme"></activity>
+            android:theme="@style/AppTheme" />
+        <activity android:name=".DebugActivity"></activity>
     </application>
 
+    <!-- write permissions -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
 </manifest>

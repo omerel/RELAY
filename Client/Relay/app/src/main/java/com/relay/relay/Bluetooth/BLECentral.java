@@ -17,6 +17,7 @@ import android.os.RemoteException;
 import android.util.Log;
 
 import com.relay.relay.SubSystem.RelayConnectivityManager;
+import com.relay.relay.Util.StatusBar;
 
 import java.util.List;
 
@@ -52,10 +53,12 @@ public class BLECentral implements BLConstants {
 
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 Log.d(TAG, "Connected to GATT server.(CLIENT SIDE)");
+                mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,"Connected to GATT server");
                 // Attempts to discover services after successful connection.
                 Log.d(TAG, "Attempting to start service discovery:" + mBluetoothGatt.discoverServices());
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 Log.d(TAG, "Disconnected from GATT server!");
+                mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,"Disconnected from GATT server");
             }
         }
 
@@ -99,10 +102,15 @@ public class BLECentral implements BLConstants {
                     if (!mLastConnectedDevices.contains(address)) {
                         sendResultToManager(FOUND_MAC_ADDRESS, address);
                         Log.e(TAG, "Found new device that not in connected list :" + address);
+                        mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,
+                                "Found new device that not in connected list :" + address);
                     }
                     else{
                         Log.e(TAG, "Found device that is in the connected list :" + address+
                                 "\n restart scan.");
+                        mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,
+                                "Found device that is in the connected list :" + address+
+                                        "\n restart scan.");
                         // try the next device in results
                         mBleScan.checkResults();
                         mConnectionHandler.removeCallbacks(null); // clear watchdog

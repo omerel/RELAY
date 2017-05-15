@@ -3,13 +3,24 @@ package com.relay.relay.Util;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.os.CountDownTimer;
+import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 
+import com.relay.relay.DB.BlConnectionLogDB;
 import com.relay.relay.R;
+
+import java.util.List;
+import java.util.zip.Inflater;
 
 
 /**
@@ -27,6 +38,7 @@ public class StatusBar {
     public static final int FLAG_CONNECTING = 13;
     public static final int FLAG_HANDSHAKE = 14;
     public static final int FLAG_ERROR = 15;
+    public static final int FLAG_NO_CHANGE = 16;
 
 
     private Activity mActivity;
@@ -46,8 +58,15 @@ public class StatusBar {
 
         this.mAdvertisementFlag = (ImageView) mActivity.findViewById(R.id.flag_advertise);
         mAdvertisementFlag.setImageDrawable(mActivity.getDrawable(R.drawable.ic_flag_non));
+
         this.mSearchFlag = (ImageView) mActivity.findViewById(R.id.flag_search);
         mSearchFlag.setImageDrawable(mActivity.getDrawable(R.drawable.ic_flag_non));
+        mSearchFlag.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                openLogDialog();
+            }
+        });
         this.mConnectingFlag = (ImageView) mActivity.findViewById(R.id.flag_connecting);
         mConnectingFlag.setImageDrawable(mActivity.getDrawable(R.drawable.ic_flag_non));
         this.mHandShakeFlag = (ImageView) mActivity.findViewById(R.id.flag_handshake);
@@ -156,5 +175,53 @@ public class StatusBar {
         mAdvertisementFlag.setImageDrawable(mActivity.getDrawable(R.drawable.ic_flag_non));
         mSearchFlag.setImageDrawable(mActivity.getDrawable(R.drawable.ic_flag_non));
         mConnectingFlag.setImageDrawable(mActivity.getDrawable(R.drawable.ic_flag_non));
+    }
+
+
+    private void openLogDialog(){
+
+         List<BluetoothConnectionLogger> logList;
+         BlConnectionLoggerListArrayAdapter adapter;
+         RecyclerView recyclerView;
+
+        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(mActivity);
+        builder.setTitle("Connection Log");
+
+
+        LinearLayout layout = new LinearLayout(mActivity.getBaseContext());
+        layout.setOrientation(LinearLayout.VERTICAL);
+
+
+        // setup recyclerView
+        BlConnectionLogDB blConnectionLogDB = new BlConnectionLogDB(mActivity);
+        logList = blConnectionLogDB.getLogList();
+
+
+        recyclerView = new RecyclerView(mActivity);
+        adapter = new BlConnectionLoggerListArrayAdapter(mActivity, logList);
+        recyclerView.setAdapter(adapter);
+
+        recyclerView.setLayoutManager(new LinearLayoutManager(mActivity.getBaseContext()));
+        recyclerView.setItemAnimator(new DefaultItemAnimator());
+        recyclerView.setItemViewCacheSize(20);
+
+        layout.addView(recyclerView);
+
+        builder.setView(layout);
+        // Set up the buttons
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+
+        builder.show();
     }
 }

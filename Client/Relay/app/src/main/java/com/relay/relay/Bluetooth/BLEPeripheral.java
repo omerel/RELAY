@@ -49,13 +49,12 @@ public class BLEPeripheral implements BLConstants {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 if (newState == BluetoothGatt.STATE_CONNECTED) {
                     mGattServer.connect(device,false);
-                    // Stop advertising
-                    mBleAdvertising.stopAdvertising();
-                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_STOP_ADVERTISEMENT);
+                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,"BluetoothGatt connected to BLE device");
                     Log.e(TAG, "Connected to device(SERVER SIDE): " + device.getAddress());
 
                 } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
                     Log.d(TAG, "Disconnected from device");
+                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,"BluetoothGatt disconnected from BLE device");
 //                    // create new advertising to others device
 //                    close();
 //                    startPeripheral();
@@ -74,6 +73,9 @@ public class BLEPeripheral implements BLConstants {
                 mGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS,
                     offset, characteristic.getValue());
             sendResultToManager(GET_BLUETOOTH_SERVER_READY);
+            // Stop advertising
+            mBleAdvertising.stopAdvertising();
+            mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_STOP_ADVERTISEMENT,"Stop BLE advertisement");
         }
     };
 
@@ -147,7 +149,7 @@ public class BLEPeripheral implements BLConstants {
         // check mBleAdvertising not null
         if(mBleAdvertising != null) {
             mBleAdvertising.startAdvertising();
-            mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_ADVERTISEMENT);
+            mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_ADVERTISEMENT,"Start advertisement");
         }
     }
 
