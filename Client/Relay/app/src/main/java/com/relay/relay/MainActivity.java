@@ -33,6 +33,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.app.NotificationCompat;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -435,9 +436,11 @@ public class MainActivity extends AppCompatActivity
                 switch (action){
                     // When incoming message received
                     case MESSAGE_RECEIVED:
-                        String relayMessage = intent.getStringExtra("relayMessage");
-                        //createAlertDialog("New message",relayMessage,false);
-                        notifyMessageArrived(relayMessage); //create sound
+                        final String relayMessage = intent.getStringExtra("relayMessage");
+                        new Thread(new Runnable() {
+                            public void run() {
+                                notifyMessageArrived(relayMessage); //create sound
+                            } }).start();
                         break;
                     case FRESH_FRAGMENT:
                         refreshFragment(mFragment);
@@ -460,15 +463,16 @@ public class MainActivity extends AppCompatActivity
      */
     public void notifyMessageArrived(String msg){
 
-        // check id user put mute on settings
-        boolean mute = sharedPreferences.getBoolean(SYSTEM_SETTING_MUTE,false);
+        boolean  mute = sharedPreferences.getBoolean(SYSTEM_SETTING_MUTE, true);
+        Log.e(TAG,"mute: "+mute);
+
+        //Define Notification Manager
+        NotificationManager notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
+        //Define sound URI
+        Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
 
         if (!mute) {
-            //Define Notification Manager
-            NotificationManager notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
 
-            //Define sound URI
-            Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
             if (!mIsInFront) {
                 // set notification
                 Intent notificationIntent = new Intent(this, MainActivity.class);
@@ -489,10 +493,23 @@ public class MainActivity extends AppCompatActivity
                 //Display notification
                 notificationManager.notify(0, mBuilder.build());
             } else {
-
                 // play sound
                 final MediaPlayer sound = MediaPlayer.create(this, soundUri);
                 sound.start();
+
+                Intent notificationIntent = new Intent(this, MainActivity.class);
+                PendingIntent intent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
+                NotificationCompat.Builder mBuilder = (NotificationCompat.Builder) new NotificationCompat.Builder(getApplicationContext())
+                        .setSmallIcon(R.drawable.relay_icon)
+                        .setContentTitle(msg.split(DELIMITER)[0])
+                        .setContentText(msg.split(DELIMITER)[1])
+                        .setDefaults(Notification.DEFAULT_ALL)
+                        .setSound(soundUri)
+                        .setContentIntent(intent);
+                
+                //Display notification
+                notificationManager.notify(0, mBuilder.build());
+
             }
         }
     }
