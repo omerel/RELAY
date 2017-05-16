@@ -2,7 +2,6 @@ package com.relay.relay.DB;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Log;
 
@@ -11,14 +10,11 @@ import com.relay.relay.R;
 import com.relay.relay.SubSystem.DataManager;
 import com.relay.relay.Util.ImageConverter;
 import com.relay.relay.Util.TimePerformance;
-import com.relay.relay.Util.UuidGenerator;
+import com.relay.relay.viewsAndViewAdapters.UuidGenerator;
 import com.relay.relay.system.Node;
-import com.relay.relay.system.RelayMessage;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.HashMap;
 import java.util.UUID;
 
 /**

@@ -1,4 +1,4 @@
-package com.relay.relay.Util;
+package com.relay.relay.viewsAndViewAdapters;
 
 /**
  * Created by omer on 26/04/2017.
@@ -9,21 +9,19 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.ImageView;
-import android.widget.Switch;
 import android.widget.TextView;
 
 import com.relay.relay.R;
 
 import java.util.List;
 
-import static com.relay.relay.Util.StatusBar.FLAG_ADVERTISEMENT;
-import static com.relay.relay.Util.StatusBar.FLAG_CONNECTING;
-import static com.relay.relay.Util.StatusBar.FLAG_ERROR;
-import static com.relay.relay.Util.StatusBar.FLAG_HANDSHAKE;
-import static com.relay.relay.Util.StatusBar.FLAG_NO_CHANGE;
-import static com.relay.relay.Util.StatusBar.FLAG_SEARCH;
+import static com.relay.relay.viewsAndViewAdapters.StatusBar.FLAG_ADVERTISEMENT;
+import static com.relay.relay.viewsAndViewAdapters.StatusBar.FLAG_CONNECTING;
+import static com.relay.relay.viewsAndViewAdapters.StatusBar.FLAG_ERROR;
+import static com.relay.relay.viewsAndViewAdapters.StatusBar.FLAG_HANDSHAKE;
+import static com.relay.relay.viewsAndViewAdapters.StatusBar.FLAG_NO_CHANGE;
+import static com.relay.relay.viewsAndViewAdapters.StatusBar.FLAG_SEARCH;
 
 public class BlConnectionLoggerListArrayAdapter extends RecyclerView.Adapter<BlConnectionLoggerListArrayAdapter.ViewHolder> {
 

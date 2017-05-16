@@ -15,7 +15,7 @@ import com.couchbase.lite.QueryRow;
 import com.couchbase.lite.SavedRevision;
 import com.couchbase.lite.View;
 import com.couchbase.lite.android.AndroidContext;
-import com.relay.relay.Util.BluetoothConnectionLogger;
+import com.relay.relay.viewsAndViewAdapters.BluetoothConnectionLogger;
 
 import java.io.IOException;
 import java.text.DateFormat;

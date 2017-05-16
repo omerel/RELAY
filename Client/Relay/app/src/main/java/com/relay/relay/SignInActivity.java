@@ -27,12 +27,10 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.relay.relay.SubSystem.DataManager;
-import com.relay.relay.Util.ImageConverter;
-import com.relay.relay.Util.UuidGenerator;
+import com.relay.relay.viewsAndViewAdapters.UuidGenerator;
 import com.relay.relay.system.Node;
 
 import java.util.Calendar;
-import java.util.Date;
 import java.util.UUID;
 
 import static com.relay.relay.MainActivity.SYSTEM_SETTING;
@@ -215,6 +213,23 @@ public class SignInActivity extends AppCompatActivity {
         progressDialog.setIndeterminate(true);
         progressDialog.setMessage("Authenticating...");
         progressDialog.show();
+
+
+        // todo delete when no longer needed
+        // backdoor to demo users with out using server
+        if( email.split("@")[1].equals("relay.com") ){
+            String userUUID = "";
+            try {
+                userUUID = uuidGenerator.GenerateUUIDFromEmail(email).toString();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            progressDialog.dismiss();
+            signInWithNewUserDialog("Alert",
+                    "Sign in with new user will delete all data of others users.\n" +
+                            "Connection to internet is necessary to restore your data ",userUUID,password);
+        }
+
 
         mAuth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {

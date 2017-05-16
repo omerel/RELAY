@@ -15,14 +15,12 @@ import android.os.ParcelUuid;
 import android.os.RemoteException;
 import android.util.Log;
 import com.relay.relay.SubSystem.RelayConnectivityManager;
+import com.relay.relay.viewsAndViewAdapters.StatusBar;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import static android.bluetooth.le.ScanSettings.MATCH_NUM_FEW_ADVERTISEMENT;
-import static android.bluetooth.le.ScanSettings.MATCH_NUM_MAX_ADVERTISEMENT;// todo added
-import static android.bluetooth.le.ScanSettings.MATCH_NUM_ONE_ADVERTISEMENT;
 
 /**
  * Created by omer on 10/12/2016.
@@ -63,6 +61,7 @@ public class BLEScan implements BLConstants {
         if (mBluetoothAdapter.isEnabled()) {
             mBluetoothLeScanner.startScan(buildScanFilters(), buildScanSettings(), mScanCallback);
             Log.d(TAG, "Start Scanning for BLE Advertisements");
+            mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_SEARCH,TAG+": Start BLE Search");
         }
     }
 
@@ -73,6 +72,7 @@ public class BLEScan implements BLConstants {
         // Stop the scan, wipe the callback.
         if (mBluetoothAdapter.isEnabled() && mScanCallback != null ) {
             mBluetoothLeScanner.stopScan(mScanCallback);
+            mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_STOP_SCAN,TAG+": Stop BLE Search");
         }
         Log.d(TAG, "Stopping Scanning");
     }
@@ -111,6 +111,7 @@ public class BLEScan implements BLConstants {
             // 2. give a chance to devices that are with farther
             sendResultToBLECentral(FOUND_NEW_DEVICE,listBluetoothDeviceResults.get(listBluetoothDeviceResults.size()-1));
             listBluetoothDeviceResults.remove(listBluetoothDeviceResults.size()-1);
+            mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,TAG+": Found device to connect on queue");
             Log.e(TAG, "sendResultToBLECentral" );
             }
     }
@@ -119,6 +120,7 @@ public class BLEScan implements BLConstants {
         if (listBluetoothDeviceResults.size() != 0)
                 return true;
         Log.e(TAG,"There are no devices in queue");
+        mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,TAG+": Search queue is empty");
         return false;
     }
 
@@ -164,6 +166,7 @@ public class BLEScan implements BLConstants {
             stopScanning();
             sendResultToBLECentral(BLE_SCAN_ERROR,null);
             Log.e(TAG, "Error - Scan failed with error: "+ errorCode);
+            mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_ERROR,TAG+": Error - Scan failed with error: "+ errorCode);
         }
     }
 

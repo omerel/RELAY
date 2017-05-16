@@ -25,7 +25,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.relay.relay.SubSystem.DataManager;
-import com.relay.relay.Util.CountryCodeActivityDialog;
+import com.relay.relay.viewsAndViewAdapters.CountryCodeActivityDialog;
 import com.relay.relay.Util.ImageConverter;
 import com.relay.relay.Util.Imageutils;
 import com.relay.relay.Util.ShowActivityFullImage;
@@ -40,7 +40,7 @@ import java.util.UUID;
 import static android.app.Activity.RESULT_OK;
 import static com.relay.relay.SignInActivity.CURRENT_UUID_USER;
 import static com.relay.relay.MainActivity.SYSTEM_SETTING;
-import static com.relay.relay.Util.CountryCodeActivityDialog.ACTION_OPEN;
+import static com.relay.relay.viewsAndViewAdapters.CountryCodeActivityDialog.ACTION_OPEN;
 import static com.relay.relay.Util.Imageutils.CAMERA_REQUEST;
 import static com.relay.relay.Util.Imageutils.GALLERY_REQUEST;
 import static com.theartofdev.edmodo.cropper.CropImage.CROP_IMAGE_EXTRA_OPTIONS;

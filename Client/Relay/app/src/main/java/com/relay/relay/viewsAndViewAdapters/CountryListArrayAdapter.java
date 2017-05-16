@@ -1,4 +1,4 @@
-package com.relay.relay.Util;
+package com.relay.relay.viewsAndViewAdapters;
 
 /**
  * Created by omer on 26/04/2017.

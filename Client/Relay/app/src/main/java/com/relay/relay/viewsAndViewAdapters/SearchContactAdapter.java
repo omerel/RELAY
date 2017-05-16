@@ -1,7 +1,6 @@
-package com.relay.relay.Util;
+package com.relay.relay.viewsAndViewAdapters;
 
 import android.support.v7.widget.RecyclerView;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Filter;
@@ -10,6 +9,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.relay.relay.R;
+import com.relay.relay.Util.SearchUser;
 
 import java.util.ArrayList;
 

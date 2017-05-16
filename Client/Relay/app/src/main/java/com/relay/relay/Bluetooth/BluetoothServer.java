@@ -8,6 +8,10 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
+
+import com.relay.relay.SubSystem.RelayConnectivityManager;
+import com.relay.relay.viewsAndViewAdapters.StatusBar;
+
 import java.io.IOException;
 
 /**
@@ -25,20 +29,21 @@ public class BluetoothServer extends Thread implements BLConstants {
     private Messenger mMessenger;
     private BluetoothDevice mConnectedDevice;
     private BluetoothSocket mBluetoothSocket;
-
+    private RelayConnectivityManager mRelayConnectivityManager;
 
     /**
      * BluetoothServer constructor
      * @param bluetoothAdapter to create socket
      * @param messenger to bluetooth manager
      */
-    public BluetoothServer(BluetoothAdapter bluetoothAdapter, Messenger messenger) {
+    public BluetoothServer(BluetoothAdapter bluetoothAdapter, Messenger messenger,RelayConnectivityManager relayConnectivityManager) {
 
         // Use messenger to update bluetooth manger
         this.mMessenger = messenger;
         this.mBluetoothAdapter = bluetoothAdapter;
         this.mBluetoothSocket = null;
         this.mConnectedDevice = null;
+        this.mRelayConnectivityManager = relayConnectivityManager;
 
         // Use a temporary object that is later assigned to mmServerSocket,
         // because mmServerSocket is final
@@ -51,6 +56,8 @@ public class BluetoothServer extends Thread implements BLConstants {
              tmp = mBluetoothAdapter.listenUsingInsecureRfcommWithServiceRecord("RELAY", APP_UUID);
         } catch (IOException e) {
             Log.e(TAG, "Problem with creating listenUsingRfcommWithServiceRecord");
+            mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_ERROR,TAG+
+                    ": Failed tp listen Using Insecure Rfcomm With Service Record, "+e.getMessage());
         }
         mmServerSocket = tmp;
         Log.d(TAG, "Class created");
@@ -69,9 +76,13 @@ public class BluetoothServer extends Thread implements BLConstants {
                 Log.e(TAG, "SUCCESSFULLY CONNECTED");
             } catch (IOException e) {
                 Log.e(TAG, "Problem with mmServerSocket.accept() "+e.getMessage());
+                mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,TAG+
+                        ": Failed to accept socket, "+e.getMessage());
                 break;
             }catch (NullPointerException e){
                 Log.e(TAG, "Problem with mmServerSocket.accept() [null] ");
+                mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_ERROR,TAG+
+                        ": Failed to accept socket, "+e.getMessage());
                 break;
             }
             // If a connection was accepted
@@ -83,6 +94,8 @@ public class BluetoothServer extends Thread implements BLConstants {
                 // Send message back to the bluetooth manager
                 sendMessageToManager(DEVICE_CONNECTED_SUCCESSFULLY_TO_BLUETOOTH_SERVER);
                 Log.d(TAG, "DEVICE_CONNECTED_SUCCESSFULLY_TO_BLUETOOTH_SERVER");
+                mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_CONNECTING,TAG+": Device "+
+                        mConnectedDevice.getAddress()+" Connected  successfully to me" );
             }
 
         }

@@ -9,22 +9,18 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.relay.relay.Util.CountryCodeActivityDialog;
+import com.relay.relay.viewsAndViewAdapters.CountryCodeActivityDialog;
 import com.relay.relay.Util.ImageConverter;
 import com.relay.relay.Util.Imageutils;
-import com.relay.relay.Util.UuidGenerator;
+import com.relay.relay.viewsAndViewAdapters.UuidGenerator;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -39,7 +35,7 @@ import static com.relay.relay.SignupActivity.STEP_6_RESIDENCE;
 import static com.relay.relay.SignupActivity.STEP_7_FINISH;
 import static com.relay.relay.SignupActivity.STEP_BACK;
 import static com.relay.relay.SignupActivity.STEP_NEXT;
-import static com.relay.relay.Util.CountryCodeActivityDialog.ACTION_OPEN;
+import static com.relay.relay.viewsAndViewAdapters.CountryCodeActivityDialog.ACTION_OPEN;
 import static com.relay.relay.Util.Imageutils.CAMERA_REQUEST;
 import static com.relay.relay.Util.Imageutils.GALLERY_REQUEST;
 

@@ -2,12 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.relay.relay">
 
-    <!-- CAMERA permissions -->
-    <uses-permission android:name="android.permission.CAMERA" />
-
-    <uses-feature
-        android:name="android.hardware.camera"
-        android:required="true" />
 
     <!-- Bluetooth permissions -->
     <uses-permission android:name="android.permission.BLUETOOTH" />
@@ -29,7 +23,7 @@
         android:allowBackup="true"
         android:icon="@drawable/relay_icon"
         android:label="@string/app_name"
-        android:supportsRtl="true"
+        android:supportsRtl="false"
         android:theme="@style/AppTheme">
         <service
             android:name=".SubSystem.RelayConnectivityManager"
@@ -70,7 +64,7 @@
             android:theme="@style/FullscreenTheme" />
         <activity android:name=".ComposeMessageActivity" />
         <activity
-            android:name=".Util.CountryCodeActivityDialog"
+            android:name=".viewsAndViewAdapters.CountryCodeActivityDialog"
             android:label="Select your country"
             android:noHistory="true"
             android:theme="@android:style/Theme.Holo.Light.Dialog" />
@@ -98,4 +92,12 @@
     <!-- write permissions -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+
+    <!-- CAMERA permissions -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="true" />
+
 </manifest>

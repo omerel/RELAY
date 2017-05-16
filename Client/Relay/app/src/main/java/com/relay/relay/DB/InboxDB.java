@@ -20,11 +20,9 @@ import com.couchbase.lite.SavedRevision;
 import com.couchbase.lite.UnsavedRevision;
 import com.couchbase.lite.View;
 import com.couchbase.lite.android.AndroidContext;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.relay.relay.SubSystem.DataManager;
 import com.relay.relay.Util.SearchUser;
-import com.relay.relay.Util.UuidGenerator;
-import com.relay.relay.system.Node;
+import com.relay.relay.viewsAndViewAdapters.UuidGenerator;
 import com.relay.relay.system.RelayMessage;
 
 import java.io.IOException;
@@ -34,12 +32,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
-import static com.couchbase.lite.replicator.RemoteRequestRetry.TAG;
 
 /**
  * Created by omer on 23/03/2017.

@@ -8,7 +8,7 @@
     <!-- The primary full-screen view. This can be replaced with whatever view
          is needed to present your content, e.g. VideoView, SurfaceView,
          TextureView, etc. -->
-    <com.relay.relay.Util.TouchImageView
+    <com.relay.relay.viewsAndViewAdapters.TouchImageView
         android:id="@+id/fullscreen_content"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

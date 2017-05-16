@@ -34,7 +34,7 @@ import com.google.firebase.auth.EmailAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.relay.relay.SubSystem.DataManager;
-import com.relay.relay.Util.UuidGenerator;
+import com.relay.relay.viewsAndViewAdapters.UuidGenerator;
 import com.relay.relay.system.Node;
 
 import java.util.UUID;
@@ -42,7 +42,6 @@ import java.util.UUID;
 import static com.relay.relay.MainActivity.SYSTEM_SETTING;
 import static com.relay.relay.SignInActivity.CURRENT_UUID_PASSWORD;
 import static com.relay.relay.SignInActivity.CURRENT_UUID_USER;
-import static com.relay.relay.SignInActivity.IS_LOG_IN;
 
 
 public class SettingsFragment extends Fragment implements View.OnClickListener {

@@ -9,21 +9,15 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.net.Uri;
 import android.os.Build;
-import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.content.FileProvider;
 import android.support.v7.app.AlertDialog;
 import android.widget.Toast;
-
-import java.io.File;
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 public class Imageutils {
 
@@ -62,7 +56,7 @@ public class Imageutils {
         if (Build.VERSION.SDK_INT >= 23) {
             permission_check(CAMERA_REQUEST);
         } else {
-            camera_call();
+            callCamera();
         }
     }
 
@@ -75,7 +69,7 @@ public class Imageutils {
             permission_check(GALLERY_REQUEST);
         }
         else {
-            galley_call();
+            callGallery();
         }
     }
 
@@ -113,12 +107,26 @@ public class Imageutils {
             return;
         }
 
-        if(code == CAMERA_REQUEST)
-            camera_call();
-        else if(code == GALLERY_REQUEST)
-            galley_call();
-    }
 
+
+        if(code == CAMERA_REQUEST){
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                if (current_activity.checkSelfPermission(Manifest.permission.CAMERA)
+                        != PackageManager.PERMISSION_GRANTED) {
+
+                    current_activity.requestPermissions(new String[]{Manifest.permission.CAMERA}, 1);
+                }
+                else
+                    callCamera();
+            }
+        }
+
+        if(code == GALLERY_REQUEST){
+                callGallery();
+            }
+
+    }
 
     private void showMessageOKCancel(String message, DialogInterface.OnClickListener okListener) {
         new AlertDialog.Builder(current_activity)
@@ -134,15 +142,15 @@ public class Imageutils {
      * Capture image from camera
      */
 
-    public void camera_call() {
+    public void callCamera() {
         Intent intent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
-        current_activity.startActivityForResult(intent, CAMERA_REQUEST);
+        current_activity.startActivityForResult(intent,CAMERA_REQUEST);
     }
 
     /**
      * pick image from Gallery
      */
-    public void galley_call() {
+    public void callGallery() {
         Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         intent.setType("image/*");
         current_activity.startActivityForResult(intent, GALLERY_REQUEST);
@@ -156,7 +164,7 @@ public class Imageutils {
         switch (requestCode) {
             case CAMERA_REQUEST:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    camera_call();
+                    callCamera();
                 } else {
                     Toast.makeText(current_activity, "Permission denied",Toast.LENGTH_LONG).show();
                 }
@@ -165,7 +173,7 @@ public class Imageutils {
             case GALLERY_REQUEST:
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0 || grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    galley_call();
+                    callGallery();
                 } else {
                     Toast.makeText(current_activity, "Permission denied",Toast.LENGTH_LONG).show();
                 }

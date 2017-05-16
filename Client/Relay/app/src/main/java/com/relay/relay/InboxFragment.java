@@ -13,7 +13,6 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
@@ -37,7 +36,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.Database;
 import com.couchbase.lite.Document;
 import com.couchbase.lite.Emitter;
@@ -46,23 +44,19 @@ import com.couchbase.lite.Mapper;
 import com.couchbase.lite.Query;
 import com.relay.relay.SubSystem.DataManager;
 import com.relay.relay.SubSystem.RelayConnectivityManager;
-import com.relay.relay.Util.GifImageView;
+import com.relay.relay.viewsAndViewAdapters.GifImageView;
 import com.relay.relay.Util.GridSpacingItemDecoration;
 import com.relay.relay.Util.ImageConverter;
-import com.relay.relay.Util.LiveQueryAdapter;
-import com.relay.relay.Util.SearchContactAdapter;
+import com.relay.relay.viewsAndViewAdapters.LiveQueryAdapter;
+import com.relay.relay.viewsAndViewAdapters.SearchContactAdapter;
 import com.relay.relay.Util.SearchUser;
-import com.relay.relay.Util.ShowActivityFullImage;
-import com.relay.relay.Util.StatusBar;
-import com.relay.relay.Util.UuidGenerator;
+import com.relay.relay.viewsAndViewAdapters.UuidGenerator;
 import com.relay.relay.system.Node;
-import com.relay.relay.system.RelayMessage;
 
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.UUID;
 
-import static com.couchbase.lite.replicator.RemoteRequestRetry.TAG;
 import static com.relay.relay.DB.InboxDB.REFRESH_INBOX_DB;
 import static com.relay.relay.MainActivity.REQUEST_FOR_MANUAL_HAND_SHAKE;
 

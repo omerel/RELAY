@@ -5,9 +5,11 @@ import android.bluetooth.le.AdvertiseCallback;
 import android.bluetooth.le.AdvertiseData;
 import android.bluetooth.le.AdvertiseSettings;
 import android.bluetooth.le.BluetoothLeAdvertiser;
-import android.os.Build;
 import android.os.ParcelUuid;
 import android.util.Log;
+
+import com.relay.relay.SubSystem.RelayConnectivityManager;
+import com.relay.relay.viewsAndViewAdapters.StatusBar;
 
 /**
  * Created by omer on 10/12/2016.
@@ -23,19 +25,23 @@ public class BLEAdvertising implements BLConstants {
     private BluetoothLeAdvertiser mBluetoothLeAdvertiser;
     private AdvertiseCallback mAdvertiseCallback;
 
+    private RelayConnectivityManager mRelayConnectivityManager;
+
     /**
      * BLEAdvertising constructor
      * @param bluetoothAdapter helps to check if bluetooth enable or disable
      */
-    public BLEAdvertising(BluetoothAdapter bluetoothAdapter) {
+    public BLEAdvertising(BluetoothAdapter bluetoothAdapter,RelayConnectivityManager relayConnectivityManager) {
 
         this.mBluetoothAdapter = bluetoothAdapter;
         this.mAdvertiseCallback = null;
+        this.mRelayConnectivityManager = relayConnectivityManager;
 
         if (mBluetoothAdapter != null) {
             mBluetoothLeAdvertiser = mBluetoothAdapter.getBluetoothLeAdvertiser();
         } else {
             Log.e(TAG, "Error - FAILED_ADVERTISING");
+            mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_ERROR,TAG+": Error - FAILED_ADVERTISING");
         }
         Log.d(TAG, "Class created");
     }
@@ -61,10 +67,11 @@ public class BLEAdvertising implements BLConstants {
                 if (mBluetoothLeAdvertiser != null && mBluetoothAdapter.isEnabled()) {
                     mBluetoothLeAdvertiser.startAdvertising(settings, data, dataRes, mAdvertiseCallback);
                     Log.d(TAG, "Starting Advertising");
+                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_ADVERTISEMENT,TAG+": Start BLE Advertising");
                 }
             }catch(Exception e){
                 Log.e(TAG,e.getMessage());
-                // do nothing
+                mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_ERROR,TAG+": "+e.getMessage());
             }
 
         }
@@ -78,6 +85,7 @@ public class BLEAdvertising implements BLConstants {
             mBluetoothLeAdvertiser.stopAdvertising(mAdvertiseCallback);
             mAdvertiseCallback = null;
             Log.d(TAG, "System Stopping Advertising");
+            mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_STOP_ADVERTISEMENT,TAG+": Stop BLE Advertising");
         }
     }
 
@@ -129,18 +137,23 @@ public class BLEAdvertising implements BLConstants {
             switch (errorCode) {
                 case ADVERTISE_FAILED_ALREADY_STARTED:
                     Log.e(TAG, "ADVERTISE_FAILED_ALREADY_STARTED");
+                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_ERROR,TAG+": ADVERTISE_FAILED_ALREADY_STARTED");
                     break;
                 case ADVERTISE_FAILED_DATA_TOO_LARGE:
                     Log.e(TAG, "ADVERTISE_FAILED_DATA_TOO_LARGE");
+                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_ERROR,TAG+": ADVERTISE_FAILED_DATA_TOO_LARGE");
                     break;
                 case ADVERTISE_FAILED_FEATURE_UNSUPPORTED:
                     Log.e(TAG, "ADVERTISE_FAILED_FEATURE_UNSUPPORTED");
+                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_ERROR,TAG+": ADVERTISE_FAILED_FEATURE_UNSUPPORTED");
                     break;
                 case ADVERTISE_FAILED_INTERNAL_ERROR:
                     Log.e(TAG, "ADVERTISE_FAILED_INTERNAL_ERROR");
+                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_ERROR,TAG+": ADVERTISE_FAILED_INTERNAL_ERROR");
                     break;
                 case ADVERTISE_FAILED_TOO_MANY_ADVERTISERS:
                     Log.e(TAG, "ADVERTISE_FAILED_TOO_MANY_ADVERTISERS");
+                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_ERROR,TAG+": ADVERTISE_FAILED_TOO_MANY_ADVERTISERS");
                     break;
             }
         }
@@ -148,6 +161,7 @@ public class BLEAdvertising implements BLConstants {
         public void onStartSuccess(AdvertiseSettings settingsInEffect) {
             super.onStartSuccess(settingsInEffect);
             Log.d(TAG, "Advertising successfully started");
+            mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_ADVERTISEMENT,TAG+": Advertising successfully started");
         }
     }
 }

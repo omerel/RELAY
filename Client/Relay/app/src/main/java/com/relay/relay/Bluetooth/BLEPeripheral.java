@@ -22,7 +22,8 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
 import com.relay.relay.SubSystem.RelayConnectivityManager;
-import com.relay.relay.Util.StatusBar;
+import com.relay.relay.Util.MacAddressFinder;
+import com.relay.relay.viewsAndViewAdapters.StatusBar;
 
 
 public class BLEPeripheral implements BLConstants {
@@ -49,18 +50,20 @@ public class BLEPeripheral implements BLConstants {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 if (newState == BluetoothGatt.STATE_CONNECTED) {
                     mGattServer.connect(device,false);
-                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,"BluetoothGatt connected to BLE device");
+                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,TAG+": BluetoothGatt connected to BLE device");
                     Log.e(TAG, "Connected to device(SERVER SIDE): " + device.getAddress());
 
                 } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
                     Log.d(TAG, "Disconnected from device");
-                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,"BluetoothGatt disconnected from BLE device");
+                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,TAG+": BluetoothGatt disconnected from BLE device");
 //                    // create new advertising to others device
 //                    close();
 //                    startPeripheral();
                 }
             } else {
                 Log.e(TAG, "Error when connecting: " + status);
+                mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_ERROR,TAG+": Error when connecting: "+status);
+
             }
         }
 
@@ -75,7 +78,6 @@ public class BLEPeripheral implements BLConstants {
             sendResultToManager(GET_BLUETOOTH_SERVER_READY);
             // Stop advertising
             mBleAdvertising.stopAdvertising();
-            mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_STOP_ADVERTISEMENT,"Stop BLE advertisement");
         }
     };
 
@@ -89,9 +91,9 @@ public class BLEPeripheral implements BLConstants {
 
         this.mRelayConnectivityManager = relayConnectivityManager;
         this.mBluetoothAdapter = bluetoothAdapter;
-        this.mBLEService = new BLEService(mBluetoothAdapter.getAddress());
+        this.mBLEService = new BLEService(MacAddressFinder.getBluetoothMacAddress());
         this.mBluetoothGattService = mBLEService.getBluetoothGattService();
-        this.mBleAdvertising = new BLEAdvertising(mBluetoothAdapter);
+        this.mBleAdvertising = new BLEAdvertising(mBluetoothAdapter,relayConnectivityManager);
         this.mMessenger =messenger;
         this.mBluetoothManager = (BluetoothManager) mRelayConnectivityManager.getSystemService(Context.BLUETOOTH_SERVICE);
 
@@ -109,19 +111,6 @@ public class BLEPeripheral implements BLConstants {
             mBleAdvertising.stopAdvertising();
         }
     }
-//
-//
-//    /**
-//     * Stop Peripheral - disconnect from all devices and stop advertising
-//     */
-//    public void stopPeripheral(){
-//
-//        if (mGattServer != null) {
-//           disconnectFromDevices(); //TODO do i need it? is there any limit for it?
-//            mGattServer.close();
-//        }
-//        mBleAdvertising.stopAdvertising();
-//    }
 
     /**
      * Start Peripheral - start advertising
@@ -139,17 +128,18 @@ public class BLEPeripheral implements BLConstants {
         if (mGattServer == null) {
             Log.e(TAG, "ERROR - didn't open gattServer. returns null");
             // reset mBluetoothManager and start Peripheral in the next interval
-            // TODO sendResultToManager(BLE_ADVERTISE_ERROR);
+            sendResultToManager(BLE_ADVERTISE_ERROR);
+            mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_ERROR,TAG+": ERROR - didn't open gattServer. returns null");
             return;
         }
 
         // Add BLEService
         mGattServer.addService(mBluetoothGattService);
-
         // check mBleAdvertising not null
         if(mBleAdvertising != null) {
             mBleAdvertising.startAdvertising();
-            mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_ADVERTISEMENT,"Start advertisement");
+        }else{
+            sendResultToManager(BLE_ADVERTISE_ERROR);
         }
     }
 

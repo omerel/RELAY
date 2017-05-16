@@ -21,21 +21,24 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.relay.relay.DB.BlConnectionLogDB;
-import com.relay.relay.Util.BlConnectionLoggerListArrayAdapter;
-import com.relay.relay.Util.BluetoothConnectionLogger;
+import com.relay.relay.Util.MacAddressFinder;
+import com.relay.relay.viewsAndViewAdapters.BlConnectionLoggerListArrayAdapter;
+import com.relay.relay.viewsAndViewAdapters.BluetoothConnectionLogger;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.NetworkInterface;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.List;
 
-import static com.relay.relay.Util.StatusBar.FLAG_ADVERTISEMENT;
-import static com.relay.relay.Util.StatusBar.FLAG_CONNECTING;
-import static com.relay.relay.Util.StatusBar.FLAG_ERROR;
-import static com.relay.relay.Util.StatusBar.FLAG_HANDSHAKE;
-import static com.relay.relay.Util.StatusBar.FLAG_NO_CHANGE;
-import static com.relay.relay.Util.StatusBar.FLAG_SEARCH;
+import static com.relay.relay.viewsAndViewAdapters.StatusBar.FLAG_ADVERTISEMENT;
+import static com.relay.relay.viewsAndViewAdapters.StatusBar.FLAG_CONNECTING;
+import static com.relay.relay.viewsAndViewAdapters.StatusBar.FLAG_ERROR;
+import static com.relay.relay.viewsAndViewAdapters.StatusBar.FLAG_HANDSHAKE;
+import static com.relay.relay.viewsAndViewAdapters.StatusBar.FLAG_NO_CHANGE;
+import static com.relay.relay.viewsAndViewAdapters.StatusBar.FLAG_SEARCH;
 
 public class DebugActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -63,7 +66,7 @@ public class DebugActivity extends AppCompatActivity implements View.OnClickList
             calendar.get(Calendar.MINUTE)+":"+calendar.get(Calendar.SECOND);
 
     private String[] deviceDetails = {Build.BRAND,Build.MODEL,Build.VERSION.RELEASE,
-            Build.getRadioVersion(),
+            MacAddressFinder.getBluetoothMacAddress(),
             String.valueOf(BluetoothAdapter.getDefaultAdapter().isMultipleAdvertisementSupported()),dateIssue};
 
     @Override
@@ -85,7 +88,7 @@ public class DebugActivity extends AppCompatActivity implements View.OnClickList
         textViewDevice.setText("Brand: "+deviceDetails[0] +
                         "\nModel: "+deviceDetails[1] +
                         "\nVersion: "+ deviceDetails[2] +
-                        "\nRadio version: "+deviceDetails[3] +
+                        "\nMAC: "+deviceDetails[3] +
                         "\nSupport BLE advertisement: "+ deviceDetails[4] +
                         "\nDate of issue: "+ deviceDetails[5] );
 
@@ -146,7 +149,7 @@ public class DebugActivity extends AppCompatActivity implements View.OnClickList
             FileWriter writer = new FileWriter(csvFile);
 
             writer.append("Device details:\n");
-            writer.append("Brand,Model,Version,Radio Version,Support BLE advertisement,Date of issue\n");
+            writer.append("Brand,Model,Version,MAC,Support BLE advertisement,Date of issue\n");
             writer.append(deviceDetails[0]+","+deviceDetails[1]+","+deviceDetails[2]+","+
                     deviceDetails[3]+","+deviceDetails[4]+","+deviceDetails[5]+"\n");
             writer.append("Log info:"+"\n");

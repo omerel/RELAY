@@ -1,23 +1,17 @@
-package com.relay.relay.Util;
+package com.relay.relay.viewsAndViewAdapters;
 
 import android.app.Activity;
 import android.content.Context;
-import android.os.Bundle;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.ViewGroup;
-import android.widget.ListAdapter;
 
 import com.couchbase.lite.Document;
 import com.couchbase.lite.LiveQuery;
 import com.couchbase.lite.QueryEnumerator;
 import com.relay.relay.ConversationActivity;
-
-import java.util.ArrayList;
-import java.util.Map;
 
 /**
  * Created by omer on 07/04/2017.

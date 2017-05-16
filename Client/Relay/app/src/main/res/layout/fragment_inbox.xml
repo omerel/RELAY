@@ -28,7 +28,7 @@
         android:layout_marginBottom="16dp"
         app:srcCompat="@android:drawable/ic_dialog_email" />
 
-    <com.relay.relay.Util.GifImageView
+    <com.relay.relay.viewsAndViewAdapters.GifImageView
         android:id="@+id/gif_empty"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

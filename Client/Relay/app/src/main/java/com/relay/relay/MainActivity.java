@@ -41,7 +41,7 @@ import android.widget.TextView;
 
 import com.relay.relay.SubSystem.DataManager;
 import com.relay.relay.SubSystem.RelayConnectivityManager;
-import com.relay.relay.Util.StatusBar;
+import com.relay.relay.viewsAndViewAdapters.StatusBar;
 
 import java.util.UUID;
 
@@ -506,7 +506,7 @@ public class MainActivity extends AppCompatActivity
                         .setDefaults(Notification.DEFAULT_ALL)
                         .setSound(soundUri)
                         .setContentIntent(intent);
-                
+
                 //Display notification
                 notificationManager.notify(0, mBuilder.build());
 

@@ -1,4 +1,4 @@
-package com.relay.relay.Util;
+package com.relay.relay.viewsAndViewAdapters;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
@@ -6,21 +6,20 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.os.CountDownTimer;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
 import com.relay.relay.DB.BlConnectionLogDB;
 import com.relay.relay.R;
+import com.relay.relay.viewsAndViewAdapters.BlConnectionLoggerListArrayAdapter;
+import com.relay.relay.viewsAndViewAdapters.BluetoothConnectionLogger;
 
 import java.util.List;
-import java.util.zip.Inflater;
 
 
 /**

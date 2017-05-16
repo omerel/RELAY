@@ -6,6 +6,10 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
+
+import com.relay.relay.SubSystem.RelayConnectivityManager;
+import com.relay.relay.viewsAndViewAdapters.StatusBar;
+
 import java.io.IOException;
 
 /**
@@ -20,17 +24,19 @@ public class BluetoothClient extends Thread implements BLConstants {
     private final BluetoothDevice mBluetoothDevice;
     private Messenger mMessenger;
     private final BluetoothSocket mBluetoothSocket;
+    private  RelayConnectivityManager mRelayConnectivityManager;
 
     /**
      * BluetoothClient constructor
      * @param messenger to bluetooth manager
      * @param bluetoothDevice the device that act as a service
      */
-    public BluetoothClient(Messenger messenger, BluetoothDevice bluetoothDevice) {
+    public BluetoothClient(Messenger messenger, BluetoothDevice bluetoothDevice, RelayConnectivityManager relayConnectivityManager) {
 
         // Use messenger to update bluetooth manger
         this.mMessenger = messenger;
         this.mBluetoothDevice = bluetoothDevice;
+        this.mRelayConnectivityManager = relayConnectivityManager;
 
         // Use a temporary object that is later assigned to mBluetoothSocket,
         // because mBluetoothSocket is final
@@ -43,6 +49,8 @@ public class BluetoothClient extends Thread implements BLConstants {
             tmp = mBluetoothDevice.createInsecureRfcommSocketToServiceRecord(APP_UUID);
         } catch (IOException e) {
             Log.e(TAG, "Problem with creating createRfcommSocketToServiceRecord");
+            mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_ERROR,TAG+
+                    ": Failed create Rfcomm Socket To Service Record, "+e.getMessage());
         }
         mBluetoothSocket = tmp;
         Log.d(TAG, "Class created");
@@ -61,10 +69,14 @@ public class BluetoothClient extends Thread implements BLConstants {
             cancel();
             // Send message back to the bluetooth manager
             sendMessageToManager(FAILED_CONNECTING_TO_DEVICE);
+            mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,TAG+
+                    ": Failed connecting device socket, "+connectException.getMessage());
             return;
         }
         // Send message back to the bluetooth manager
         sendMessageToManager(SUCCEED_CONNECTING_TO_DEVICE);
+        mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_CONNECTING,TAG+": Succeed Connecting device"+
+                mBluetoothSocket.getRemoteDevice().getAddress());
         Log.d(TAG, "SUCCEED_CONNECTING_TO_DEVICE");
     }
 
@@ -73,6 +85,7 @@ public class BluetoothClient extends Thread implements BLConstants {
         try {
             mBluetoothSocket.close();
             Log.d(TAG, "Thread was closed");
+            mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_CLOSE_CONNECTION,TAG+": Close bluetooth socket");
         } catch (IOException e) {
             Log.e(TAG, "Error with mBluetoothSocket.close() ");
         }

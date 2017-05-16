@@ -1,21 +1,14 @@
-package com.relay.relay.Util;
+package com.relay.relay.viewsAndViewAdapters;
 
 import android.app.Activity;
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.support.v7.widget.RecyclerView;
-import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.TextView;
 
 import com.couchbase.lite.Document;
 import com.couchbase.lite.LiveQuery;
 import com.couchbase.lite.QueryEnumerator;
 import com.relay.relay.InboxFragment;
-import com.relay.relay.MainActivity;
-import com.relay.relay.R;
 
 /**
  * Created by omer on 31/03/2017.

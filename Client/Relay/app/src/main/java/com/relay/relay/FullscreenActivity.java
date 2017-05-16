@@ -1,17 +1,13 @@
 package com.relay.relay;
 
-import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.os.Handler;
-import android.view.MotionEvent;
 import android.view.View;
 
 import com.relay.relay.Util.ImageConverter;
-import com.relay.relay.Util.TouchImageView;
+import com.relay.relay.viewsAndViewAdapters.TouchImageView;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.

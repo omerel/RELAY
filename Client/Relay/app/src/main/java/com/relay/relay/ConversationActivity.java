@@ -51,7 +51,7 @@ import com.relay.relay.SubSystem.RelayConnectivityManager;
 import com.relay.relay.Util.GridSpacingItemDecoration;
 import com.relay.relay.Util.ImageConverter;
 import com.relay.relay.Util.Imageutils;
-import com.relay.relay.Util.LiveQueryMessageAdapter;
+import com.relay.relay.viewsAndViewAdapters.LiveQueryMessageAdapter;
 import com.relay.relay.Util.ShowActivityFullImage;
 import com.relay.relay.system.RelayMessage;
 import com.theartofdev.edmodo.cropper.CropImage;
