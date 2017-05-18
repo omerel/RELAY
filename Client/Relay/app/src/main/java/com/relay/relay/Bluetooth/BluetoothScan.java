@@ -56,20 +56,22 @@ public class BluetoothScan implements BLConstants{
             mBluetoothAdapter.startDiscovery();
             Log.e(TAG, "start Discovery ");
             beDiscoverable();
-
         }
         stopScanHandler = new Handler();
         stopScanHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
                 stopScan();
-                if(!isDeviceFound) // if not found or if the device was the server
-                try {
-                    mRelayConnectivityManager.unregisterReceiver(mBroadcastReceiver);
-                }catch (Exception e){
-                    Log.e(TAG,e.getMessage());
+                // if not found or if the device was the server
+                if(!isDeviceFound) {
+                    try {
+                        mRelayConnectivityManager.unregisterReceiver(mBroadcastReceiver);
+                        Log.e(TAG, "stopScanHandler is alarmed");
+                    } catch (Exception e) {
+                        Log.e(TAG, e.getMessage());
+                    }
+                    sendMessageToBluetoothManager(NOT_FOUND_ADDRESS_FROM_BLSCAN, null);
                 }
-                    sendMessageToBluetoothManager(NOT_FOUND_ADDRESS_FROM_BLSCAN,null);
             }
         }, SCAN_TIME);
     }
@@ -103,14 +105,13 @@ public class BluetoothScan implements BLConstants{
                         case BluetoothDevice.ACTION_FOUND:
                             // Get the BluetoothDevice object from the Intent
                             BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                            Log.e(TAG, "ACTION_FOUND " + device.getName());
-
                             String[] split = null;
                             if (device.getName() != null)
                                 split = device.getName().split("_");
                             if (split != null && split.length > 0) {
                                 if (split[0].equals("relay")) {
                                     isDeviceFound = true;
+                                    Log.e(TAG, "ACTION_FOUND " + device.getName());
                                     stopScan();
                                     try {
                                         mRelayConnectivityManager.unregisterReceiver(mBroadcastReceiver);

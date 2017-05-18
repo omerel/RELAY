@@ -128,6 +128,7 @@ public class BLEPeripheral implements BLConstants {
         if (mGattServer == null) {
             Log.e(TAG, "ERROR - didn't open gattServer. returns null");
             // reset mBluetoothManager and start Peripheral in the next interval
+            close();
             sendResultToManager(BLE_ADVERTISE_ERROR);
             mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_ERROR,TAG+": ERROR - didn't open gattServer. returns null");
             return;

@@ -51,17 +51,7 @@
                 android:layout_marginBottom="4dp"
                 android:id="@+id/textView_item_contact_message" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="13:00 12/08/2016"
-                android:textSize="8sp"
-                android:layout_toRightOf="@id/textView_item_contact_name"
-                android:layout_marginLeft="8dp"
-                android:layout_alignEnd="@+id/textView_item_contact_message"
-                android:layout_alignBaseline="@id/textView_item_contact_name"
-                android:textAlignment="textEnd"
-                android:id="@+id/textView_item_message_time" />
+
 
             <ImageView
                 android:layout_width="12dp"
@@ -81,7 +71,17 @@
                 android:layout_marginRight="4dp"
                 android:layout_toRightOf="@id/imageView_item_message_updates"
                 android:id="@+id/imageView_item_message_status"/>
-
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="13:00 12/08/2016"
+                android:textSize="8sp"
+                android:layout_toRightOf="@id/imageView_item_message_status"
+                android:layout_marginLeft="8dp"
+                android:layout_alignEnd="@+id/textView_item_contact_message"
+                android:layout_alignBaseline="@id/textView_item_contact_name"
+                android:textAlignment="textEnd"
+                android:id="@+id/textView_item_message_time" />
             <ImageView
                 android:id="@+id/image_view_picture_attachment"
                 android:layout_width="150dp"

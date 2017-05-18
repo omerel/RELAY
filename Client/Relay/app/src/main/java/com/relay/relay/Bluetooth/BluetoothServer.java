@@ -75,14 +75,18 @@ public class BluetoothServer extends Thread implements BLConstants {
                 socket = mmServerSocket.accept();
                 Log.e(TAG, "SUCCESSFULLY CONNECTED");
             } catch (IOException e) {
-                Log.e(TAG, "Problem with mmServerSocket.accept() "+e.getMessage());
+                cancel();
+                Log.e(TAG, "Problem with mmServerSocket.accept()  IOException:"+e.getMessage());
                 mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,TAG+
                         ": Failed to accept socket, "+e.getMessage());
+                sendMessageToManager(DEVICE_FAILED_CONNECTING_ME);
                 break;
             }catch (NullPointerException e){
+                cancel();
                 Log.e(TAG, "Problem with mmServerSocket.accept() [null] ");
                 mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_ERROR,TAG+
                         ": Failed to accept socket, "+e.getMessage());
+                sendMessageToManager(DEVICE_FAILED_CONNECTING_ME);
                 break;
             }
             // If a connection was accepted

@@ -55,7 +55,6 @@ public class BluetoothClient extends Thread implements BLConstants {
         mBluetoothSocket = tmp;
         Log.d(TAG, "Class created");
     }
-
     // Start thread
     public void run() {
         Log.d(TAG, "Start Thread");
@@ -64,7 +63,7 @@ public class BluetoothClient extends Thread implements BLConstants {
             // until it succeeds or throws an exception
             mBluetoothSocket.connect();
         } catch (IOException connectException) {
-            Log.e(TAG, "Problem with mBluetoothSocket.connect() ");
+            Log.e(TAG, "Problem with mBluetoothSocket.connect() "+connectException.getMessage());
             // Unable to connect; close the socket and get out
             cancel();
             // Send message back to the bluetooth manager

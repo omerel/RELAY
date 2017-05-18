@@ -29,6 +29,7 @@ public interface BLConstants {
     // Message from BluetoothClient
     int FAILED_CONNECTING_TO_DEVICE = 20;
     int SUCCEED_CONNECTING_TO_DEVICE = 21;
+    int DEVICE_FAILED_CONNECTING_ME = 22;
 
     // Message from BLEAdvertising
     int BLE_ADVERTISE_ERROR = 30;
