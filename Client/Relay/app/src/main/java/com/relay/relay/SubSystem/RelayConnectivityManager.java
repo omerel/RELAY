@@ -230,10 +230,8 @@ public class RelayConnectivityManager extends Service implements BLConstants {
 //        if (mCurrentMode == BLUETOOTH_MODE){
 //
 //        }
-        new Thread(new Runnable() {
-            public void run() {
-                mLogger.addToLog(flag,logMsg);
-            } }).start();
+
+        mLogger.addToLog(flag,logMsg);
 
         // BroadCast relay message to activity
         Intent updateActivity = new Intent(StatusBar.STATUS_BAR_RELAY);

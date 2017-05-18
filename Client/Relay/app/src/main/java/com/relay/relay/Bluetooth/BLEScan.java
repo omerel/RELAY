@@ -164,9 +164,9 @@ public class BLEScan implements BLConstants {
         public void onScanFailed(int errorCode) {
             super.onScanFailed(errorCode);
             stopScanning();
-            sendResultToBLECentral(BLE_SCAN_ERROR,null);
-            Log.e(TAG, "Error - Scan failed with error: "+ errorCode);
             mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_ERROR,TAG+": Error - Scan failed with error: "+ errorCode);
+            Log.e(TAG, "Error - Scan failed with error: "+ errorCode);
+            sendResultToBLECentral(BLE_SCAN_ERROR,null);
         }
     }
 
