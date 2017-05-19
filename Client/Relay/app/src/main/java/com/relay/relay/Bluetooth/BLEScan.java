@@ -9,6 +9,7 @@ import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.ParcelUuid;
@@ -111,7 +112,6 @@ public class BLEScan implements BLConstants {
             // 2. give a chance to devices that are with farther
             sendResultToBLECentral(FOUND_NEW_DEVICE,listBluetoothDeviceResults.get(listBluetoothDeviceResults.size()-1));
             listBluetoothDeviceResults.remove(listBluetoothDeviceResults.size()-1);
-            mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,TAG+": Found device to connect on queue");
             Log.e(TAG, "sendResultToBLECentral" );
             }
     }
@@ -120,7 +120,6 @@ public class BLEScan implements BLConstants {
         if (listBluetoothDeviceResults.size() != 0)
                 return true;
         Log.e(TAG,"There are no devices in queue");
-        mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,TAG+": Search queue is empty");
         return false;
     }
 
@@ -155,16 +154,36 @@ public class BLEScan implements BLConstants {
             // dynamic address every few seconds)
             if (!listBluetoothDeviceResults.contains(result.getDevice()) && listBluetoothDeviceResults.size() < 3) {
                 listBluetoothDeviceResults.add(result.getDevice());
-                Log.e(TAG, "Found new result - "+"Name :  "+result.getDevice().getName() +
-                        " ,Mac device : "+result.getDevice().getAddress());
+                Log.e(TAG, "Found new device - "+"Name :  "+result.getDevice().getName() +
+                        " ,Mac random device : "+result.getDevice().getAddress());
+                mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,TAG+": "+
+                        "Found new device - "+"Name :  "+result.getDevice().getName() +
+                        " ,Mac random device : "+result.getDevice().getAddress());
             }
         }
 
         @Override
-        public void onScanFailed(int errorCode) {
+        public void onScanFailed(final int errorCode) {
             super.onScanFailed(errorCode);
-            mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_ERROR,TAG+": Error - Scan failed with error: "+ errorCode);
-            stopScanning();
+            //todo   test moved the the stop to manager stopScanning();
+            switch (errorCode){
+                case 1 :
+                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_ERROR,TAG+": Scan failed with error: "+
+                            "Fails to start scan as BLE scan with the same settings is already started by the app");
+                    break;
+                case 2 :
+                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_ERROR,TAG+": Scan failed with error: "+
+                    "Fails to start scan as app cannot be registered");
+                    break;
+                case 4 :
+                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_ERROR,TAG+": Scan failed with error: "+
+                    "Fails to start power optimized scan as this feature is not supported");
+                    break;
+                case 3 :
+                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_ERROR,TAG+": Scan failed with error: "+
+                    "Fails to start scan due an internal error");
+                    break;
+            }
             Log.e(TAG, "Error - Scan failed with error: "+ errorCode);
             sendResultToBLECentral(BLE_SCAN_ERROR,null);
         }

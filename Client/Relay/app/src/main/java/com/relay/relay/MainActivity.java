@@ -497,18 +497,20 @@ public class MainActivity extends AppCompatActivity
                 final MediaPlayer sound = MediaPlayer.create(this, soundUri);
                 sound.start();
 
-                Intent notificationIntent = new Intent(this, MainActivity.class);
-                PendingIntent intent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
-                NotificationCompat.Builder mBuilder = (NotificationCompat.Builder) new NotificationCompat.Builder(getApplicationContext())
-                        .setSmallIcon(R.drawable.relay_icon)
-                        .setContentTitle(msg.split(DELIMITER)[0])
-                        .setContentText(msg.split(DELIMITER)[1])
-                        .setDefaults(Notification.DEFAULT_ALL)
-                        .setSound(soundUri)
-                        .setContentIntent(intent);
+                // sound with notification
 
-                //Display notification
-                notificationManager.notify(0, mBuilder.build());
+//                Intent notificationIntent = new Intent(this, MainActivity.class);
+//                PendingIntent intent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
+//                NotificationCompat.Builder mBuilder = (NotificationCompat.Builder) new NotificationCompat.Builder(getApplicationContext())
+//                        .setSmallIcon(R.drawable.relay_icon)
+//                        .setContentTitle(msg.split(DELIMITER)[0])
+//                        .setContentText(msg.split(DELIMITER)[1])
+//                        .setDefaults(Notification.DEFAULT_ALL)
+//                        .setSound(soundUri)
+//                        .setContentIntent(intent);
+//
+//                //Display notification
+//                notificationManager.notify(0, mBuilder.build());
 
             }
         }

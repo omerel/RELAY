@@ -130,14 +130,18 @@ public class BLManager extends Thread implements BLConstants {
 
     // Close thread
     public void cancel() {
+
         stopSearch(FOUND_NEW_DEVICE); // the parameter used to init the counter
+        mAdvertiserHandler.removeCallbacksAndMessages(null);
+        mHandler.removeCallbacks(null);
+        mScanHandler.removeCallbacks(null);
+
         if (mBluetoothClient != null)
             mBluetoothClient.cancel();
         if (mBluetoothServer != null)
             mBluetoothServer.cancel();
         mBLECentral.close();
         mBlePeripheral.close();
-        mAdvertiserHandler.removeCallbacksAndMessages(null);
         Log.d(TAG, "Cancel thread");
     }
 
@@ -454,6 +458,7 @@ public class BLManager extends Thread implements BLConstants {
                 case BLE_SCAN_ERROR:
                     Log.e(TAG, "BLE_SCAN_ERROR");
                     mStatus = DISCONNECTED;
+                    // todo test not closing scan when failed stopSearch(0);
                     break;
 
                 case FOUND_MAC_ADDRESS_FROM_BLSCAN:

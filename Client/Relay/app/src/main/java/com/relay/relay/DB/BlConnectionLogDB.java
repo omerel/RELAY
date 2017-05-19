@@ -25,6 +25,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Created by omer on 14/05/2017.
@@ -33,7 +34,7 @@ import java.util.Map;
 public class BlConnectionLogDB {
 
     final String TAG = "RELAY_DEBUG: "+ BlConnectionLogDB.class.getSimpleName();
-    final String FORMATTER_DATE = "yyyyMMddHHmmss";
+    final String FORMATTER_DATE = "yyyyMMddHHmmssSSS";
     final String DB_NAME = "bl_connection_logger_db";
 
     private Database mDatabase = null;
@@ -74,7 +75,7 @@ public class BlConnectionLogDB {
         String tStamp = convertCalendarToFormattedString(Calendar.getInstance());
         properties.put("time", tStamp);
 
-        String docId = "Log_"+tStamp;
+        String docId = "Log_"+ UUID.randomUUID();;
         Document document = mDatabase.getDocument(docId);
 
         try {

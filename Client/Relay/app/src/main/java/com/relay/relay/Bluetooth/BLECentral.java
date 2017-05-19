@@ -105,11 +105,9 @@ public class BLECentral implements BLConstants {
                                 TAG+": Found new device that not in connected list :" + address);
                     }
                     else{
-                        Log.e(TAG, "Found device that is in the connected list :" + address+
-                                "\n restart scan.");
+                        Log.e(TAG, "The device that is in the connected list :" + address);
                         mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,
-                                TAG+": Found device that is in the connected list :" + address+
-                                        "\n restart scan.");
+                                TAG+": The device that is in the connected list :" + address);
                         // try the next device in results
                         mBleScan.checkResults();
                         mConnectionHandler.removeCallbacks(null); // clear watchdog
@@ -149,6 +147,8 @@ public class BLECentral implements BLConstants {
             // disable connection automatically
             mBluetoothGatt = bluetoothDevice.connectGatt(mRelayConnectivityManager, false, mGattCallback);
             Log.e(TAG, "Connecting to gatt server ");
+            mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,
+                    TAG+": Connecting to gatt server in "+ bluetoothDevice.getAddress());
           //  connectionWatchDog(10000);
           //  Log.e(TAG, "Starting connection watchdog for 10 seconds");
         }

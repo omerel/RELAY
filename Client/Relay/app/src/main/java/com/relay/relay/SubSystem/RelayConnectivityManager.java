@@ -206,7 +206,10 @@ public class RelayConnectivityManager extends Service implements BLConstants {
 
     private void startBluetoothMode(){mBluetoothManager.start();}
 
-    private void stopBluetoothMode(){mBluetoothManager.cancel();}
+    private void stopBluetoothMode(){
+        mBluetoothManager.cancel();
+        mBluetoothManager = new BLManager(mMessenger,this);
+    }
 
     @SuppressLint("WifiManagerLeak")
     private boolean isWifiAvailable() {
