@@ -246,7 +246,8 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
                 break;
 
             case R.id.imageView_close_attachment_send_message_area:
-
+                mAttachment.setVisibility(View.GONE);
+                mDeleteAttachment.setVisibility(View.GONE);
                 break;
 
         }
