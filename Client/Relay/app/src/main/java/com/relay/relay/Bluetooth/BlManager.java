@@ -365,9 +365,6 @@ public class BLManager extends Thread implements BLConstants {
                     // cancel server if working
                     mBluetoothServer.cancel();
 
-                    stopSearch(FOUND_NEW_DEVICE);
-
-
                     // Start handshake
                     mHandShake = new HandShake(bluetoothSocket,mMessenger,mInitiator,
                             mRelayConnectivityManager,mDataManager,metadata);
