@@ -117,11 +117,13 @@ public class BLManager extends Thread implements BLConstants {
                 mBlePeripheral.startPeripheral();
             }
         }
+
         mAdvertiserHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                startPeripheral();
-                Log.d(TAG, "Restart Advertisement if needed");
+                // todo test. try to see if advertisement working without it
+//                startPeripheral();
+//                Log.d(TAG, "Restart Advertisement if needed");
             }
         }, 60000); // 1 min
 
@@ -457,7 +459,6 @@ public class BLManager extends Thread implements BLConstants {
                 case BLE_SCAN_ERROR:
                     Log.e(TAG, "BLE_SCAN_ERROR");
                     mStatus = DISCONNECTED;
-                    // todo test not closing scan when failed stopSearch(0);
                     break;
 
                 case FOUND_MAC_ADDRESS_FROM_BLSCAN:

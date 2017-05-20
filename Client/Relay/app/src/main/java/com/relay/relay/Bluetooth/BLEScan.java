@@ -101,7 +101,7 @@ public class BLEScan implements BLConstants {
     private ScanSettings buildScanSettings() {
         ScanSettings.Builder builder = new ScanSettings.Builder();
         builder.setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY);
-        builder.setReportDelay(0);
+        builder.setReportDelay(0); // when delay use onBatchScanResults
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             builder.setNumOfMatches(MATCH_NUM_FEW_ADVERTISEMENT );
         }
@@ -189,6 +189,15 @@ public class BLEScan implements BLConstants {
             }
             Log.e(TAG, "Error - Scan failed with error: "+ errorCode);
             sendResultToBLECentral(BLE_SCAN_ERROR,null);
+
+//            mBluetoothAdapter.disable();
+//            new Handler().postDelayed(new Runnable() {
+//                @Override
+//                public void run() {
+//                    mBluetoothAdapter.enable();
+//                }
+//            },200);
+
         }
     }
 
