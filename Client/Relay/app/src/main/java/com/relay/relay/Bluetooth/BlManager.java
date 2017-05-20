@@ -121,9 +121,8 @@ public class BLManager extends Thread implements BLConstants {
         mAdvertiserHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                // todo test. try to see if advertisement working without it
-//                startPeripheral();
-//                Log.d(TAG, "Restart Advertisement if needed");
+                startPeripheral();
+                Log.d(TAG, "Restart Advertisement if needed");
             }
         }, 60000); // 1 min
 

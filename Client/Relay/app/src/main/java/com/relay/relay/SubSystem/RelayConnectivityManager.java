@@ -338,7 +338,8 @@ public class RelayConnectivityManager extends Service implements BLConstants {
                     case SEARCH_FOR_HANDSHAKE_AFTER_ADDING_MESSAGE:
                         if (mCurrentMode == BLUETOOTH_MODE){
                             if (mBluetoothManager.mStatus == DISCONNECTED){
-                                mBluetoothManager.startSearchImmediately();
+                                // todo test. check if this action reduce ble scan error code 2
+                                //mBluetoothManager.startSearchImmediately();
                             }
                         }
                         else if (mCurrentMode == WIFI_MODE){

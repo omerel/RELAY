@@ -114,7 +114,7 @@ public class BLEAdvertising implements BLConstants {
         //dataBuilder.setIncludeDeviceName(true);
         // add service UUID
         dataBuilder.addServiceUuid(new ParcelUuid(RELAY_SERVICE_UUID));
-        dataBuilder.setIncludeTxPowerLevel(true);
+        //dataBuilder.setIncludeTxPowerLevel(true);
         return dataBuilder.build();
     }
 
