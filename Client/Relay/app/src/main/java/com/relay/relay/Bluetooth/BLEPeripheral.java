@@ -49,22 +49,29 @@ public class BLEPeripheral implements BLConstants {
 
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 if (newState == BluetoothGatt.STATE_CONNECTED) {
-                    mGattServer.connect(device,false);
-                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,TAG+": BluetoothGatt connected to BLE device");
-                    Log.e(TAG, "Connected to device(SERVER SIDE): " + device.getAddress());
+                   // mGattServer.connect(device,false);
+                    // Add BLEService
+                    Log.e(TAG, "addService() - service: " + mGattServer.addService(mBluetoothGattService));
+                    Log.e(TAG, "mGattServer.getServices().size(): " + mGattServer.getServices().size());
+
+                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,TAG+": Device Connected to my bluetooth GATT");
+                    Log.e(TAG, "Device Connected to my bluetooth GATT: " + device.getAddress());
 
                 } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
-                    Log.d(TAG, "Disconnected from device");
-                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,TAG+": BluetoothGatt disconnected from BLE device");
-//                    // create new advertising to others device
-//                    close();
-//                    startPeripheral();
+                    Log.d(TAG, " device Disconnected from my bluetooth GATT ");
+                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,TAG+": device Disconnected from my bluetooth GATT ");
                 }
             } else {
                 Log.e(TAG, "Error when connecting: " + status);
                 mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_ERROR,TAG+": Error when connecting: "+status);
 
             }
+        }
+
+        @Override
+        public void onServiceAdded(int status, BluetoothGattService service) {
+            super.onServiceAdded(status, service);
+            Log.e(TAG, "onServiceAdded");
         }
 
         @Override
@@ -75,6 +82,7 @@ public class BLEPeripheral implements BLConstants {
             if (mBluetoothAdapter.isEnabled())
                 mGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS,
                     offset, characteristic.getValue());
+
             sendResultToManager(GET_BLUETOOTH_SERVER_READY);
             // Stop advertising
             mBleAdvertising.stopAdvertising();
@@ -116,6 +124,7 @@ public class BLEPeripheral implements BLConstants {
      * Start Peripheral - start advertising
      */
     public void startPeripheral(){
+        Log.e(TAG, "startPeripheral");
 
         // If the user disabled Bluetooth when the app was in the background,
         // openGattServer() will return null.
@@ -134,11 +143,12 @@ public class BLEPeripheral implements BLConstants {
             return;
         }
 
-        // Add BLEService
-        mGattServer.addService(mBluetoothGattService);
         // check mBleAdvertising not null
         if(mBleAdvertising != null) {
+
+            // Start advertising
             mBleAdvertising.startAdvertising();
+
         }else{
             sendResultToManager(BLE_ADVERTISE_ERROR);
         }

@@ -50,6 +50,7 @@ public class BLEScan implements BLConstants {
         this.mRelayConnectivityManager = relayConnectivityManager;
         mBluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
 
+
         Log.d(TAG, "Class created");
     }
 
@@ -73,6 +74,8 @@ public class BLEScan implements BLConstants {
         // Stop the scan, wipe the callback.
         if (mBluetoothAdapter.isEnabled() && mScanCallback != null ) {
             mBluetoothLeScanner.stopScan(mScanCallback);
+            // todo test added flushPendingScanResults to reduce registration error
+            mBluetoothLeScanner.flushPendingScanResults(mScanCallback);
             mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_STOP_SCAN,TAG+": Stop BLE Search");
         }
         Log.d(TAG, "Stopping Scanning");

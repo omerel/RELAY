@@ -63,7 +63,7 @@ public class BlConnectionLoggerListArrayAdapter extends RecyclerView.Adapter<BlC
                 holder.flag.setImageDrawable(context.getResources().getDrawable(R.drawable.ic_flag_error));
                 break;
             case FLAG_NO_CHANGE:
-                holder.flag.setImageDrawable(context.getResources().getDrawable(R.drawable.ic_flag_log));
+                holder.flag.setImageDrawable(context.getResources().getDrawable(R.drawable.ic_flag_ble_info));
                 break;
             default:
                 holder.flag.setImageDrawable(context.getResources().getDrawable(R.drawable.ic_flag_idle));

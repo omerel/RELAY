@@ -14,6 +14,7 @@ import android.os.RemoteException;
 import android.util.Log;
 
 import com.relay.relay.SubSystem.RelayConnectivityManager;
+import com.relay.relay.viewsAndViewAdapters.StatusBar;
 
 /**
  * Created by omer on 03/01/2017.
@@ -54,6 +55,7 @@ public class BluetoothScan implements BLConstants{
             mBluetoothAdapter.setName("relay_"+mBluetoothName);
             sendMessageToBluetoothManager(GET_BLUETOOTH_SERVER_READY,null);
             mBluetoothAdapter.startDiscovery();
+            mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_SEARCH,TAG+": start Manual Discovery " );
             Log.e(TAG, "start Discovery ");
             beDiscoverable();
         }
@@ -71,6 +73,7 @@ public class BluetoothScan implements BLConstants{
                         Log.e(TAG, e.getMessage());
                     }
                     sendMessageToBluetoothManager(NOT_FOUND_ADDRESS_FROM_BLSCAN, null);
+                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,TAG+": Found non in bl scan" );
                 }
             }
         }, SCAN_TIME);
@@ -80,6 +83,7 @@ public class BluetoothScan implements BLConstants{
         if (mBluetoothAdapter != null)
             mBluetoothAdapter.cancelDiscovery();
         mBluetoothAdapter.setName(mBluetoothName);
+        mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,TAG+": Stop Bluetooth scan" );
         Log.e(TAG, "finish Discovery ");
     }
 
@@ -116,6 +120,7 @@ public class BluetoothScan implements BLConstants{
                                     try {
                                         mRelayConnectivityManager.unregisterReceiver(mBroadcastReceiver);
                                         sendMessageToBluetoothManager(FOUND_MAC_ADDRESS_FROM_BLSCAN, device.getAddress());
+                                        mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,TAG+": Found MAC address from bl scan, device: "+ device.getAddress());
                                     }catch (Exception e){
                                         Log.e(TAG,e.getMessage());
 

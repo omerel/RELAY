@@ -5,6 +5,7 @@ import android.bluetooth.le.AdvertiseCallback;
 import android.bluetooth.le.AdvertiseData;
 import android.bluetooth.le.AdvertiseSettings;
 import android.bluetooth.le.BluetoothLeAdvertiser;
+import android.os.Handler;
 import android.os.ParcelUuid;
 import android.util.Log;
 
@@ -109,7 +110,8 @@ public class BLEAdvertising implements BLConstants {
     private AdvertiseData buildAdvertiseData() {
 
         AdvertiseData.Builder dataBuilder = new AdvertiseData.Builder();
-        dataBuilder.setIncludeDeviceName(true);
+        // // TODO: 19/05/2017 in some devices its create error ADVERTISE_FAILED_DATA_TOO_LARGE
+        //dataBuilder.setIncludeDeviceName(true);
         // add service UUID
         dataBuilder.addServiceUuid(new ParcelUuid(RELAY_SERVICE_UUID));
         dataBuilder.setIncludeTxPowerLevel(true);
@@ -156,6 +158,8 @@ public class BLEAdvertising implements BLConstants {
                     mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_ERROR,TAG+": ADVERTISE_FAILED_TOO_MANY_ADVERTISERS");
                     break;
             }
+            // todo test
+            stopAdvertising();
         }
         @Override
         public void onStartSuccess(AdvertiseSettings settingsInEffect) {
@@ -164,4 +168,6 @@ public class BLEAdvertising implements BLConstants {
             mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_ADVERTISEMENT,TAG+": Advertising successfully started");
         }
     }
+
+
 }

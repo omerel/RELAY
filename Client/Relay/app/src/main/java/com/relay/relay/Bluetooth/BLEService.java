@@ -29,8 +29,7 @@ public class BLEService implements BLConstants  {
         mAddressCharacteristic.setValue(address);
 
         // create Characteristic service
-        mAddressService = new BluetoothGattService(RELAY_SERVICE_UUID,
-                BluetoothGattService.SERVICE_TYPE_PRIMARY);
+        mAddressService = new BluetoothGattService(RELAY_SERVICE_UUID, BluetoothGattService.SERVICE_TYPE_PRIMARY);
 
         mAddressService.addCharacteristic(mAddressCharacteristic);
     }

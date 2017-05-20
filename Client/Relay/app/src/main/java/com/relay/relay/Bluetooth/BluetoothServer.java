@@ -66,6 +66,7 @@ public class BluetoothServer extends Thread implements BLConstants {
     // Start thread
     public void run() {
         Log.d(TAG, "Start Thread");
+        mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,TAG+ "Waiting to mmServerSocket.accept() ");
 
         BluetoothSocket socket = null;
         // Keep listening until exception occurs or a socket is returned

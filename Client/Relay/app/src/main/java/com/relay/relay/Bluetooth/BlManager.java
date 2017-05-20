@@ -185,8 +185,11 @@ public class BLManager extends Thread implements BLConstants {
         mScanHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                if(mBLECentral.getBleScan().isResultsInQueue())
+
+                if(mBLECentral.getBleScan().isResultsInQueue()){
+                    stopSearch(FOUND_NEW_DEVICE);
                     mBLECentral.getBleScan().checkResults();
+                }
                 else
                     sendMessageToManager(SCAN_FINISHED_WITHOUT_CHANGES);
             }
@@ -281,14 +284,13 @@ public class BLManager extends Thread implements BLConstants {
         mBlePeripheral.close();
 
         // stop ble search
-        stopSearch(0);
+        stopSearch(FOUND_NEW_DEVICE);
 
         // create server socket
         openBluetoothServerSocketConnection();
 
         mBluetoothScan.startScan();
         Log.e(TAG, "Start Bluetooth scan ");
-        mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_SEARCH,TAG+": Start manual bluetooth search");
     }
 
     public void openBluetoothServerSocketConnection(){
@@ -341,15 +343,15 @@ public class BLManager extends Thread implements BLConstants {
                 case FAILED_CONNECTING_TO_DEVICE:
                     Log.e(TAG, "FAILED_CONNECTING_TO_DEVICE");
                     //update status
-                    mStatus = DISCONNECTED;
+                    //mStatus = DISCONNECTED;
                     //make sure not scanning
-                    stopSearch(0);
+                    stopSearch(FOUND_NEW_DEVICE);
                     break;
 
                 case DEVICE_FAILED_CONNECTING_ME:
                     Log.e(TAG, "DEVICE_FAILED_CONNECTING_ME");
                     //update status
-                    mStatus = DISCONNECTED;
+                    //mStatus = DISCONNECTED;
                     break;
 
                 case SUCCEED_CONNECTING_TO_DEVICE:
