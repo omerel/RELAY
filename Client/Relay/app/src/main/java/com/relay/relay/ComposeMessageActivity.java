@@ -5,6 +5,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
@@ -196,8 +197,14 @@ public class ComposeMessageActivity extends AppCompatActivity implements View.On
 
             case CAMERA_REQUEST:
                 if(resultCode == RESULT_OK) {
+
+                    //todo to get thumb image
                     loadedBitmap = (Bitmap) data.getExtras().get("data");
                     setSmallImageInAttachment(loadedBitmap);
+
+                    // todo to get full size
+//                    loadedBitmap = BitmapFactory.decodeFile(imageUtils.getCurrentPhotoPath());
+//                    setRatioImageInAttachment();
                 }
                 break;
 
@@ -286,8 +293,10 @@ public class ComposeMessageActivity extends AppCompatActivity implements View.On
         // set image in attachment
         // create small pic with low resolution
         Bitmap smallPic;
+
         smallPic =ImageConverter.scaleDown(image,300,true);
         smallPic = ImageConverter.getRoundedCornerBitmap(smallPic,10);
+
         mAttachment.setImageBitmap(smallPic);
         mAttachment.setVisibility(View.VISIBLE);
         mDeleteAttachment.setVisibility(View.VISIBLE);
@@ -458,5 +467,14 @@ public class ComposeMessageActivity extends AppCompatActivity implements View.On
             }
         });
         alertdialog.show();
+    }
+
+
+    private void setRatioImageInAttachment() {
+        Bitmap bitmap = ImageConverter.scaleImageToImageViewSize(mAttachment,imageUtils.getCurrentPhotoPath());
+		/* Associate the Bitmap to the ImageView */
+        mAttachment.setImageBitmap(bitmap);
+        mAttachment.setVisibility(View.VISIBLE);
+        mDeleteAttachment.setVisibility(View.VISIBLE);
     }
 }
