@@ -5,7 +5,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
@@ -34,20 +33,21 @@ import com.relay.relay.SubSystem.DataManager;
 import com.relay.relay.SubSystem.RelayConnectivityManager;
 import com.relay.relay.Util.GridSpacingItemDecoration;
 import com.relay.relay.Util.ImageConverter;
-import com.relay.relay.Util.Imageutils;
+import com.relay.relay.Util.ImagePicker;
 import com.relay.relay.viewsAndViewAdapters.SearchContactAdapter;
 import com.relay.relay.Util.SearchUser;
-import com.relay.relay.viewsAndViewAdapters.UuidGenerator;
+import com.relay.relay.Util.UuidGenerator;
 import com.relay.relay.system.RelayMessage;
 import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.UUID;
 
-import static com.relay.relay.Util.Imageutils.CAMERA_REQUEST;
-import static com.relay.relay.Util.Imageutils.GALLERY_REQUEST;
+import static com.relay.relay.Util.ImagePicker.CAMERA_REQUEST;
+import static com.relay.relay.Util.ImagePicker.GALLERY_REQUEST;
 
 public class ComposeMessageActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -71,7 +71,7 @@ public class ComposeMessageActivity extends AppCompatActivity implements View.On
     private SearchListAdapter mSearchListAdapter;
 
     //For Image Attachment
-    private Imageutils imageUtils;
+    private ImagePicker imageUtils;
     private Bitmap loadedBitmap;
     private Uri loadedUri;
 
@@ -113,7 +113,7 @@ public class ComposeMessageActivity extends AppCompatActivity implements View.On
         mSearchContactRecyclerView.setVisibility(View.GONE);
         mSearchContactRecyclerView.setItemViewCacheSize(20);
 
-        imageUtils = new Imageutils(this);
+        imageUtils = new ImagePicker(this);
 
     }
 
@@ -189,6 +189,7 @@ public class ComposeMessageActivity extends AppCompatActivity implements View.On
                 if (resultCode == RESULT_OK) {
                     loadedUri = result.getUri();
                     loadedBitmap = uriToBitmap(loadedUri);
+                    loadedBitmap = ImageConverter.scaleDownSaveRatio(loadedBitmap,(float)0.3,true);
                     setSmallImageInAttachment(loadedBitmap);
                 } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
                     Exception error = result.getError();
@@ -197,14 +198,14 @@ public class ComposeMessageActivity extends AppCompatActivity implements View.On
 
             case CAMERA_REQUEST:
                 if(resultCode == RESULT_OK) {
+                    //to get thumb image
+//                    loadedBitmap = (Bitmap) data.getExtras().get("data");
+//                    setSmallImageInAttachment(loadedBitmap);
 
-                    //todo to get thumb image
-                    loadedBitmap = (Bitmap) data.getExtras().get("data");
-                    setSmallImageInAttachment(loadedBitmap);
-
-                    // todo to get full size
-//                    loadedBitmap = BitmapFactory.decodeFile(imageUtils.getCurrentPhotoPath());
-//                    setRatioImageInAttachment();
+                    //to get full size image
+                    Uri uri = Uri.fromFile(new File(imageUtils.getCurrentPhotoPath()));
+                    //loadedBitmap = BitmapFactory.decodeFile(imageUtils.getCurrentPhotoPath());
+                    cropImage(uri);
                 }
                 break;
 
@@ -294,7 +295,7 @@ public class ComposeMessageActivity extends AppCompatActivity implements View.On
         // create small pic with low resolution
         Bitmap smallPic;
 
-        smallPic =ImageConverter.scaleDown(image,300,true);
+        smallPic =ImageConverter.scaleDownToSquare(image,300,true);
         smallPic = ImageConverter.getRoundedCornerBitmap(smallPic,10);
 
         mAttachment.setImageBitmap(smallPic);

@@ -42,6 +42,8 @@ public class BLEScan implements BLConstants {
 
     private List<BluetoothDevice> listBluetoothDeviceResults;
 
+    private  int counter;
+
 
     public BLEScan(BluetoothAdapter bluetoothAdapter,Messenger messenger,RelayConnectivityManager relayConnectivityManager) {
         this.mBluetoothAdapter = bluetoothAdapter;
@@ -49,6 +51,7 @@ public class BLEScan implements BLConstants {
         this.mMessenger = messenger;
         this.mRelayConnectivityManager = relayConnectivityManager;
         mBluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
+        counter = 0;
 
 
         Log.d(TAG, "Class created");
@@ -62,7 +65,8 @@ public class BLEScan implements BLConstants {
         mScanCallback = new CustomScanCallback();
         if (mBluetoothAdapter.isEnabled()) {
             mBluetoothLeScanner.startScan(buildScanFilters(), buildScanSettings(), mScanCallback);
-            Log.d(TAG, "Start Scanning for BLE Advertisements");
+            counter++;
+            Log.e(TAG, "Start Scanning for BLE Advertisements on the "+counter+ " th time");
             mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_SEARCH,TAG+": Start BLE Search");
         }
     }
@@ -168,7 +172,6 @@ public class BLEScan implements BLConstants {
         @Override
         public void onScanFailed(final int errorCode) {
             super.onScanFailed(errorCode);
-            //todo   test moved the the stop to manager stopScanning();
             switch (errorCode){
                 case 1 :
                     mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_ERROR,TAG+": Scan failed with error: "+
@@ -189,14 +192,6 @@ public class BLEScan implements BLConstants {
             }
             Log.e(TAG, "Error - Scan failed with error: "+ errorCode);
             sendResultToBLECentral(BLE_SCAN_ERROR,null);
-
-//            mBluetoothAdapter.disable();
-//            new Handler().postDelayed(new Runnable() {
-//                @Override
-//                public void run() {
-//                    mBluetoothAdapter.enable();
-//                }
-//            },200);
 
         }
     }

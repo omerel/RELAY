@@ -22,7 +22,7 @@ import com.couchbase.lite.View;
 import com.couchbase.lite.android.AndroidContext;
 import com.relay.relay.SubSystem.DataManager;
 import com.relay.relay.Util.SearchUser;
-import com.relay.relay.viewsAndViewAdapters.UuidGenerator;
+import com.relay.relay.Util.UuidGenerator;
 import com.relay.relay.system.RelayMessage;
 
 import java.io.IOException;

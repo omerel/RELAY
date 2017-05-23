@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.net.Uri;
@@ -50,21 +51,22 @@ import com.relay.relay.SubSystem.DataManager;
 import com.relay.relay.SubSystem.RelayConnectivityManager;
 import com.relay.relay.Util.GridSpacingItemDecoration;
 import com.relay.relay.Util.ImageConverter;
-import com.relay.relay.Util.Imageutils;
+import com.relay.relay.Util.ImagePicker;
 import com.relay.relay.viewsAndViewAdapters.LiveQueryMessageAdapter;
 import com.relay.relay.Util.ShowActivityFullImage;
 import com.relay.relay.system.RelayMessage;
 import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 import java.util.UUID;
 
 import static com.relay.relay.DB.InboxDB.REFRESH_INBOX_DB;
 import static com.relay.relay.MainActivity.MESSAGE_RECEIVED;
-import static com.relay.relay.Util.Imageutils.CAMERA_REQUEST;
-import static com.relay.relay.Util.Imageutils.GALLERY_REQUEST;
+import static com.relay.relay.Util.ImagePicker.CAMERA_REQUEST;
+import static com.relay.relay.Util.ImagePicker.GALLERY_REQUEST;
 
 
 public class ConversationActivity extends AppCompatActivity implements View.OnClickListener{
@@ -102,7 +104,7 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
    // private Uri mLoadedImageUri;
 
     //For Image Attachment
-    private Imageutils imageUtils;
+    private ImagePicker imageUtils;
     private Bitmap loadedBitmap;
     private Uri loadedUri;
 
@@ -149,7 +151,7 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
 
         initMessageRecyclerView();
 
-        imageUtils = new Imageutils(this);
+        imageUtils = new ImagePicker(this);
 
         // start listen to connectivity Manager when there any updates with messages
         createBroadcastReceiver();
@@ -277,6 +279,7 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
                 if (resultCode == RESULT_OK) {
                     loadedUri = result.getUri();
                     loadedBitmap = uriToBitmap(loadedUri);
+                    loadedBitmap = ImageConverter.scaleDownSaveRatio(loadedBitmap,(float)0.3,true);
                     setSmallImageInAttachment(loadedBitmap);
                 } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
                     Exception error = result.getError();
@@ -285,8 +288,15 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
 
             case CAMERA_REQUEST:
                 if(resultCode == RESULT_OK) {
-                    loadedBitmap = (Bitmap) data.getExtras().get("data");
-                    setSmallImageInAttachment(loadedBitmap);
+                    //to get thumb image
+                    //loadedBitmap = (Bitmap) data.getExtras().get("data");
+                    // setSmallImageInAttachment(loadedBitmap);
+                    //to get full size image
+                    Uri uri = Uri.fromFile(new File(imageUtils.getCurrentPhotoPath()));
+                    //loadedBitmap = BitmapFactory.decodeFile(imageUtils.getCurrentPhotoPath());
+                    cropImage(uri);
+
+
                 }
                 break;
 
@@ -391,7 +401,7 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
         // set image in attachment
         // create small pic with low resolution
         Bitmap smallPic;
-        smallPic =ImageConverter.scaleDown(image,300,true);
+        smallPic =ImageConverter.scaleDownToSquare(image,300,true);
         smallPic = ImageConverter.getRoundedCornerBitmap(smallPic,10);
         mAttachment.setImageBitmap(smallPic);
         mAttachment.setVisibility(View.VISIBLE);
@@ -520,7 +530,7 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
                     holder.textMessage.setText(relayMessage.getContent());
                 // create small pic with low resolution
                 Bitmap smallPic = ImageConverter.convertBytesToBitmap(relayMessage.getAttachment());
-                smallPic =ImageConverter.scaleDown(smallPic,300,true);
+                smallPic =ImageConverter.scaleDownToSquare(smallPic,300,true);
                 smallPic = ImageConverter.getRoundedCornerBitmap(smallPic,5);
                 holder.pictureAttachment.setImageBitmap(smallPic);
             }

@@ -1,4 +1,4 @@
-package com.relay.relay.viewsAndViewAdapters;
+package com.relay.relay.Util;
 
 import android.util.Log;
 

@@ -10,7 +10,7 @@ import com.relay.relay.R;
 import com.relay.relay.SubSystem.DataManager;
 import com.relay.relay.Util.ImageConverter;
 import com.relay.relay.Util.TimePerformance;
-import com.relay.relay.viewsAndViewAdapters.UuidGenerator;
+import com.relay.relay.Util.UuidGenerator;
 import com.relay.relay.system.Node;
 
 import java.sql.Timestamp;

@@ -34,7 +34,7 @@ import com.google.firebase.auth.EmailAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.relay.relay.SubSystem.DataManager;
-import com.relay.relay.viewsAndViewAdapters.UuidGenerator;
+import com.relay.relay.Util.UuidGenerator;
 import com.relay.relay.system.Node;
 
 import java.util.UUID;

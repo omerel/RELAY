@@ -9,33 +9,27 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.content.FileProvider;
 import android.support.v7.app.AlertDialog;
-import android.util.Log;
 import android.widget.Toast;
-
-import com.relay.relay.SubSystem.HandShake;
 
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class Imageutils {
+public class ImagePicker {
 
     public static final int CAMERA_REQUEST = 150;
     public static final int GALLERY_REQUEST = 250;
 
-    private final String TAG = "RELAY_DEBUG: "+ Imageutils.class.getSimpleName();;
+    private final String TAG = "RELAY_DEBUG: "+ ImagePicker.class.getSimpleName();;
 
     public String currentPhotoPath;
 
@@ -43,7 +37,7 @@ public class Imageutils {
     Activity current_activity;
 
 
-    public Imageutils(Activity activity) {
+    public ImagePicker(Activity activity) {
         this.context = activity;
         this.current_activity = activity;
         this.currentPhotoPath = "";
@@ -160,23 +154,24 @@ public class Imageutils {
 
     public void callCamera() {
         // for thumb image
-        Intent intent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
-        current_activity.startActivityForResult(intent,CAMERA_REQUEST);
+//        Intent intent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+//        current_activity.startActivityForResult(intent,CAMERA_REQUEST);
 
         // for full size images
-//        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-//        File photoFile = null;
-//
-//        try {
-//            photoFile = setUpPhotoFile();
-//            currentPhotoPath = photoFile.getAbsolutePath();
-//            takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(photoFile));
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//            photoFile = null;
-//            currentPhotoPath = null;
-//        }
-//        current_activity.startActivityForResult(takePictureIntent,CAMERA_REQUEST);
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        File photoFile = null;
+
+
+        try {
+            photoFile = setUpPhotoFile();
+            currentPhotoPath = photoFile.getAbsolutePath();
+            takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(photoFile));
+        } catch (IOException e) {
+            e.printStackTrace();
+            photoFile = null;
+            currentPhotoPath = null;
+        }
+        current_activity.startActivityForResult(takePictureIntent,CAMERA_REQUEST);
 
     }
 

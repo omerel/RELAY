@@ -3,6 +3,7 @@ package com.relay.relay.SubSystem;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Messenger;
@@ -17,6 +18,9 @@ import com.relay.relay.Util.TimePerformance;
 import com.relay.relay.system.Node;
 import com.relay.relay.system.RelayMessage;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -56,8 +60,6 @@ public class HandShake implements BLConstants {
     private DataTransferred mDataTransferred;
     private Node mMyNode;
     private Handler watchDogHandler;
-
-
 
     private DataTransferred.Metadata metadata;
     private DataTransferred.Metadata receivedMetadata;
@@ -179,6 +181,7 @@ public class HandShake implements BLConstants {
                     Log.e(TAG, "STEP_2_UPDATE_NODES_AND_RELATIONS. Initiator: "+mInitiator );
                     receivedUpdateNodeAndRelations =
                             JsonConvertor.getUpdateNodeAndRelationsFromJsonContent(jsonPacket);
+
                     step=7;//7
                     timePerformance.start();
                     updateNodeAndRelations(receivedUpdateNodeAndRelations);
@@ -308,6 +311,14 @@ public class HandShake implements BLConstants {
                     RelayMessage relayMessage = JsonConvertor.getRelayMessageFromJsonContent(jsonPacket);
                     updateReceivedMessage(relayMessage);
                     mDataManager.getMessagesDB().addMessage(relayMessage);
+                    // alert device when he gets new message
+                    UUID destId = relayMessage.getDestinationId();
+                    step=13;//13
+                    if (destId.equals(mMyNode.getId())) {
+                        step=14;//14
+                        String msg = "@"+receivedMetadata.getMyNode().getUserName()+DELIMITER+"Received image";
+                        sendMessageToManager(NEW_RELAY_MESSAGE, msg);
+                    }
                     Log.e(TAG, "ACK object message");
                     sendPacket(ACK_OBJECT_STEP_4, new String("DUMMY"));
                     break;
@@ -501,7 +512,6 @@ public class HandShake implements BLConstants {
                 "\n relations to update- "+nodeRelationsArrayList.size());
 
         for ( Node node : nodeArrayList){
-
             // update the new node without timStamp
             mDataManager.getNodesDB().addNode(node);
         }
@@ -691,4 +701,6 @@ public class HandShake implements BLConstants {
         DateFormat date = new SimpleDateFormat(FORMATTER_DATE);
         return (date.format(cal.getTime()));
     }
+
+
 }

@@ -28,6 +28,8 @@ public class BLEAdvertising implements BLConstants {
 
     private RelayConnectivityManager mRelayConnectivityManager;
 
+    private int count = 0;
+
     /**
      * BLEAdvertising constructor
      * @param bluetoothAdapter helps to check if bluetooth enable or disable
@@ -51,6 +53,7 @@ public class BLEAdvertising implements BLConstants {
      * StartAdvertising
      */
     public void startAdvertising() {
+
         if (mAdvertiseCallback == null) {
 
             // setup advertising setting
@@ -67,14 +70,14 @@ public class BLEAdvertising implements BLConstants {
                 mAdvertiseCallback = new CustomAdvertiseCallback();
                 if (mBluetoothLeAdvertiser != null && mBluetoothAdapter.isEnabled()) {
                     mBluetoothLeAdvertiser.startAdvertising(settings, data, dataRes, mAdvertiseCallback);
-                    Log.d(TAG, "Starting Advertising");
+                    Log.e(TAG, "Starting Advertising on the "+count+"th time");
+                    count++;
                     mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_ADVERTISEMENT,TAG+": Start BLE Advertising");
                 }
             }catch(Exception e){
                 Log.e(TAG,e.getMessage());
                 mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_ERROR,TAG+": "+e.getMessage());
             }
-
         }
     }
 
@@ -90,14 +93,13 @@ public class BLEAdvertising implements BLConstants {
         }
     }
 
-
     /**
      * Returns an AdvertiseSettings object set to use low power (to help preserve battery life)
      * and disable the built-in timeout since this code uses its own timeout runnable.
      */
     private AdvertiseSettings buildAdvertiseSettings() {
         AdvertiseSettings.Builder settingsBuilder = new AdvertiseSettings.Builder();
-        settingsBuilder.setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY);//check
+        settingsBuilder.setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_POWER);//check
         //settingsBuilder.setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_MEDIUM);//check
         settingsBuilder.setConnectable(true);
         settingsBuilder.setTimeout(0); //disable time limit
@@ -168,6 +170,4 @@ public class BLEAdvertising implements BLConstants {
             mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_ADVERTISEMENT,TAG+": Advertising successfully started");
         }
     }
-
-
 }

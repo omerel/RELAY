@@ -19,8 +19,8 @@ import android.widget.TextView;
 
 import com.relay.relay.viewsAndViewAdapters.CountryCodeActivityDialog;
 import com.relay.relay.Util.ImageConverter;
-import com.relay.relay.Util.Imageutils;
-import com.relay.relay.viewsAndViewAdapters.UuidGenerator;
+import com.relay.relay.Util.ImagePicker;
+import com.relay.relay.Util.UuidGenerator;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -36,8 +36,8 @@ import static com.relay.relay.SignupActivity.STEP_7_FINISH;
 import static com.relay.relay.SignupActivity.STEP_BACK;
 import static com.relay.relay.SignupActivity.STEP_NEXT;
 import static com.relay.relay.viewsAndViewAdapters.CountryCodeActivityDialog.ACTION_OPEN;
-import static com.relay.relay.Util.Imageutils.CAMERA_REQUEST;
-import static com.relay.relay.Util.Imageutils.GALLERY_REQUEST;
+import static com.relay.relay.Util.ImagePicker.CAMERA_REQUEST;
+import static com.relay.relay.Util.ImagePicker.GALLERY_REQUEST;
 
 
 public class SignupStepFragment extends Fragment {
@@ -51,7 +51,7 @@ public class SignupStepFragment extends Fragment {
     private int countryCode;
 
     //For Image Attachment
-    private Imageutils imageUtils;
+    private ImagePicker imageUtils;
     private Bitmap loadedBitmap;
     private Uri loadedUri;
 
@@ -102,7 +102,7 @@ public class SignupStepFragment extends Fragment {
             else
                 inputText = (String) getArguments().getString(RECEIVED_OBJECT);
         }
-        imageUtils = new Imageutils(getActivity());
+        imageUtils = new ImagePicker(getActivity());
     }
 
     @Override
@@ -459,7 +459,7 @@ public class SignupStepFragment extends Fragment {
             case CAMERA_REQUEST:
                 if(resultCode == RESULT_OK) {
                     loadedBitmap = (Bitmap) data.getExtras().get("data");
-                    loadedBitmap = ImageConverter.scaleDown(loadedBitmap,100,true);
+                    loadedBitmap = ImageConverter.scaleDownToSquare(loadedBitmap,100,true);
                     inputImage = loadedBitmap;
                     circleImageView.setImageBitmap(loadedBitmap);
 
@@ -472,7 +472,7 @@ public class SignupStepFragment extends Fragment {
 
                     loadedUri = data.getData();
                     loadedBitmap = uriToBitmap(loadedUri);
-                    loadedBitmap = ImageConverter.scaleDown(loadedBitmap,100,true);
+                    loadedBitmap = ImageConverter.scaleDownToSquare(loadedBitmap,100,true);
                     inputImage = loadedBitmap;
                     circleImageView.setImageBitmap(loadedBitmap);
 

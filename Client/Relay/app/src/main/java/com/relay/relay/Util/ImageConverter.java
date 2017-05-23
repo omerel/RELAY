@@ -90,8 +90,8 @@ public class ImageConverter {
     }
 
 
-    public static Bitmap scaleDown(Bitmap realImage, float maxImageSize,
-                                   boolean filter) {
+    public static Bitmap scaleDownToSquare(final Bitmap realImage, float maxImageSize,
+                                           boolean filter) {
         Bitmap newBitmap;
         try {
             float ratio = Math.min(
@@ -102,12 +102,24 @@ public class ImageConverter {
 
             int size = Math.max(height, width);
 
-
             newBitmap = Bitmap.createScaledBitmap(realImage, size,
                     size, filter);
         }
         catch (Exception e){
-            Log.e(TAG,"Error in scaleDown");
+            Log.e(TAG,"Error in scaleDownToSquare");
+            return realImage;
+        }
+        return newBitmap;
+    }
+
+    public static Bitmap scaleDownSaveRatio(final Bitmap realImage, float ratio,
+                                            boolean filter) {
+        Bitmap newBitmap;
+        try {
+            newBitmap = Bitmap.createScaledBitmap(realImage,(int)(realImage.getWidth()*ratio), (int)(realImage.getHeight()*ratio), filter);
+        }
+        catch (Exception e){
+            Log.e(TAG,"Error in scale Save Ratio");
             return realImage;
         }
         return newBitmap;
@@ -142,6 +154,8 @@ public class ImageConverter {
 
 		/* Decode the JPEG file into a Bitmap */
         Bitmap bitmap = BitmapFactory.decodeFile(imagePath, bmOptions);
+
+
 
         return bitmap;
 

@@ -50,7 +50,7 @@ import com.relay.relay.Util.ImageConverter;
 import com.relay.relay.viewsAndViewAdapters.LiveQueryAdapter;
 import com.relay.relay.viewsAndViewAdapters.SearchContactAdapter;
 import com.relay.relay.Util.SearchUser;
-import com.relay.relay.viewsAndViewAdapters.UuidGenerator;
+import com.relay.relay.Util.UuidGenerator;
 import com.relay.relay.system.Node;
 
 import java.util.ArrayList;
@@ -383,7 +383,7 @@ public class InboxFragment extends Fragment {
                 if( newImage == null )
                     holder.circleImageView.setImageResource(R.drawable.pic_unknown_user);
                 else{
-                    newImage = ImageConverter.scaleDown(newImage,100,true);
+                    newImage = ImageConverter.scaleDownToSquare(newImage,100,true);
                     holder.circleImageView.setImageBitmap(newImage);
                 }
             }

@@ -27,12 +27,14 @@ import android.widget.TextView;
 import com.relay.relay.SubSystem.DataManager;
 import com.relay.relay.viewsAndViewAdapters.CountryCodeActivityDialog;
 import com.relay.relay.Util.ImageConverter;
-import com.relay.relay.Util.Imageutils;
+import com.relay.relay.Util.ImagePicker;
 import com.relay.relay.Util.ShowActivityFullImage;
 import com.relay.relay.system.Node;
+import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageActivity;
 import com.theartofdev.edmodo.cropper.CropImageOptions;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Calendar;
 import java.util.UUID;
@@ -41,8 +43,8 @@ import static android.app.Activity.RESULT_OK;
 import static com.relay.relay.SignInActivity.CURRENT_UUID_USER;
 import static com.relay.relay.MainActivity.SYSTEM_SETTING;
 import static com.relay.relay.viewsAndViewAdapters.CountryCodeActivityDialog.ACTION_OPEN;
-import static com.relay.relay.Util.Imageutils.CAMERA_REQUEST;
-import static com.relay.relay.Util.Imageutils.GALLERY_REQUEST;
+import static com.relay.relay.Util.ImagePicker.CAMERA_REQUEST;
+import static com.relay.relay.Util.ImagePicker.GALLERY_REQUEST;
 import static com.theartofdev.edmodo.cropper.CropImage.CROP_IMAGE_EXTRA_OPTIONS;
 import static com.theartofdev.edmodo.cropper.CropImage.CROP_IMAGE_EXTRA_SOURCE;
 
@@ -72,7 +74,7 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
     String inputAnswer;
 
     //For Image Attachment
-    private Imageutils imageUtils;
+    private ImagePicker imageUtils;
     private Bitmap loadedBitmap;
     private Uri loadedUri;
 
@@ -135,7 +137,7 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
         mUserResidence = CountryCodeActivityDialog.getCountryFromCode(userNode.getResidenceCode());
         mUserProfileShort = "@"+mUserName.toLowerCase()+",  "+mUserEmail;
 
-        imageUtils = new Imageutils(getActivity());
+        imageUtils = new ImagePicker(getActivity());
     }
 
     @Override
@@ -328,7 +330,7 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
             intent.setClass(getContext(), CropImageActivity.class);
             intent.putExtra(CROP_IMAGE_EXTRA_SOURCE, uri);
             intent.putExtra(CROP_IMAGE_EXTRA_OPTIONS, new CropImageOptions());
-            startActivity(intent);
+            startActivityForResult(intent,CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE);
         }
     }
 
@@ -379,13 +381,38 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
 
         switch (requestCode) {
 
+            case CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE:
+                CropImage.ActivityResult result = CropImage.getActivityResult(data);
+                if (resultCode == RESULT_OK) {
+                    loadedUri = result.getUri();
+                    loadedBitmap = uriToBitmap(loadedUri);
+                    loadedBitmap = ImageConverter.scaleDownSaveRatio(loadedBitmap,(float)0.3,true);
+                    mProfileImage.setImageBitmap(loadedBitmap);
+                    mUserImage = loadedBitmap;
+                    updateProfileImage(loadedBitmap);
+
+                } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
+                    Exception error = result.getError();
+                }
+                break;
+
             case CAMERA_REQUEST:
                 if(resultCode == RESULT_OK) {
                     loadedBitmap = (Bitmap) data.getExtras().get("data");
                     mUserImage = loadedBitmap;
-                    loadedBitmap = ImageConverter.scaleDown(loadedBitmap,100,true);
+                    loadedBitmap = ImageConverter.scaleDownToSquare(loadedBitmap,100,true);
                     mProfileImage.setImageBitmap(loadedBitmap);
                     updateProfileImage(loadedBitmap);
+
+//
+//                    //to get thumb image
+////                    loadedBitmap = (Bitmap) data.getExtras().get("data");
+////                    setSmallImageInAttachment(loadedBitmap);
+//
+//                    //to get full size image
+//                    Uri uri = Uri.fromFile(new File(imageUtils.getCurrentPhotoPath()));
+//                    //loadedBitmap = BitmapFactory.decodeFile(imageUtils.getCurrentPhotoPath());
+//                    cropImage(uri);
 
                 }
                 break;
@@ -395,12 +422,13 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
                     Log.i("Gallery","Photo");
 
                     loadedUri = data.getData();
-                    loadedBitmap = uriToBitmap(loadedUri);
-                    mUserImage = loadedBitmap;
-                    loadedBitmap = ImageConverter.scaleDown(loadedBitmap,100,true);
-                    mProfileImage.setImageBitmap(loadedBitmap);
-                    mUserImage = loadedBitmap;
-                    updateProfileImage(loadedBitmap);
+                    //loadedBitmap = uriToBitmap(loadedUri);
+                    cropImage(loadedUri);
+//                    mUserImage = loadedBitmap;
+//                    loadedBitmap = ImageConverter.scaleDownToSquare(loadedBitmap,100,true);
+//                    mProfileImage.setImageBitmap(loadedBitmap);
+//                    mUserImage = loadedBitmap;
+//                    updateProfileImage(loadedBitmap);
 
                 }
                 break;

@@ -35,7 +35,6 @@ public class BLEPeripheral implements BLConstants {
     private BluetoothManager mBluetoothManager;
     private BluetoothAdapter mBluetoothAdapter;
     private BLEService mBLEService;
-    private BLEAdvertising mBleAdvertising;
     private BluetoothGattServer mGattServer;
     private Messenger mMessenger;
 
@@ -84,8 +83,6 @@ public class BLEPeripheral implements BLConstants {
                     offset, characteristic.getValue());
 
             sendResultToManager(GET_BLUETOOTH_SERVER_READY);
-            // Stop advertising
-            mBleAdvertising.stopAdvertising();
         }
     };
 
@@ -101,10 +98,8 @@ public class BLEPeripheral implements BLConstants {
         this.mBluetoothAdapter = bluetoothAdapter;
         this.mBLEService = new BLEService(MacAddressFinder.getBluetoothMacAddress());
         this.mBluetoothGattService = mBLEService.getBluetoothGattService();
-        this.mBleAdvertising = new BLEAdvertising(mBluetoothAdapter,relayConnectivityManager);
         this.mMessenger =messenger;
         this.mBluetoothManager = (BluetoothManager) mRelayConnectivityManager.getSystemService(Context.BLUETOOTH_SERVICE);
-
     }
 
     /**
@@ -116,7 +111,6 @@ public class BLEPeripheral implements BLConstants {
                 disconnectFromDevices();
                 mGattServer.close();
             }
-            mBleAdvertising.stopAdvertising();
         }
     }
 
@@ -138,21 +132,12 @@ public class BLEPeripheral implements BLConstants {
             Log.e(TAG, "ERROR - didn't open gattServer. returns null");
             // reset mBluetoothManager and start Peripheral in the next interval
             close();
-            sendResultToManager(BLE_ADVERTISE_ERROR);
+            sendResultToManager(BLE_GATT_SERVER_ERROR);
             mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_ERROR,TAG+": ERROR - didn't open gattServer. returns null");
             return;
         }
-
-        // check mBleAdvertising not null
-        if(mBleAdvertising != null) {
-
-            // Start advertising
-            mBleAdvertising.startAdvertising();
-
-        }else{
-            sendResultToManager(BLE_ADVERTISE_ERROR);
-        }
     }
+
 
 
     /**
