@@ -6,6 +6,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -45,6 +47,7 @@ import static com.relay.relay.MainActivity.SYSTEM_SETTING;
 import static com.relay.relay.viewsAndViewAdapters.CountryCodeActivityDialog.ACTION_OPEN;
 import static com.relay.relay.Util.ImagePicker.CAMERA_REQUEST;
 import static com.relay.relay.Util.ImagePicker.GALLERY_REQUEST;
+import static com.theartofdev.edmodo.cropper.CropImage.CAMERA_CAPTURE_PERMISSIONS_REQUEST_CODE;
 import static com.theartofdev.edmodo.cropper.CropImage.CROP_IMAGE_EXTRA_OPTIONS;
 import static com.theartofdev.edmodo.cropper.CropImage.CROP_IMAGE_EXTRA_SOURCE;
 
@@ -74,7 +77,7 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
     String inputAnswer;
 
     //For Image Attachment
-    private ImagePicker imageUtils;
+    private ImagePicker imagePicker;
     private Bitmap loadedBitmap;
     private Uri loadedUri;
 
@@ -137,7 +140,7 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
         mUserResidence = CountryCodeActivityDialog.getCountryFromCode(userNode.getResidenceCode());
         mUserProfileShort = "@"+mUserName.toLowerCase()+",  "+mUserEmail;
 
-        imageUtils = new ImagePicker(getActivity());
+        imagePicker = new ImagePicker(getActivity());
     }
 
     @Override
@@ -327,52 +330,62 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
         if (uri != null){
             // crop image
             Intent intent = new Intent();
-            intent.setClass(getContext(), CropImageActivity.class);
+            intent.setClass(getActivity(), CropImageActivity.class);
             intent.putExtra(CROP_IMAGE_EXTRA_SOURCE, uri);
-            intent.putExtra(CROP_IMAGE_EXTRA_OPTIONS, new CropImageOptions());
+            CropImageOptions cropImageOptions = new CropImageOptions();
+            cropImageOptions.activityTitle = "Edit your image";
+            intent.putExtra(CROP_IMAGE_EXTRA_OPTIONS, cropImageOptions);
             startActivityForResult(intent,CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE);
         }
     }
 
     public void imagepicker() {
 
-        final CharSequence[] items;
 
-        if(imageUtils.isDeviceSupportCamera()) {
-            items=new CharSequence[2];
-            items[0]="Camera";
-            items[1]="Gallery";
-        }
-        else {
-            items=new CharSequence[1];
-            items[0]="Gallery";
-        }
+        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        intent.setType("image/*");
+        startActivityForResult(intent, GALLERY_REQUEST);
 
-        android.app.AlertDialog.Builder alertdialog = new android.app.AlertDialog.Builder(getContext());
-        alertdialog.setTitle("Add Image");
-        alertdialog.setItems(items, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int item) {
-                if (items[item].equals("Camera")) {
-                    Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                    if (takePictureIntent.resolveActivity(getActivity().getPackageManager()) != null)
-                        startActivityForResult(takePictureIntent, CAMERA_REQUEST);
+        // Because from some reason the crop doesn't work on returning uri image in fragment and can't
+        //resolve it , up rather to give the user only the gallery option
 
-                }
-                else if (items[item].equals("Gallery")) {
-
-                    Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                    intent.setType("image/*");
-                    startActivityForResult(intent, GALLERY_REQUEST);
-                }
-            }
-        });
-        alertdialog.show();
+//        final CharSequence[] items;
+//
+//        if(imagePicker.isDeviceSupportCamera()) {
+//            items=new CharSequence[2];
+//            items[0]="Camera";
+//            items[1]="Gallery";
+//        }
+//        else {
+//            items=new CharSequence[1];
+//            items[0]="Gallery";
+//        }
+//
+//        android.app.AlertDialog.Builder alertdialog = new android.app.AlertDialog.Builder(getContext());
+//        alertdialog.setTitle("Add Image");
+//        alertdialog.setItems(items, new DialogInterface.OnClickListener() {
+//            @Override
+//            public void onClick(DialogInterface dialog, int item) {
+//                if (items[item].equals("Camera")) {
+//                    Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+//                    if (takePictureIntent.resolveActivity(getActivity().getPackageManager()) != null)
+//                        startActivityForResult(takePictureIntent, CAMERA_REQUEST);
+//
+//                }
+//                else if (items[item].equals("Gallery")) {
+//
+//                    Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+//                    intent.setType("image/*");
+//                    startActivityForResult(intent, GALLERY_REQUEST);
+//                }
+//            }
+//        });
+//        alertdialog.show();
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        imageUtils.request_permission_result(requestCode, permissions, grantResults);
+        imagePicker.request_permission_result(requestCode, permissions, grantResults);
     }
 
     @Override
@@ -397,6 +410,7 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
                 break;
 
             case CAMERA_REQUEST:
+                Log.d(TAG,"On camera request");
                 if(resultCode == RESULT_OK) {
                     loadedBitmap = (Bitmap) data.getExtras().get("data");
                     mUserImage = loadedBitmap;
@@ -404,31 +418,15 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
                     mProfileImage.setImageBitmap(loadedBitmap);
                     updateProfileImage(loadedBitmap);
 
-//
-//                    //to get thumb image
-////                    loadedBitmap = (Bitmap) data.getExtras().get("data");
-////                    setSmallImageInAttachment(loadedBitmap);
-//
-//                    //to get full size image
-//                    Uri uri = Uri.fromFile(new File(imageUtils.getCurrentPhotoPath()));
-//                    //loadedBitmap = BitmapFactory.decodeFile(imageUtils.getCurrentPhotoPath());
-//                    cropImage(uri);
-
                 }
                 break;
 
             case GALLERY_REQUEST:
+                Log.d(TAG,"On gallery request");
                 if(resultCode== RESULT_OK && data != null) {
-                    Log.i("Gallery","Photo");
-
                     loadedUri = data.getData();
                     //loadedBitmap = uriToBitmap(loadedUri);
                     cropImage(loadedUri);
-//                    mUserImage = loadedBitmap;
-//                    loadedBitmap = ImageConverter.scaleDownToSquare(loadedBitmap,100,true);
-//                    mProfileImage.setImageBitmap(loadedBitmap);
-//                    mUserImage = loadedBitmap;
-//                    updateProfileImage(loadedBitmap);
 
                 }
                 break;
@@ -442,6 +440,7 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
                 break;
         }
     }
+
 
     public void updateProfileImage(Bitmap image) {
         userNode.setProfilePicture(ImageConverter.ConvertBitmapToBytes(image),true);

@@ -21,7 +21,11 @@ import com.relay.relay.viewsAndViewAdapters.CountryCodeActivityDialog;
 import com.relay.relay.Util.ImageConverter;
 import com.relay.relay.Util.ImagePicker;
 import com.relay.relay.Util.UuidGenerator;
+import com.theartofdev.edmodo.cropper.CropImage;
+import com.theartofdev.edmodo.cropper.CropImageActivity;
+import com.theartofdev.edmodo.cropper.CropImageOptions;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.UUID;
 
@@ -38,9 +42,13 @@ import static com.relay.relay.SignupActivity.STEP_NEXT;
 import static com.relay.relay.viewsAndViewAdapters.CountryCodeActivityDialog.ACTION_OPEN;
 import static com.relay.relay.Util.ImagePicker.CAMERA_REQUEST;
 import static com.relay.relay.Util.ImagePicker.GALLERY_REQUEST;
+import static com.theartofdev.edmodo.cropper.CropImage.CROP_IMAGE_EXTRA_OPTIONS;
+import static com.theartofdev.edmodo.cropper.CropImage.CROP_IMAGE_EXTRA_SOURCE;
 
 
 public class SignupStepFragment extends Fragment {
+
+    private final String TAG = "RELAY_DEBUG: "+ SignupStepFragment.class.getSimpleName();
 
     private static final String RECEIVED_STEP = "received_step";
     private static final String RECEIVED_OBJECT = "received_object";
@@ -401,38 +409,46 @@ public class SignupStepFragment extends Fragment {
 
     public void imagepicker() {
 
-        final CharSequence[] items;
 
-        if(imageUtils.isDeviceSupportCamera()) {
-            items=new CharSequence[2];
-            items[0]="Camera";
-            items[1]="Gallery";
-        }
-        else {
-            items=new CharSequence[1];
-            items[0]="Gallery";
-        }
+        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        intent.setType("image/*");
+        startActivityForResult(intent, GALLERY_REQUEST);
 
-        android.app.AlertDialog.Builder alertdialog = new android.app.AlertDialog.Builder(getContext());
-        alertdialog.setTitle("Add Image");
-        alertdialog.setItems(items, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int item) {
-                if (items[item].equals("Camera")) {
-                    Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                    if (takePictureIntent.resolveActivity(getActivity().getPackageManager()) != null)
-                        startActivityForResult(takePictureIntent, CAMERA_REQUEST);
+        // Because from some reason the crop doesn't work on returning uri image in fragment and can't
+        //resolve it , up rather to give the user only the gallery option
 
-                }
-                else if (items[item].equals("Gallery")) {
-
-                    Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                    intent.setType("image/*");
-                    startActivityForResult(intent, GALLERY_REQUEST);
-                }
-            }
-        });
-        alertdialog.show();
+//        final CharSequence[] items;
+//
+//        if(imageUtils.isDeviceSupportCamera()) {
+//            items=new CharSequence[2];
+//            items[0]="Camera";
+//            items[1]="Gallery";
+//        }
+//        else {
+//            items=new CharSequence[1];
+//            items[0]="Gallery";
+//        }
+//
+//        android.app.AlertDialog.Builder alertdialog = new android.app.AlertDialog.Builder(getContext());
+//        alertdialog.setTitle("Add Image");
+//        alertdialog.setItems(items, new DialogInterface.OnClickListener() {
+//            @Override
+//            public void onClick(DialogInterface dialog, int item) {
+//                if (items[item].equals("Camera")) {
+//                    Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+//                    if (takePictureIntent.resolveActivity(getActivity().getPackageManager()) != null)
+//                        startActivityForResult(takePictureIntent, CAMERA_REQUEST);
+//
+//                }
+//                else if (items[item].equals("Gallery")) {
+//
+//                    Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+//                    intent.setType("image/*");
+//                    startActivityForResult(intent, GALLERY_REQUEST);
+//                }
+//            }
+//        });
+//        alertdialog.show();
     }
 
     public Bitmap uriToBitmap(Uri uri){
@@ -462,19 +478,21 @@ public class SignupStepFragment extends Fragment {
                     loadedBitmap = ImageConverter.scaleDownToSquare(loadedBitmap,100,true);
                     inputImage = loadedBitmap;
                     circleImageView.setImageBitmap(loadedBitmap);
-
                 }
                 break;
 
             case GALLERY_REQUEST:
                 if(resultCode== RESULT_OK && data != null) {
-                    Log.i("Gallery","Photo");
+                    Log.d(TAG,"On gallery request");
 
                     loadedUri = data.getData();
-                    loadedBitmap = uriToBitmap(loadedUri);
-                    loadedBitmap = ImageConverter.scaleDownToSquare(loadedBitmap,100,true);
-                    inputImage = loadedBitmap;
-                    circleImageView.setImageBitmap(loadedBitmap);
+                    cropImage(loadedUri);
+
+
+//                    loadedBitmap = uriToBitmap(loadedUri);
+//                    loadedBitmap = ImageConverter.scaleDownToSquare(loadedBitmap,100,true);
+//                    inputImage = loadedBitmap;
+//                    circleImageView.setImageBitmap(loadedBitmap);
 
                 }
                 break;
@@ -485,6 +503,33 @@ public class SignupStepFragment extends Fragment {
                     textViewInput.setText(inputText);
                 }
                 break;
+
+            case CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE:
+                CropImage.ActivityResult result = CropImage.getActivityResult(data);
+                if (resultCode == RESULT_OK) {
+                    loadedUri = result.getUri();
+                    loadedBitmap = uriToBitmap(loadedUri);
+                    loadedBitmap = ImageConverter.scaleDownSaveRatio(loadedBitmap,(float)0.3,true);
+                    inputImage = loadedBitmap;
+                    circleImageView.setImageBitmap(loadedBitmap);
+
+                } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
+                    Exception error = result.getError();
+                }
+                break;
+
+        }
+    }
+    public void cropImage(Uri uri){
+        if (uri != null){
+            // crop image
+            Intent intent = new Intent();
+            intent.setClass(getActivity(), CropImageActivity.class);
+            intent.putExtra(CROP_IMAGE_EXTRA_SOURCE, uri);
+            CropImageOptions cropImageOptions = new CropImageOptions();
+            cropImageOptions.activityTitle = "Edit your image";
+            intent.putExtra(CROP_IMAGE_EXTRA_OPTIONS, cropImageOptions);
+            startActivityForResult(intent,CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE);
         }
     }
 }

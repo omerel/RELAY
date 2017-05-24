@@ -8,7 +8,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.net.Uri;
@@ -104,7 +103,7 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
    // private Uri mLoadedImageUri;
 
     //For Image Attachment
-    private ImagePicker imageUtils;
+    private ImagePicker imagePicker;
     private Bitmap loadedBitmap;
     private Uri loadedUri;
 
@@ -151,7 +150,7 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
 
         initMessageRecyclerView();
 
-        imageUtils = new ImagePicker(this);
+        imagePicker = new ImagePicker(this);
 
         // start listen to connectivity Manager when there any updates with messages
         createBroadcastReceiver();
@@ -266,7 +265,7 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        imageUtils.request_permission_result(requestCode, permissions, grantResults);
+        imagePicker.request_permission_result(requestCode, permissions, grantResults);
     }
 
     @Override
@@ -287,13 +286,14 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
                 break;
 
             case CAMERA_REQUEST:
+                Log.d(TAG,"On camera request");
                 if(resultCode == RESULT_OK) {
                     //to get thumb image
                     //loadedBitmap = (Bitmap) data.getExtras().get("data");
                     // setSmallImageInAttachment(loadedBitmap);
                     //to get full size image
-                    Uri uri = Uri.fromFile(new File(imageUtils.getCurrentPhotoPath()));
-                    //loadedBitmap = BitmapFactory.decodeFile(imageUtils.getCurrentPhotoPath());
+                    Uri uri = Uri.fromFile(new File(imagePicker.getCurrentPhotoPath()));
+                    //loadedBitmap = BitmapFactory.decodeFile(imagePicker.getCurrentPhotoPath());
                     cropImage(uri);
 
 
@@ -301,8 +301,8 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
                 break;
 
             case GALLERY_REQUEST:
+                Log.d(TAG,"On gallery request");
                 if(resultCode== RESULT_OK) {
-                    Log.i("Gallery","Photo");
                     loadedUri = data.getData();
                     cropImage(loadedUri);
                 }
@@ -361,7 +361,7 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
 
         final CharSequence[] items;
 
-        if(imageUtils.isDeviceSupportCamera()) {
+        if(imagePicker.isDeviceSupportCamera()) {
             items=new CharSequence[2];
             items[0]="Camera";
             items[1]="Gallery";
@@ -377,10 +377,10 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
             @Override
             public void onClick(DialogInterface dialog, int item) {
                 if (items[item].equals("Camera")) {
-                    imageUtils.launchCamera();
+                    imagePicker.launchCamera();
                 }
                 else if (items[item].equals("Gallery")) {
-                    imageUtils.launchGallery();
+                    imagePicker.launchGallery();
                 }
             }
         });

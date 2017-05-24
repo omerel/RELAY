@@ -44,6 +44,7 @@ import com.couchbase.lite.Mapper;
 import com.couchbase.lite.Query;
 import com.relay.relay.SubSystem.DataManager;
 import com.relay.relay.SubSystem.RelayConnectivityManager;
+import com.relay.relay.Util.ShowActivityFullImage;
 import com.relay.relay.viewsAndViewAdapters.GifImageView;
 import com.relay.relay.Util.GridSpacingItemDecoration;
 import com.relay.relay.Util.ImageConverter;
@@ -453,16 +454,16 @@ public class InboxFragment extends Fragment {
 //                }
 //            });
 
-//            // listener to profile picture
-//            holder.circleImageView.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View view) {
-//                    if ( node == null)
-//                        new ShowActivityFullImage(null,getActivity());
-//                    else
-//                        new ShowActivityFullImage(ImageConverter.convertBytesToBitmap(node.getProfilePicture()),getActivity());
-//                }
-//            });
+            // listener to profile picture
+            holder.circleImageView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if ( node == null)
+                        new ShowActivityFullImage(null,getActivity());
+                    else
+                        new ShowActivityFullImage(ImageConverter.convertBytesToBitmap(node.getProfilePicture()),getActivity());
+                }
+            });
         }
     }
 
