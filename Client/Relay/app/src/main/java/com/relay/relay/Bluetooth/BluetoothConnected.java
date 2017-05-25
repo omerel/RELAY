@@ -196,11 +196,14 @@ public class BluetoothConnected extends Thread implements BLConstants {
     // Close thread
     public void cancel() {
         try {
-            closedProperly = true;
             mBluetoothSocket.close();
             Log.d(TAG, "Thread was closed");
         } catch (IOException e) {
             Log.e(TAG, "Error with mBluetoothSocket.close() ");
         }
+    }
+
+    public void finishSyncProperly(){
+        closedProperly = true;
     }
 }

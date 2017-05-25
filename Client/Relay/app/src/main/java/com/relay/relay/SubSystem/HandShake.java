@@ -400,9 +400,18 @@ public class HandShake implements BLConstants {
                         }
                         else{
                             step=25;//25
+                            // update BluetoothConnected finish properly so the close thread will be without exception
+                            mBluetoothConnected.finishSyncProperly();
                             sendPacket(FINISH, new String("DUMMY"));
                             updateSentAttachmentMessages();
-                            finishHandshake();
+                            // wait the finish will get to the sync device and than finish
+                            new Handler().postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    finishHandshake();
+                                }
+                            },200);
+
                         }
                     }
                     break;
@@ -410,6 +419,8 @@ public class HandShake implements BLConstants {
                 case FINISH:
                     step=26;//26
                     Log.e(TAG, "FINISH. Initiator: "+mInitiator );
+                    // update BluetoothConnected finish properly so the close thread will be without exception
+                    mBluetoothConnected.finishSyncProperly();
                     // reset watch dog on this step;
                     watchDogHandler.removeCallbacks(stepWatchDogRunnable);
                     updateSentAttachmentMessages();

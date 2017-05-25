@@ -10,6 +10,7 @@ import android.bluetooth.le.ScanSettings;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.ParcelUuid;
@@ -53,7 +54,6 @@ public class BLEScan implements BLConstants {
         mBluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
         counter = 0;
 
-
         Log.d(TAG, "Class created");
     }
 
@@ -62,12 +62,17 @@ public class BLEScan implements BLConstants {
      */
     public void startScanning() {
         clearResults();
-        mScanCallback = new CustomScanCallback();
         if (mBluetoothAdapter.isEnabled()) {
-            mBluetoothLeScanner.startScan(buildScanFilters(), buildScanSettings(), mScanCallback);
             counter++;
-            Log.e(TAG, "Start Scanning for BLE Advertisements on the "+counter+ " th time");
-            mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_SEARCH,TAG+": Start BLE Search");
+            new Handler(Looper.getMainLooper()).post(new Runnable() {
+                @Override
+                public void run() {
+                    mScanCallback = new CustomScanCallback();
+                    mBluetoothLeScanner.startScan(buildScanFilters(), buildScanSettings(), mScanCallback);
+                    Log.e(TAG, "Start Scanning for BLE Advertisements on the "+counter+ " th time");
+                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_SEARCH,TAG+": Start BLE Search");
+                }
+            });
         }
     }
 
@@ -77,7 +82,12 @@ public class BLEScan implements BLConstants {
     public void stopScanning() {
         // Stop the scan, wipe the callback.
         if (mBluetoothAdapter.isEnabled() && mScanCallback != null ) {
-            mBluetoothLeScanner.stopScan(mScanCallback);
+            new Handler(Looper.getMainLooper()).post(new Runnable() {
+                @Override
+                public void run() {
+                    mBluetoothLeScanner.stopScan(mScanCallback);
+                }
+            });
             // todo test added flushPendingScanResults to reduce registration error
             mBluetoothLeScanner.flushPendingScanResults(mScanCallback);
             mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_STOP_SCAN,TAG+": Stop BLE Search");

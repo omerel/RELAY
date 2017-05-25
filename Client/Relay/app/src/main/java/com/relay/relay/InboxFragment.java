@@ -637,9 +637,9 @@ public class InboxFragment extends Fragment {
                         icon = BitmapFactory.decodeResource(getResources(), R.drawable.ic_user_information);
                         RectF icon_dest = new RectF((float) itemView.getLeft() + width ,(float) itemView.getTop() + width,(float) itemView.getLeft()+ 2*width,(float)itemView.getBottom() - width);
                         c.drawBitmap(icon,null,icon_dest,p);
-                        p.setColor(Color.parseColor("#FFFFFF"));
-                        p.setTextSize(30);
-                        c.drawText("User info",(float) itemView.getLeft() + widthText/3,(float)itemView.getBottom()-widthText/4,p);
+                       // p.setColor(Color.parseColor("#FFFFFF"));
+                       // p.setTextSize(30);
+                       // c.drawText("User info",(float) itemView.getLeft() + widthText/3,(float)itemView.getBottom()-widthText/4,p);
                     } else {
                         p.setColor(Color.parseColor("#D32F2F"));
                         RectF background = new RectF((float) itemView.getRight() + dX, (float) itemView.getTop(),(float) itemView.getRight(), (float) itemView.getBottom());
@@ -647,9 +647,9 @@ public class InboxFragment extends Fragment {
                         icon = BitmapFactory.decodeResource(getResources(), R.drawable.ic_trash_can);
                         RectF icon_dest = new RectF((float) itemView.getRight() - 2*width ,(float) itemView.getTop() + width,(float) itemView.getRight() - width,(float)itemView.getBottom() - width);
                         c.drawBitmap(icon,null,icon_dest,p);
-                        p.setColor(Color.parseColor("#FFFFFF"));
-                        p.setTextSize(30);
-                        c.drawText("Delete",(float) itemView.getRight() - widthText*6/4,(float)itemView.getBottom()-widthText/4,p);
+                       // p.setColor(Color.parseColor("#FFFFFF"));
+                       // p.setTextSize(30);
+                       // c.drawText("Delete",(float) itemView.getRight() - widthText*6/4,(float)itemView.getBottom()-widthText/4,p);
                     }
                 }
                 super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);

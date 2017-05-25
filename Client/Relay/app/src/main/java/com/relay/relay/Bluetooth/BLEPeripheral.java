@@ -17,6 +17,8 @@ import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
@@ -74,14 +76,20 @@ public class BLEPeripheral implements BLConstants {
         }
 
         @Override
-        public void onCharacteristicReadRequest(BluetoothDevice device, int requestId, int offset,
-                                                BluetoothGattCharacteristic characteristic) {
+        public void onCharacteristicReadRequest(final BluetoothDevice device, final int requestId,final  int offset,
+                                                final BluetoothGattCharacteristic characteristic) {
             super.onCharacteristicReadRequest(device, requestId, offset, characteristic);
             Log.d(TAG, "Device tried to read characteristic: " + characteristic.getUuid());
-            if (mBluetoothAdapter.isEnabled())
-                mGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS,
-                    offset, characteristic.getValue());
+            if (mBluetoothAdapter.isEnabled()) {
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        mGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS,
+                                offset, characteristic.getValue());
+                    }
+                });
 
+            }
             sendResultToManager(GET_BLUETOOTH_SERVER_READY);
         }
     };

@@ -10,6 +10,7 @@ import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
@@ -54,8 +55,12 @@ public class BLECentral implements BLConstants {
                 Log.e(TAG, "Connected to GATT server.( I'm the client side)");
                 mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,TAG+": Connected to GATT server.( I'm the client side)");
                 // Attempts to discover services after successful connection.
-                Log.e(TAG, "Ask GATT server to discover services:" + mBluetoothGatt.discoverServices());
-
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        Log.e(TAG, "Ask GATT server to discover services:" + mBluetoothGatt.discoverServices());
+                    }
+                });
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 Log.e(TAG, "Disconnected from GATT server!");
                 mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,TAG+": Disconnected from GATT server");
@@ -65,7 +70,7 @@ public class BLECentral implements BLConstants {
         }
 
         @Override
-        public void onServicesDiscovered(BluetoothGatt gatt, int status) {
+        public void onServicesDiscovered(final BluetoothGatt gatt, int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 Log.e(TAG, "GATT server services Discovered");
                 mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,TAG+": GATT server services Discovered ");
@@ -80,9 +85,14 @@ public class BLECentral implements BLConstants {
                         // read Characteristic
                         // relay BlePeripheral has only one Characteristic ==> index 0
                         Log.e(TAG, "mBluetoothGattCharacteristic.size()= "+mBluetoothGattCharacteristic.size());
-                        gatt.readCharacteristic(mBluetoothGattCharacteristic.get(0));
-                        Log.e(TAG, "Ask from GATT server MAC_ADDRESS_UUID Characteristic");
-                        mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,TAG+":Ask from GATT server MAC_ADDRESS_UUID Characteristic ");
+                        new Handler(Looper.getMainLooper()).post(new Runnable() {
+                            @Override
+                            public void run() {
+                                gatt.readCharacteristic(mBluetoothGattCharacteristic.get(0));
+                                Log.e(TAG, "Ask from GATT server MAC_ADDRESS_UUID Characteristic");
+                                mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,TAG+":Ask from GATT server MAC_ADDRESS_UUID Characteristic ");                            }
+                        });
+
 
 //                        for (int j = 0; j < mBluetoothGattCharacteristic.size(); j++ ){
 //                            if (mBluetoothGattCharacteristic.get(i).getUuid().equals(MAC_ADDRESS_UUID)) {
@@ -154,17 +164,20 @@ public class BLECentral implements BLConstants {
      * @param bluetoothDevice the device that found on ble scan
      * @return true
      */
-    public boolean connect(BluetoothDevice bluetoothDevice) {
+    public boolean connect(final BluetoothDevice bluetoothDevice) {
         Log.e(TAG, "Connect");
         if (mBluetoothAdapter.isEnabled()) {
             mBluetoothGatt = null;
             // disable connection automatically
-            mBluetoothGatt = bluetoothDevice.connectGatt(mRelayConnectivityManager, false, mGattCallback);
-            Log.e(TAG, "Connecting to gatt server ");
-            mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,
-                    TAG+": Connecting to gatt server in "+ bluetoothDevice.getAddress());
-          //  connectionWatchDog(10000);
-          //  Log.e(TAG, "Starting connection watchdog for 10 seconds");
+            new Handler(Looper.getMainLooper()).post(new Runnable() {
+                @Override
+                public void run() {
+                    mBluetoothGatt = bluetoothDevice.connectGatt(mRelayConnectivityManager, false, mGattCallback);
+                    Log.e(TAG, "Connecting to gatt server ");
+                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,
+                            TAG+": Connecting to gatt server in "+ bluetoothDevice.getAddress());
+                }
+            });
         }
         return true;
     }
