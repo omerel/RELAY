@@ -5,12 +5,50 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context="com.relay.relay.InboxFragment">
 
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/recycler_view_contacts"
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:clipToPadding="false"
-        android:scrollbars="vertical" />
+        android:layout_height="wrap_content">
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/recycler_view_contacts"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clipToPadding="false"
+            android:scrollbars="vertical" />
+
+        <ImageView
+            android:id="@+id/swipe_icon"
+            android:layout_below="@id/recycler_view_contacts"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@drawable/ic_finger_swipe"
+            android:layout_centerHorizontal="true" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="User information"
+            android:layout_marginLeft="4dp"
+            android:textSize="12sp"
+            android:layout_below="@id/recycler_view_contacts"
+            android:layout_toRightOf="@id/swipe_icon"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Delete user"
+            android:layout_marginRight="24dp"
+            android:textSize="12sp"
+            android:layout_below="@id/recycler_view_contacts"
+            android:layout_alignEnd="@id/swipe_icon"/>
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0.2dp"
+            android:background="@color/colorLine"
+            android:layout_below="@id/recycler_view_contacts"
+            ></View>
+    </RelativeLayout>
+
+
+
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/recycler_view_search_contacts"

@@ -48,7 +48,7 @@ public class BLEPeripheral implements BLConstants {
 
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 if (newState == BluetoothGatt.STATE_CONNECTED) {
-                   // mGattServer.connect(device,false);
+                    //mGattServer.connect(device,false);
                     // Add BLEService
                     Log.e(TAG, "addService() - service: " + mGattServer.addService(mBluetoothGattService));
                     Log.e(TAG, "mGattServer.getServices().size(): " + mGattServer.getServices().size());

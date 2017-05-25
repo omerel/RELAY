@@ -70,7 +70,7 @@ public interface BLConstants {
     int FINISHED_HANDSHAKE = 70;
     int NEW_RELAY_MESSAGE = 71;
     int FAILED_DURING_HAND_SHAKE = 72;
-    int WATCHDOG_TIMER = 60*SECOND;
+    int WATCHDOG_TIMER = 15*SECOND;
 
     // Message from BLECentral
     int FOUND_MAC_ADDRESS = 80;

@@ -371,8 +371,9 @@ public class SignInActivity extends AppCompatActivity {
                             // the node will be update from the server
                             Calendar oldCalendarTime = Calendar.getInstance();
                             oldCalendarTime.set(Calendar.YEAR, 1999);
+                            String email = uuidGenerator.GenerateEmailFromUUID(UUID.fromString(userUUID));
                             Node node = new Node(UUID.fromString(userUUID), oldCalendarTime,oldCalendarTime,
-                                    2,uuidGenerator.GenerateEmailFromUUID(UUID.fromString(userUUID)),"...","...","...", null,
+                                    2,email,"N/A",email.split("@")[0],email.split("@")[0], null,
                                     0,oldCalendarTime);
                             dataManager.getNodesDB().addNode(node);
                             dataManager.getNodesDB().setMyNodeId(node.getId());

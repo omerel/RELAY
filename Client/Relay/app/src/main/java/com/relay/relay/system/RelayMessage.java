@@ -111,7 +111,7 @@ public class RelayMessage {
 
 
     public void deleteContent(){
-        mContent = null;
+        mContent = "";
     }
 
     public void deleteAttachment(){

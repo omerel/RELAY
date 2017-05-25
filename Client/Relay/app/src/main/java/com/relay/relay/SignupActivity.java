@@ -103,7 +103,7 @@ public class SignupActivity extends AppCompatActivity implements SignupStepFragm
 
         mFullName = null;
         mUserName = null;
-        mPhoneNumber = null;
+        mPhoneNumber = "N/A";
         mEmail = null;
         mResidence = 0;
         mPassword = null;

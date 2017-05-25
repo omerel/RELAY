@@ -60,6 +60,7 @@ public class HandShake implements BLConstants {
     private DataTransferred mDataTransferred;
     private Node mMyNode;
     private Handler watchDogHandler;
+    private Runnable stepWatchDogRunnable;
 
     private DataTransferred.Metadata metadata;
     private DataTransferred.Metadata receivedMetadata;
@@ -73,6 +74,8 @@ public class HandShake implements BLConstants {
     private int finalDegree; // the actual degree for getting data from the other device
     private Map<UUID,Node> newNodeIdList; // store all the  new nodes that sent to the device. used to update messages status
     private TimePerformance timePerformance = new TimePerformance();
+
+    private String step;
 
     // attachments sent on by one because of their size
     private int attachmentsCounter;
@@ -93,7 +96,23 @@ public class HandShake implements BLConstants {
         this.objectMessagesToSend = new ArrayList<>();
         this.metadata = metadata;
         this.mBluetoothConnected.start();
-        handShakeWatchDog(WATCHDOG_TIMER);
+        this.step = "";
+
+        // set watchdog
+        this.stepWatchDogRunnable = new Runnable() {
+            @Override
+            public void run() {
+                mBluetoothConnected.cancel();
+                Log.e(TAG,"Error - watchDogHandler");
+                sendMessageToManager(FAILED_DURING_HAND_SHAKE,"Error - WatchDogHandler. After sending: "+step);
+            }
+        };
+
+        // refresh db
+        mDataManager.closeAllDataBase();
+        mDataManager.openAllDataBase();
+
+        //start hand shake
         startHandshake();
 
     }
@@ -103,19 +122,9 @@ public class HandShake implements BLConstants {
      * if handshake is stuck close it after period of time
      * @param time
      */
-    private void handShakeWatchDog(int time){
+    private void handShakeWatchDog(int time,String step){
         watchDogHandler = new Handler();
-        watchDogHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                // TODO need to be tested
-                mBluetoothConnected.cancel();
-                Log.e(TAG,"Error - watchDogHandler");
-                sendMessageToManager(FAILED_DURING_HAND_SHAKE,null);
-                Log.d(TAG, "Restart Advertisement if needed");
-            }
-        }, time);
-
+        watchDogHandler.postDelayed(stepWatchDogRunnable, time);
     }
 
 
@@ -124,9 +133,6 @@ public class HandShake implements BLConstants {
      */
     private void startHandshake() {
 
-        // todo check if needed refresh data base if needed
-        mDataManager.closeAllDataBase();
-        mDataManager.openAllDataBase();
         // set my node
         mMyNode = mDataManager.getNodesDB().getNode(mDataManager.getMyUuid());
 
@@ -135,9 +141,14 @@ public class HandShake implements BLConstants {
         this.metadata = mDataTransferred.createMetaData();
         Log.e(TAG,"TIME TO : "+"createMetaData"+" "+ timePerformance.stop());
         this.knownRelations = metadata.getKnownRelationsList();
+        step =  "STEP_1_METADATA";
         if(mInitiator){
             sendPacket(STEP_1_METADATA,JsonConvertor.convertToJson(metadata));
+            handShakeWatchDog(WATCHDOG_TIMER,"startHandshake");
         }
+        else
+            // start watchdog in this step
+            handShakeWatchDog(WATCHDOG_TIMER*2,"startHandshake");
     }
 
     /**
@@ -154,6 +165,8 @@ public class HandShake implements BLConstants {
                 case STEP_1_METADATA:
                     step=1;//1
                     Log.e(TAG, "STEP_1_METADATA. Initiator: "+mInitiator );
+                    // reset watch dog on this step;
+                    watchDogHandler.removeCallbacks(stepWatchDogRunnable);
                     // receive meta data
                     receivedMetadata = JsonConvertor.getMetadataFromJsonContent(jsonPacket);
                     receivedKnownMessage = receivedMetadata.getKnownMessagesList();
@@ -175,13 +188,21 @@ public class HandShake implements BLConstants {
                         step=5;//5
                         sendPacket(STEP_2_UPDATE_NODES_AND_RELATIONS, JsonConvertor.convertToJson(updateNodeAndRelations));
                     }
+                    // start watchdog in this step
+                    if (!mInitiator) {
+                        handShakeWatchDog(WATCHDOG_TIMER,"STEP_1_METADATA");
+                    } else {
+                        handShakeWatchDog(WATCHDOG_TIMER,"STEP_2_UPDATE_NODES_AND_RELATIONS");
+                    }
+
                     break;
                 case STEP_2_UPDATE_NODES_AND_RELATIONS:
                     step=6;///6
                     Log.e(TAG, "STEP_2_UPDATE_NODES_AND_RELATIONS. Initiator: "+mInitiator );
+                    // reset watch dog on this step;
+                    watchDogHandler.removeCallbacks(stepWatchDogRunnable);
                     receivedUpdateNodeAndRelations =
                             JsonConvertor.getUpdateNodeAndRelationsFromJsonContent(jsonPacket);
-
                     step=7;//7
                     timePerformance.start();
                     updateNodeAndRelations(receivedUpdateNodeAndRelations);
@@ -203,9 +224,18 @@ public class HandShake implements BLConstants {
                         else
                             sendPacket(STEP_3_TEXT_MESSAGES, JsonConvertor.convertToJson(textMessagesToSend));
                     }
+                    // start watchdog in this step
+                    if (!mInitiator) {
+                        handShakeWatchDog(WATCHDOG_TIMER,"STEP_2_UPDATE_NODES_AND_RELATIONS");
+                    } else {
+                        handShakeWatchDog(WATCHDOG_TIMER,"STEP_3_TEXT_MESSAGES or STEP_3_SKIP");
+                    }
                     break;
 
                 case STEP_3_SKIP:
+                    Log.e(TAG, "STEP_3_SKIP. Initiator: "+mInitiator );
+                    // reset watch dog on this step;
+                    watchDogHandler.removeCallbacks(stepWatchDogRunnable);
                     if (!mInitiator) {
                         step=15;//15
                         // if there is no new messages to update, skip step
@@ -232,11 +262,20 @@ public class HandShake implements BLConstants {
                             sendPacket(FINISH_STEP_4, new String("DUMMY"));
                         }
                     }
+                    // start watchdog in this step
+                    if (!mInitiator) {
+                        handShakeWatchDog(WATCHDOG_TIMER,"STEP_3_TEXT_MESSAGES or STEP_3_SKIP");
+                    } else {
+                        handShakeWatchDog(WATCHDOG_TIMER,"STEP_4_OBJECT_MESSAGE or FINISH_STEP_4");
+                    }
                     break;
 
                 case STEP_3_TEXT_MESSAGES:
                     step=11;//11
                     Log.e(TAG, "STEP_3_TEXT_MESSAGES. Initiator: "+mInitiator );
+                    // reset watch dog on this step;
+                    watchDogHandler.removeCallbacks(stepWatchDogRunnable);
+
                     ArrayList<RelayMessage> relayMessages =
                             JsonConvertor.getRelayMessageListFromJsonContent(jsonPacket);
                     timePerformance.start();
@@ -277,10 +316,20 @@ public class HandShake implements BLConstants {
                             sendPacket(FINISH_STEP_4, new String("DUMMY"));
                         }
                     }
+                    // start watchdog in this step
+                    if (!mInitiator) {
+                        handShakeWatchDog(WATCHDOG_TIMER,"STEP_3_TEXT_MESSAGES");
+                    } else {
+                        handShakeWatchDog(WATCHDOG_TIMER,"STEP_4_OBJECT_MESSAGE or FINISH_STEP_4");
+                    }
                     break;
 
 
                 case ACK_OBJECT_STEP_4:
+                    step=11;//11
+                    Log.e(TAG, "ACK_OBJECT_STEP_4: "+mInitiator );
+                    // reset watch dog on this step;
+                    watchDogHandler.removeCallbacks(stepWatchDogRunnable);
                     //while there is attachments, send them one by one
                     if (attachmentsCounter < objectMessagesToSend.size()) {
 
@@ -302,12 +351,19 @@ public class HandShake implements BLConstants {
                             sendPacket(FINISH_STEP_4, new String("DUMMY"));
                         }
                     }
-
+                    // start watchdog in this step
+                    if (!mInitiator) {
+                        handShakeWatchDog(WATCHDOG_TIMER,"FINISH");
+                    } else {
+                        handShakeWatchDog(WATCHDOG_TIMER,"FINISH_STEP_4");
+                    }
                     break;
 
                 case STEP_4_OBJECT_MESSAGE:
                     step=22;//22
                     Log.e(TAG, "STEP_4_OBJECT_MESSAGE. Initiator: "+mInitiator );
+                    // reset watch dog on this step;
+                    watchDogHandler.removeCallbacks(stepWatchDogRunnable);
                     RelayMessage relayMessage = JsonConvertor.getRelayMessageFromJsonContent(jsonPacket);
                     updateReceivedMessage(relayMessage);
                     mDataManager.getMessagesDB().addMessage(relayMessage);
@@ -321,10 +377,18 @@ public class HandShake implements BLConstants {
                     }
                     Log.e(TAG, "ACK object message");
                     sendPacket(ACK_OBJECT_STEP_4, new String("DUMMY"));
+                    // start watchdog in this step
+                    if (!mInitiator) {
+                        handShakeWatchDog(WATCHDOG_TIMER,"ACK_OBJECT_STEP_4");
+                    } else {
+                        handShakeWatchDog(WATCHDOG_TIMER,"ACK_OBJECT_STEP_4");
+                    }
                     break;
 
                 case FINISH_STEP_4: // only !mInitiator get it
                     Log.e(TAG, "FINISH_STEP_4. Initiator: "+mInitiator );
+                    // reset watch dog on this step;
+                    watchDogHandler.removeCallbacks(stepWatchDogRunnable);
                     updateSentTextMessages();
                     if (!mInitiator) {
                         step=23;//23
@@ -346,16 +410,18 @@ public class HandShake implements BLConstants {
                 case FINISH:
                     step=26;//26
                     Log.e(TAG, "FINISH. Initiator: "+mInitiator );
-                    // initial watchdogHandler
-                    watchDogHandler.removeCallbacksAndMessages(null);
+                    // reset watch dog on this step;
+                    watchDogHandler.removeCallbacks(stepWatchDogRunnable);
                     updateSentAttachmentMessages();
                     finishHandshake();
                     break;
             }
         } catch (Exception e) {
+            // reset watch dog on this step;
+            watchDogHandler.removeCallbacks(stepWatchDogRunnable);
             mBluetoothConnected.cancel();
             Log.e(TAG,"Error in hand shake method,error-"+e.getMessage()+", step- "+step);
-            sendMessageToManager(FAILED_DURING_HAND_SHAKE,null);
+            sendMessageToManager(FAILED_DURING_HAND_SHAKE,"Error in hand shake method,error-"+e.getMessage()+", step- "+step);
         }
     }
 
@@ -365,20 +431,21 @@ public class HandShake implements BLConstants {
      * if the msg status is delivered and i'm not the destination or the sender delete the content (double check)
      * @param msg
      */
-     private void updateReceivedMessage(RelayMessage msg){
+    private void updateReceivedMessage(RelayMessage msg){
 
-         if (msg.getStatus() == RelayMessage.STATUS_MESSAGE_CREATED)
-             msg.setStatus(RelayMessage.STATUS_MESSAGE_SENT);
-         if (msg.getDestinationId().equals(mMyNode.getId()))
-             msg.setStatus(RelayMessage.STATUS_MESSAGE_DELIVERED);
-         if (msg.getStatus() == RelayMessage.STATUS_MESSAGE_DELIVERED){
-             if ( !msg.getDestinationId().equals(mMyNode.getId()) &&
-                     !msg.getSenderId().equals(mMyNode.getId())){
-                 msg.deleteContent();
-                 msg.deleteAttachment();
-             }
-         }
-     }
+        if (msg.getStatus() == RelayMessage.STATUS_MESSAGE_CREATED)
+            msg.setStatus(RelayMessage.STATUS_MESSAGE_SENT);
+        if (msg.getDestinationId().equals(mMyNode.getId()))
+            msg.setStatus(RelayMessage.STATUS_MESSAGE_DELIVERED);
+        if (msg.getStatus() == RelayMessage.STATUS_MESSAGE_DELIVERED){
+            // the msg already supposed to be with empty content. double check(delete in the future)
+            if ( !msg.getDestinationId().equals(mMyNode.getId()) &&
+                    !msg.getSenderId().equals(mMyNode.getId())){
+                msg.deleteContent();
+                msg.deleteAttachment();
+            }
+        }
+    }
 
     /**
      * If I get here, it's means that all my text messages where delivered therefor:
@@ -389,7 +456,9 @@ public class HandShake implements BLConstants {
      */
     private void updateSentTextMessages(){
 
-        for (RelayMessage msg : textMessagesToSend){
+        for (RelayMessage message : textMessagesToSend){
+            // because the messages in the textMessagesToSend were changed to delivered, I cant use them.
+            RelayMessage msg = mDataManager.getMessagesDB().getMessage(message.getId());
 
             UUID destinationId = msg.getDestinationId();
             UUID senderId = msg.getSenderId();
@@ -415,7 +484,10 @@ public class HandShake implements BLConstants {
 
     private void updateSentAttachmentMessages(){
 
-        for (RelayMessage msg : objectMessagesToSend){
+        for (RelayMessage message : objectMessagesToSend){
+
+            // because the messages in the textMessagesToSend were changed to delivered, I cant use them.
+            RelayMessage msg = mDataManager.getMessagesDB().getMessage(message.getId());
 
             UUID destinationId = msg.getDestinationId();
             UUID senderId = msg.getSenderId();
@@ -457,32 +529,43 @@ public class HandShake implements BLConstants {
                 RelayMessage relayMessage = mDataManager.getMessagesDB().getMessage(uuid);
                 UUID destinationId = relayMessage.getDestinationId();
                 UUID senderId = relayMessage.getSenderId();
-                // if the sender or the destination in the nodeList of device add to message list
 
+                // if the sender or the destination in the receivedKnownRelations(include all the degrees) or the of the device, add to message list
                 if (receivedKnownRelations.containsKey(destinationId) ||
                         receivedKnownRelations.containsKey(senderId)||
                         newNodeIdList.containsKey(destinationId) ||
                         newNodeIdList.containsKey(senderId)) {
 
                     // if the sender of the msg is the sync device but he doesn't have the msg,
-                    // it's means that he delete it, therefor don't pass the msg and update it as
+                    // it's means that he deleted it, therefor don't pass the msg and update it as
                     // a delivered msg
-                    if (senderId.equals(receivedMetadata.getMyNode().getId())) {
-                        RelayMessage msg = mDataManager.getMessagesDB().getMessage(uuid);
-                        msg.setStatus(RelayMessage.STATUS_MESSAGE_DELIVERED);
-                        msg.deleteAttachment();
-                        msg.deleteContent();
-                    }// continue normally
-                    else {
-                        // add message according to its type
-                        if (relayMessage.getType() == RelayMessage.TYPE_MESSAGE_TEXT)
+                    if (senderId.equals(receivedMetadata.getMyNode().getId()))
+                        relayMessage.setStatus(RelayMessage.STATUS_MESSAGE_DELIVERED);
+
+                    // if the message status is already delivered, delete the content of the message and
+                    // send only the 'log' of the message
+                    if (relayMessage.getStatus() == RelayMessage.STATUS_MESSAGE_DELIVERED){
+                        relayMessage.deleteAttachment();
+                        relayMessage.deleteContent();
+                    }
+
+                    // add message according to its type
+                    if (relayMessage.getType() == RelayMessage.TYPE_MESSAGE_TEXT)
+                        textMessagesToSend.add(relayMessage);
+                    else{
+                        // if the message type is object message but the attachment is's null because
+                        // the message status is delivered, add the message to text message list to make the hand shake
+                        // be quicker.
+                        if (relayMessage.getAttachment() == null)
                             textMessagesToSend.add(relayMessage);
                         else
                             objectMessagesToSend.add(relayMessage);
                     }
+
                 }
             }
-            else{// my device recognize this msg
+            else{
+                // my device recognize this msg
                 // update message status if needed
                 int status = receivedKnownMessage.get(uuid).getStatus();
                 RelayMessage msg = mDataManager.getMessagesDB().getMessage(uuid);
@@ -541,9 +624,6 @@ public class HandShake implements BLConstants {
         try {
             ArrayList<UUID> myNodeList = mDataManager.getNodesDB().getNodesIdList();
 
-//            // todo delete
-//            // update the device with my node and relations first
-//            updateNodeList.add(mMyNode);
 
             for (UUID nodeId : myNodeList) {
 
@@ -556,7 +636,7 @@ public class HandShake implements BLConstants {
                 // if node is known check if need to update its node and/or relations and it's not the syncing node
 //                if (receivedKnownRelations.containsKey(nodeId) &&
 //                        !nodeId.equals(receivedMetadata.getMyNode().getId())) {
-                    if (receivedKnownRelations.containsKey(nodeId)) {
+                if (receivedKnownRelations.containsKey(nodeId)) {
                     // if my node timestamp is newer ' update node and relation
                     if (mDataManager.getNodesDB().getNode(nodeId).getTimeStampNodeDetails().after(
                             receivedKnownRelations.get(nodeId).getTimeStampNodeDetails())) {
@@ -578,7 +658,7 @@ public class HandShake implements BLConstants {
                     if(knownRelations.get(nodeId) != null)
 //                        if (knownRelations.get(nodeId).getNodeDegree() <= degree &&
 //                                !nodeId.equals(receivedMetadata.getMyNode().getId())) {
-                            if (knownRelations.get(nodeId).getNodeDegree() <= degree) {
+                        if (knownRelations.get(nodeId).getNodeDegree() <= degree) {
                             updateNodeList.add(mDataManager.getNodesDB().getNode(nodeId));
                             updateRelationsList.add(tempRelations);
                             newNodeIdList.put(nodeId, mDataManager.getNodesDB().getNode(nodeId));
@@ -588,7 +668,7 @@ public class HandShake implements BLConstants {
             updateNodeAndRelations = mDataTransferred.createUpdateNodeAndRelations(updateNodeList,
                     updateRelationsList);
             Log.e(TAG,"createUpdateNodeAndRelations:\n node sent to update: "+updateNodeList.size()+
-            "\n relations to update: "+updateRelationsList.size());
+                    "\n relations to update: "+updateRelationsList.size());
             return updateNodeAndRelations;
         }catch(Exception e){
 
@@ -621,8 +701,8 @@ public class HandShake implements BLConstants {
 
             if (receivedKnownRelations.get(mMyNode.getId()).getTimeStampRankFromServer()
                     .after(mMyNode.getTimeStampRankFromServer()));
-                // update my rank (need to use it) after it will update all node
-                mMyNode.setRank(receivedKnownRelations.get(mMyNode.getId()).getNodeRank(),receivedKnownRelations.get(mMyNode.getId()).getTimeStampRankFromServer());
+            // update my rank (need to use it) after it will update all node
+            mMyNode.setRank(receivedKnownRelations.get(mMyNode.getId()).getNodeRank(),receivedKnownRelations.get(mMyNode.getId()).getTimeStampRankFromServer());
             return true;
         }
         return false;
@@ -681,6 +761,7 @@ public class HandShake implements BLConstants {
         // Send address as a String
         Bundle bundle = new Bundle();
         bundle.putString("relayMessage", message);
+        bundle.putString("message", message);
         Message msg = Message.obtain(null, m);
         msg.setData(bundle);
 

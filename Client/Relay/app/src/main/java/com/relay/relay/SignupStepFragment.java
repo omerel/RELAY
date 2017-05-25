@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.AppCompatButton;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -75,6 +76,7 @@ public class SignupStepFragment extends Fragment {
     private EditText editTextInput;
     private EditText editTextInput2;
     private de.hdodenhof.circleimageview.CircleImageView circleImageView;
+    private AppCompatButton appCompatButton;
 
 
     private OnFragmentInteractionListener mListener;
@@ -201,13 +203,20 @@ public class SignupStepFragment extends Fragment {
                 break;
 
             case STEP_5_PICTURE:
-                textViewStepLabel.setText("Step 5 from 6");
+                textViewStepLabel.setText(" \n \nAdd your profile image\nStep 5 from 6");
                 imageViewInput = (ImageView) view.findViewById(R.id.edit_profile_image);
                 circleImageView = (de.hdodenhof.circleimageview.CircleImageView) view.findViewById(R.id.user_profile_photo);
                 imageViewInput.setVisibility(View.VISIBLE);
                 circleImageView.setVisibility(View.VISIBLE);
                 if(inputImage != null)
                     circleImageView.setImageBitmap(inputImage);
+
+                circleImageView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        imagepicker();
+                    }
+                });
 
                 imageViewInput.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -217,11 +226,12 @@ public class SignupStepFragment extends Fragment {
                 });
                 break;
             case STEP_6_RESIDENCE:
-                textViewStepLabel.setText("\nOne more step...");
-                textViewInput = (TextView) view.findViewById(R.id.input_residence);
-                textViewInput.setVisibility(View.VISIBLE);
-                textViewInput.setText(CountryCodeActivityDialog.getCountryFromCode(countryCode));
-                textViewInput.setOnClickListener(new View.OnClickListener() {
+                textViewStepLabel.setText(" \n \nChoose your country\nStep 6 from 6");
+                appCompatButton =(AppCompatButton)view.findViewById(R.id.input_residence);
+               // textViewInput = (TextView) view.findViewById(R.id.input_residence);
+                appCompatButton.setVisibility(View.VISIBLE);
+                appCompatButton.setText(CountryCodeActivityDialog.getCountryFromCode(countryCode));
+                appCompatButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         openListDialog();
@@ -229,7 +239,7 @@ public class SignupStepFragment extends Fragment {
                 });
                 break;
             case STEP_7_FINISH:
-                textViewStepLabel.setText("You are ready to sign up!");
+                textViewStepLabel.setText("Click to create account!");
 //                textViewConfirmLabel = (TextView) view.findViewById(R.id.input_confirm_code_label);
 //                textViewConfirmLabel.setVisibility(View.VISIBLE);
 //                editTextInput = (EditText) view.findViewById(R.id.input_confirm_code);
@@ -326,7 +336,7 @@ public class SignupStepFragment extends Fragment {
                     UUID uuid = uuidGenerator.GenerateUUIDFromEmail(email);
                 } catch (Exception e) {
                     valid = false;
-                    editTextInput.setError("this email can't be generate");
+                    editTextInput.setError("Illegal email");
                     e.printStackTrace();
                 }
 
@@ -357,7 +367,7 @@ public class SignupStepFragment extends Fragment {
                 break;
             case STEP_6_RESIDENCE:
                 inputText = CountryCodeActivityDialog.getCountryFromCode(countryCode);
-                textViewInput.setText(inputText);
+                appCompatButton.setText(inputText);
                 valid = true;
                 break;
             case STEP_7_FINISH:
@@ -484,23 +494,15 @@ public class SignupStepFragment extends Fragment {
             case GALLERY_REQUEST:
                 if(resultCode== RESULT_OK && data != null) {
                     Log.d(TAG,"On gallery request");
-
                     loadedUri = data.getData();
                     cropImage(loadedUri);
-
-
-//                    loadedBitmap = uriToBitmap(loadedUri);
-//                    loadedBitmap = ImageConverter.scaleDownToSquare(loadedBitmap,100,true);
-//                    inputImage = loadedBitmap;
-//                    circleImageView.setImageBitmap(loadedBitmap);
-
                 }
                 break;
             case ACTION_OPEN:
                 if(resultCode == RESULT_OK) {
                     countryCode = data.getIntExtra(CountryCodeActivityDialog.RESULT_CONTRYCODE, 1);
                     inputText = CountryCodeActivityDialog.getCountryFromCode(countryCode);
-                    textViewInput.setText(inputText);
+                    appCompatButton.setText(inputText);
                 }
                 break;
 
@@ -509,7 +511,7 @@ public class SignupStepFragment extends Fragment {
                 if (resultCode == RESULT_OK) {
                     loadedUri = result.getUri();
                     loadedBitmap = uriToBitmap(loadedUri);
-                    loadedBitmap = ImageConverter.scaleDownSaveRatio(loadedBitmap,(float)0.3,true);
+                    loadedBitmap = ImageConverter.scaleDownSaveRatio(loadedBitmap,(float)0.5,true);
                     inputImage = loadedBitmap;
                     circleImageView.setImageBitmap(loadedBitmap);
 

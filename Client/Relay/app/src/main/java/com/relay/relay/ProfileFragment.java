@@ -399,7 +399,7 @@ public class ProfileFragment extends Fragment implements View.OnClickListener {
                 if (resultCode == RESULT_OK) {
                     loadedUri = result.getUri();
                     loadedBitmap = uriToBitmap(loadedUri);
-                    loadedBitmap = ImageConverter.scaleDownSaveRatio(loadedBitmap,(float)0.3,true);
+                    loadedBitmap = ImageConverter.scaleDownSaveRatio(loadedBitmap,(float)0.5,true);
                     mProfileImage.setImageBitmap(loadedBitmap);
                     mUserImage = loadedBitmap;
                     updateProfileImage(loadedBitmap);

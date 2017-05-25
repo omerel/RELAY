@@ -121,11 +121,9 @@ public class StatusBar {
                 mAdvertisementFlag.setImageDrawable(mActivity.getDrawable(R.drawable.ic_flag_non));
                 break;
             case FLAG_SEARCH :
-                mConnectingFlag.setImageDrawable(mActivity.getDrawable(R.drawable.ic_flag_non));
                 mSearchFlag.setImageDrawable(mActivity.getDrawable(R.drawable.ic_flag_search));
                 break;
             case FLAG_CONNECTING :
-                mSearchFlag.setImageDrawable(mActivity.getDrawable(R.drawable.ic_flag_non));
                 mConnectingFlag.setImageDrawable(mActivity.getDrawable(R.drawable.ic_flag_connecting));
                 break;
             case FLAG_HANDSHAKE :

@@ -28,6 +28,8 @@ public class BluetoothConnected extends Thread implements BLConstants {
     private final InputStream mmInStream;
     private final OutputStream mmOutStream;
 
+    private boolean closedProperly;
+
     /**
      * BluetoothConnected constructor
      * @param bluetoothSocket for transmit data between devices
@@ -48,6 +50,8 @@ public class BluetoothConnected extends Thread implements BLConstants {
         }
         mmInStream = tmpIn;
         mmOutStream = tmpOut;
+
+        closedProperly = false;
         Log.d(TAG, "Class created");
     }
 
@@ -106,13 +110,17 @@ public class BluetoothConnected extends Thread implements BLConstants {
                 }
 
             } catch (IOException e) {
-                Log.e(TAG, "Error - got out from read packet loop\n"+e.getMessage());
+                Log.e(TAG, "Error - got out from read packet loop.\n"+e.getMessage());
+                if (!closedProperly)
+                    sendPacketMessageBluetoothManager(FAILED_DURING_HAND_SHAKE,"Error - got out from read packet loop.\n"+e.getMessage());
+                cancel();
                 break;
             }
             catch (Exception e) {
                 Log.e(TAG, "Error - Problem with reading data\n"+e.getMessage());
                 cancel();
-                sendPacketMessageBluetoothManager(FAILED_DURING_HAND_SHAKE,null);
+                sendPacketMessageBluetoothManager(FAILED_DURING_HAND_SHAKE,"Error - Problem with reading data\n"+e.getMessage());
+                break;
             }
         }
     }
@@ -142,9 +150,9 @@ public class BluetoothConnected extends Thread implements BLConstants {
             mmOutStream.write(packet);
         }
         catch (IOException e) {
-            Log.e(TAG, "Error with writePacket ");
+            Log.e(TAG, "Error with writePacket "+e.getMessage());
             cancel();
-            sendPacketMessageBluetoothManager(FAILED_DURING_HAND_SHAKE,null);
+            sendPacketMessageBluetoothManager(FAILED_DURING_HAND_SHAKE,"Error with writePacket "+e.getMessage());
         }
     }
 
@@ -188,6 +196,7 @@ public class BluetoothConnected extends Thread implements BLConstants {
     // Close thread
     public void cancel() {
         try {
+            closedProperly = true;
             mBluetoothSocket.close();
             Log.d(TAG, "Thread was closed");
         } catch (IOException e) {

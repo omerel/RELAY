@@ -462,8 +462,8 @@ public class BLManager extends Thread implements BLConstants {
                 case BLE_GATT_SERVER_ERROR:
                     Log.e(TAG, "BLE_GATT_SERVER_ERROR");
                     mStatus = DISCONNECTED;
-                    // try to restart peripheral
-                    startPeripheral();
+//                    // try to restart peripheral
+//                    startPeripheral();
                     break;
 
                 case BLE_ADVERTISE_ERROR:
@@ -513,7 +513,8 @@ public class BLManager extends Thread implements BLConstants {
 
                 case FAILED_DURING_HAND_SHAKE:
                     Log.e(TAG, "FAILED_DURING_HAND_SHAKE");
-                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_ERROR,TAG+": Failed transfer during hand shake");
+                    String errorMessage = msg.getData().getString("message");
+                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_ERROR,TAG+" FAILED_DURING_HAND_SHAKE: "+errorMessage);
                     mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_CLOSE_CONNECTION,TAG+": Close connection");
 
                     // todo test

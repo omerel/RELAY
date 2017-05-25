@@ -314,6 +314,10 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
     private boolean sendMessage(String destination) {
 
         String content = mEditText.getText().toString();
+        if (content.trim().length() == 0){
+            content= "";
+        }
+
         //check if there is an image to upload
         if (mAttachment.getVisibility() == View.VISIBLE){
 
@@ -511,11 +515,9 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
                 // if its emoji
                 if (relayMessage.getContent().length() == 2){
                     //TODO check the char is emoji ascii
-
                     if (relayMessage.getContent().matches(regex))
                         holder.textMessage.setTextSize(40);
                 }
-
                 holder.textMessage.setText(relayMessage.getContent());
                 holder.pictureAttachment.setVisibility(View.GONE);
             }
