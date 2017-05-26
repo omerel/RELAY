@@ -28,7 +28,7 @@
             android:layout_height="wrap_content"
             android:text="User information"
             android:layout_marginLeft="4dp"
-            android:textSize="12sp"
+            android:textSize="8sp"
             android:layout_below="@id/recycler_view_contacts"
             android:layout_toRightOf="@id/swipe_icon"/>
         <TextView
@@ -36,7 +36,7 @@
             android:layout_height="wrap_content"
             android:text="Delete user"
             android:layout_marginRight="24dp"
-            android:textSize="12sp"
+            android:textSize="8sp"
             android:layout_below="@id/recycler_view_contacts"
             android:layout_alignEnd="@id/swipe_icon"/>
         <View

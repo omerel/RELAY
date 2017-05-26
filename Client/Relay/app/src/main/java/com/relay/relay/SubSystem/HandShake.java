@@ -286,7 +286,8 @@ public class HandShake implements BLConstants {
                         // alert device when he gets new message
                         UUID destId = relayMessage.getDestinationId();
                         step=13;//13
-                        if (destId.equals(mMyNode.getId())) {
+                        // check content in case its a message that I received again after i recover my user
+                        if (destId.equals(mMyNode.getId()) && !relayMessage.getContent().equals("")) {
                             step=14;//14
                             String msg = "@"+receivedMetadata.getMyNode().getUserName()+DELIMITER+relayMessage.getContent();
                             sendMessageToManager(NEW_RELAY_MESSAGE, msg);

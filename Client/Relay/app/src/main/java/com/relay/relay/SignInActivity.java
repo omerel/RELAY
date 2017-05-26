@@ -26,6 +26,7 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.relay.relay.DB.Test;
 import com.relay.relay.SubSystem.DataManager;
 import com.relay.relay.Util.UuidGenerator;
 import com.relay.relay.system.Node;
@@ -215,7 +216,7 @@ public class SignInActivity extends AppCompatActivity {
         progressDialog.show();
 
 
-        // todo delete when no longer needed
+        // todo delete when no longer needed the demo
         // backdoor to demo users with out using server
         if( email.split("@")[1].equals("relay.com") ){
             String userUUID = "";
@@ -372,9 +373,16 @@ public class SignInActivity extends AppCompatActivity {
                             Calendar oldCalendarTime = Calendar.getInstance();
                             oldCalendarTime.set(Calendar.YEAR, 1999);
                             String email = uuidGenerator.GenerateEmailFromUUID(UUID.fromString(userUUID));
-                            Node node = new Node(UUID.fromString(userUUID), oldCalendarTime,oldCalendarTime,
-                                    2,email,"N/A",email.split("@")[0],email.split("@")[0], null,
-                                    0,oldCalendarTime);
+                            Node node = null;
+                            // todo delete when no longer needed
+                            // backdoor to demo users with out using server
+                            if( email.split("@")[1].equals("relay.com") )
+                                node = new Test(getApplicationContext()).createDemoNode(email,userUUID);
+                            else
+                                node = new Node(UUID.fromString(userUUID), oldCalendarTime,oldCalendarTime,
+                                        2,email,"N/A",email.split("@")[0],email.split("@")[0], null,
+                                        0,oldCalendarTime);
+                            //////////////////////////////////////////////
                             dataManager.getNodesDB().addNode(node);
                             dataManager.getNodesDB().setMyNodeId(node.getId());
 

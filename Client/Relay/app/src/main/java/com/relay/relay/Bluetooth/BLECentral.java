@@ -41,7 +41,6 @@ public class BLECentral implements BLConstants {
     List<BluetoothGattService>  mBluetoothGattService;
     List<BluetoothGattCharacteristic>  mBluetoothGattCharacteristic;
 
-    private Handler mConnectionHandler;
 
 
     /**
@@ -88,9 +87,12 @@ public class BLECentral implements BLConstants {
                         new Handler(Looper.getMainLooper()).post(new Runnable() {
                             @Override
                             public void run() {
-                                gatt.readCharacteristic(mBluetoothGattCharacteristic.get(0));
-                                Log.e(TAG, "Ask from GATT server MAC_ADDRESS_UUID Characteristic");
-                                mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,TAG+":Ask from GATT server MAC_ADDRESS_UUID Characteristic ");                            }
+                                if (gatt.getServices().size() != 0) {
+                                    gatt.readCharacteristic(mBluetoothGattCharacteristic.get(0));
+                                    Log.e(TAG, "Ask from GATT server MAC_ADDRESS_UUID Characteristic");
+                                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE, TAG + ":Ask from GATT server MAC_ADDRESS_UUID Characteristic ");
+                                }
+                            }
                         });
 
 
@@ -134,7 +136,6 @@ public class BLECentral implements BLConstants {
                                 TAG+": The device that is in the connected list :" + address);
                         // try the next device in results
                         mBleScan.checkResults();
-                        mConnectionHandler.removeCallbacks(null); // clear watchdog
                     }
                 }
             }
@@ -191,7 +192,6 @@ public class BLECentral implements BLConstants {
             Log.e(TAG, "BluetoothGatt not initialized");
             return;
         }
-//        mConnectionHandler.removeCallbacks(null);
 //        mBleScan.stopScanning();
         if (mBluetoothAdapter.isEnabled()) {
             mBluetoothGatt.close();
@@ -228,20 +228,6 @@ public class BLECentral implements BLConstants {
         return mBleScan;
     }
 
-
-//    // todo from some reason it making problems
-//    private void connectionWatchDog(int time){
-//        mConnectionHandler = new Handler();
-//        mConnectionHandler.postDelayed(new Runnable() {
-//            @Override
-//            public void run() {
-//                // TODO need to be tested
-//                close();
-//                Log.e(TAG,"Error - mBluetoothGatt didn't get any respond");
-//                sendResultToManager(FAILED_CONNECTING_TO_DEVICE,null);
-//            }
-//        }, time);
-//    }
 
     /**
      * Handler of incoming messages from BleScan

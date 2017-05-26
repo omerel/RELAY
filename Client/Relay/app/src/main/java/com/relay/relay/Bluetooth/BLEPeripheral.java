@@ -39,60 +39,10 @@ public class BLEPeripheral implements BLConstants {
     private BLEService mBLEService;
     private BluetoothGattServer mGattServer;
     private Messenger mMessenger;
+    private  int mConnectionCounter;
+    private BluetoothGattServerCallback mGattServerCallback;
 
-    /**
-     * BluetoothGattServerCallback
-     */
-    private final BluetoothGattServerCallback mGattServerCallback = new BluetoothGattServerCallback() {
-        @Override
-        public void onConnectionStateChange(BluetoothDevice device, final int status, int newState) {
-            super.onConnectionStateChange(device, status, newState);
 
-            if (status == BluetoothGatt.GATT_SUCCESS) {
-                if (newState == BluetoothGatt.STATE_CONNECTED) {
-                    //mGattServer.connect(device,false);
-                    // Add BLEService
-                    Log.e(TAG, "addService() - service: " + mGattServer.addService(mBluetoothGattService));
-                    Log.e(TAG, "mGattServer.getServices().size(): " + mGattServer.getServices().size());
-
-                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,TAG+": Device Connected to my bluetooth GATT");
-                    Log.e(TAG, "Device Connected to my bluetooth GATT: " + device.getAddress());
-
-                } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
-                    Log.d(TAG, " device Disconnected from my bluetooth GATT ");
-                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,TAG+": device Disconnected from my bluetooth GATT ");
-                }
-            } else {
-                Log.e(TAG, "Error when connecting: " + status);
-                mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_ERROR,TAG+": Error when connecting: "+status);
-
-            }
-        }
-
-        @Override
-        public void onServiceAdded(int status, BluetoothGattService service) {
-            super.onServiceAdded(status, service);
-            Log.e(TAG, "onServiceAdded");
-        }
-
-        @Override
-        public void onCharacteristicReadRequest(final BluetoothDevice device, final int requestId,final  int offset,
-                                                final BluetoothGattCharacteristic characteristic) {
-            super.onCharacteristicReadRequest(device, requestId, offset, characteristic);
-            Log.d(TAG, "Device tried to read characteristic: " + characteristic.getUuid());
-            if (mBluetoothAdapter.isEnabled()) {
-                new Handler(Looper.getMainLooper()).post(new Runnable() {
-                    @Override
-                    public void run() {
-                        mGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS,
-                                offset, characteristic.getValue());
-                    }
-                });
-
-            }
-            sendResultToManager(GET_BLUETOOTH_SERVER_READY);
-        }
-    };
 
     /**
      * BLEPeripheral constructor
@@ -108,6 +58,8 @@ public class BLEPeripheral implements BLConstants {
         this.mBluetoothGattService = mBLEService.getBluetoothGattService();
         this.mMessenger =messenger;
         this.mBluetoothManager = (BluetoothManager) mRelayConnectivityManager.getSystemService(Context.BLUETOOTH_SERVICE);
+        this.mConnectionCounter = 0;
+
     }
 
     /**
@@ -117,6 +69,7 @@ public class BLEPeripheral implements BLConstants {
         if (mBluetoothAdapter.isEnabled()) {
             if (mGattServer != null) {
                 disconnectFromDevices();
+                mGattServer.clearServices();
                 mGattServer.close();
             }
         }
@@ -133,6 +86,59 @@ public class BLEPeripheral implements BLConstants {
         if (mGattServer!= null)
             mGattServer.close();
 
+        /**
+         * BluetoothGattServerCallback
+         */
+        mGattServerCallback = new BluetoothGattServerCallback() {
+            @Override
+            public void onConnectionStateChange(BluetoothDevice device, final int status, int newState) {
+                super.onConnectionStateChange(device, status, newState);
+
+                if (status == BluetoothGatt.GATT_SUCCESS) {
+                    if (newState == BluetoothGatt.STATE_CONNECTED) {
+                        //mGattServer.connect(device,false);
+                        // Add BLEService
+                        mConnectionCounter++;
+                        mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,TAG+": Device Connected to my bluetooth GATT");
+                        Log.e(TAG, "Device Connected to my bluetooth GATT: " + device.getAddress());
+
+                    } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
+                        Log.d(TAG, " device Disconnected from my bluetooth GATT ");
+                        mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,TAG+": device Disconnected from my bluetooth GATT ");
+                    }
+                } else {
+                    Log.e(TAG, "Error when connecting: " + status);
+                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_ERROR,TAG+": Error when connecting: "+status);
+
+                }
+            }
+
+            @Override
+            public void onServiceAdded(int status, BluetoothGattService service) {
+                super.onServiceAdded(status, service);
+                Log.e(TAG, "onServiceAdded");
+            }
+
+            @Override
+            public void onCharacteristicReadRequest(final BluetoothDevice device, final int requestId,final  int offset,
+                                                    final BluetoothGattCharacteristic characteristic) {
+                super.onCharacteristicReadRequest(device, requestId, offset, characteristic);
+                Log.d(TAG, "Device tried to read characteristic: " + characteristic.getUuid());
+                if (mBluetoothAdapter.isEnabled()) {
+                    new Handler(Looper.getMainLooper()).post(new Runnable() {
+                        @Override
+                        public void run() {
+                            mGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS,
+                                    offset, characteristic.getValue());
+                        }
+                    });
+                }
+                sendResultToManager(GET_BLUETOOTH_SERVER_READY);
+                Log.e(TAG, "Connection counter: "+ mConnectionCounter +"!!!");
+            }
+        };
+
+
         // open GattServer
         mGattServer = mBluetoothManager.openGattServer(mRelayConnectivityManager, mGattServerCallback);
 
@@ -144,6 +150,11 @@ public class BLEPeripheral implements BLConstants {
             mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_ERROR,TAG+": ERROR - didn't open gattServer. returns null");
             return;
         }
+
+        // add services
+        Log.e(TAG, "addService() - service: " + mGattServer.addService(mBluetoothGattService));
+        Log.e(TAG, "mGattServer.getServices().size(): " + mGattServer.getServices().size());
+
     }
 
 

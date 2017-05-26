@@ -87,6 +87,13 @@ public class InboxDB {
         UUID senderId = relayMessage.getSenderId();
         UUID contact = null;
 
+
+        // in case of user recover, ignore a message that I sent or got that it status is delivered
+        if(relayMessage.getStatus() == RelayMessage.STATUS_MESSAGE_DELIVERED &&
+                relayMessage.getContent().equals("") &&
+                relayMessage.getAttachment() == null )
+            return false;
+
         /// check first if I'm the sender or the destination . in other words, if to to put the msg in the inbox
         if ( mMyId.equals(destinationId) || mMyId.equals(senderId) ){
 
@@ -102,6 +109,7 @@ public class InboxDB {
                     addMessageItem(relayMessage.getId(),relayMessage.getContent(),contact, relayMessage.getTimeCreated(),isMyMessage);
                     break;
             }
+            return true;
         }
         return false;
     }

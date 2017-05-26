@@ -79,8 +79,8 @@ public class BLManager extends Thread implements BLConstants {
         }
          this.mRelayConnectivityManager = relayConnectivityManager;
          this.mBLECentral = new BLECentral(mBluetoothAdapter,mMessenger,mLastConnectedDevices, relayConnectivityManager);
-         this.mBlePeripheral = new BLEPeripheral(mBluetoothAdapter,mMessenger, relayConnectivityManager);
-         this.mBluetoothScan = new BluetoothScan(mBluetoothAdapter,mMessenger, relayConnectivityManager);
+       //  this.mBlePeripheral = new BLEPeripheral(mBluetoothAdapter,mMessenger, relayConnectivityManager);
+         this.mBluetoothScan = new BluetoothScan(mBluetoothAdapter,mMessenger, mRelayConnectivityManager);
          this.mBleAdvertising = new BLEAdvertising(mBluetoothAdapter,relayConnectivityManager);
          this.mBluetoothClient =  null;
          this.mBluetoothServer = new BluetoothServer(mBluetoothAdapter,mMessenger,mRelayConnectivityManager);
@@ -102,6 +102,7 @@ public class BLManager extends Thread implements BLConstants {
              public void run() {
                  if (mStatus != CONNECTED || mStatus != CONNECTING){
                      startSearchImmediately();
+                     startPeripheral();
                  }
                  intervalSearch();
              }
@@ -141,6 +142,9 @@ public class BLManager extends Thread implements BLConstants {
 
         if (BluetoothAdapter.getDefaultAdapter().isMultipleAdvertisementSupported()){
             if (mStatus != CONNECTED || mStatus != CONNECTING){
+                if (mBlePeripheral != null)
+                    mBlePeripheral.close();
+                mBlePeripheral = new BLEPeripheral(mBluetoothAdapter,mMessenger, mRelayConnectivityManager);
                 mBlePeripheral.startPeripheral();
             }
         }
@@ -357,7 +361,6 @@ public class BLManager extends Thread implements BLConstants {
                     Log.e(TAG, "DEVICE_FAILED_CONNECTING_ME");
                     // update status
                     mStatus = DISCONNECTED;
-                    mBlePeripheral.close();
                     startPeripheral();
                     break;
 

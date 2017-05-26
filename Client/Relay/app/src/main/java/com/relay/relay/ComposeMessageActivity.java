@@ -51,7 +51,6 @@ import static com.relay.relay.Util.ImagePicker.GALLERY_REQUEST;
 
 public class ComposeMessageActivity extends AppCompatActivity implements View.OnClickListener {
 
-
     // activity for passing to other classes
     private Activity activity = this;
 
@@ -247,14 +246,29 @@ public class ComposeMessageActivity extends AppCompatActivity implements View.On
                 createAlertDialog("Ooops...","Message is empty");
                 break;
             case 0:
-                // all good
 
-                String message = subject+"\n "+content;
-                UUID uuid = null;
                 // get uuid
                 UuidGenerator uuidGenerator = new UuidGenerator();
+                // all good
+                String message = subject+"\n "+content;
+                UUID uuidDestination = null;
+                UUID uuidSender =  mDataManager.getNodesDB().getMyNodeId();
+
+                // todo delete when no needed
+                // Admin backdoor to create demo messages
+                if(subject.contains("admin")){
+                    message = subject.split("iamadmin")[0]+"\n "+content;
+                    String sender = subject.split("iamadmin")[1];
+                    try {
+                        uuidSender =uuidGenerator.GenerateUUIDFromEmail(sender);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+                ////////////////////////////////////
+
                 try {
-                     uuid =uuidGenerator.GenerateUUIDFromEmail(sendTo);
+                     uuidDestination =uuidGenerator.GenerateUUIDFromEmail(sendTo);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -265,7 +279,7 @@ public class ComposeMessageActivity extends AppCompatActivity implements View.On
                     if (loadedBitmap != null) {
 
                         RelayMessage newMessage = new RelayMessage(
-                                mDataManager.getNodesDB().getMyNodeId(), uuid, RelayMessage.TYPE_MESSAGE_INCLUDE_ATTACHMENT,
+                                uuidSender, uuidDestination, RelayMessage.TYPE_MESSAGE_INCLUDE_ATTACHMENT,
                                 message, ImageConverter.ConvertBitmapToBytes(loadedBitmap));
                         mDataManager.getMessagesDB().addMessage(newMessage);
                         requestForSearch();
@@ -274,7 +288,7 @@ public class ComposeMessageActivity extends AppCompatActivity implements View.On
                 else{
                     if (content.trim().length() != 0) {
                         RelayMessage newMessage = new RelayMessage(
-                                mDataManager.getNodesDB().getMyNodeId(), uuid, RelayMessage.TYPE_MESSAGE_TEXT,
+                                uuidSender, uuidDestination, RelayMessage.TYPE_MESSAGE_TEXT,
                                 message, null);
                         mDataManager.getMessagesDB().addMessage(newMessage);
                         requestForSearch();

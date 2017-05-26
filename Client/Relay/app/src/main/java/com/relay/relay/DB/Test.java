@@ -2,7 +2,10 @@ package com.relay.relay.DB;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.util.Log;
 
 import com.relay.relay.MainActivity;
@@ -61,21 +64,22 @@ public class Test {
 
     private Calendar[] dates;
 
-    public Test(Context context){
-
-        this.context = context;
-        dataManager = new DataManager(context);
-        graphRelations = dataManager.getGraphRelations();
-        nodesDB = dataManager.getNodesDB();
-        messagesDB = dataManager.getMessagesDB();
-        handShakeDB = dataManager.getHandShakeDB();
-
-        // get uuid
-        SharedPreferences sharedPreferences = context.getSharedPreferences(MainActivity.SYSTEM_SETTING,0);
-        String uuidString =  sharedPreferences.getString("my_uuid",null);
-        myID = UUID.fromString(uuidString);
-
-    }
+    public Test(Context context){this.context = context;}
+//    public Test(Context context){
+//
+//        this.context = context;
+//        dataManager = new DataManager(context);
+//        graphRelations = dataManager.getGraphRelations();
+//        nodesDB = dataManager.getNodesDB();
+//        messagesDB = dataManager.getMessagesDB();
+//        handShakeDB = dataManager.getHandShakeDB();
+//
+//        // get uuid
+//        SharedPreferences sharedPreferences = context.getSharedPreferences(MainActivity.SYSTEM_SETTING,0);
+//        String uuidString =  sharedPreferences.getString("my_uuid",null);
+//        myID = UUID.fromString(uuidString);
+//
+//    }
 
 
     // not include max
@@ -83,6 +87,60 @@ public class Test {
         return min + (int)(Math.random() * ((max - min)));
     }
 
+
+    public Node createDemoNode(String email,String userUUID){
+        // set up new node with limit info and oldest date. when connected to relay server,
+        // the node will be update from the server
+        Calendar oldCalendarTime = Calendar.getInstance();
+        //oldCalendarTime.set(Calendar.YEAR, 1999);
+        Node node = null;
+        Drawable drawable;
+        byte[] pic;
+        switch(email){
+            case "boris@relay.com":
+                drawable = context.getResources().getDrawable(R.drawable.ic_demo_boris);
+                pic = ImageConverter.ConvertBitmapToBytes(((BitmapDrawable)drawable).getBitmap());
+                node = new Node(UUID.fromString(userUUID), oldCalendarTime,oldCalendarTime,
+                        2,email,"N/A","Boris","Boris Varsi", pic,0,oldCalendarTime);
+                break;
+            case "yaron@relay.com":
+                drawable = context.getResources().getDrawable(R.drawable.ic_demo_yaron);
+                pic = ImageConverter.ConvertBitmapToBytes(((BitmapDrawable)drawable).getBitmap());
+                node = new Node(UUID.fromString(userUUID), oldCalendarTime,oldCalendarTime,
+                        2,email,"N/A","Yaron","Yaron Levy", pic,0,oldCalendarTime);
+                break;
+            case "dor@relay.com":
+                drawable = context.getResources().getDrawable(R.drawable.ic_demo_dor);
+                pic = ImageConverter.ConvertBitmapToBytes(((BitmapDrawable)drawable).getBitmap());
+                node = new Node(UUID.fromString(userUUID), oldCalendarTime,oldCalendarTime,
+                        2,email,"N/A","Dor","Dor Bar-tov", pic,0,oldCalendarTime);
+                break;
+            case "suzan@relay.com":
+                drawable = context.getResources().getDrawable(R.drawable.ic_demo_suzan);
+                pic = ImageConverter.ConvertBitmapToBytes(((BitmapDrawable)drawable).getBitmap());
+                node = new Node(UUID.fromString(userUUID), oldCalendarTime,oldCalendarTime,
+                        2,email,"N/A","Suzan","Suzan Vilner", pic,0,oldCalendarTime);
+                break;
+            case "sivan@relay.com":
+                drawable = context.getResources().getDrawable(R.drawable.ic_demo_sivan);
+                pic = ImageConverter.ConvertBitmapToBytes(((BitmapDrawable)drawable).getBitmap());
+                node = new Node(UUID.fromString(userUUID), oldCalendarTime,oldCalendarTime,
+                        2,email,"N/A","Sivan","Sivan wizeman", pic,0,oldCalendarTime);
+                break;
+            case "gal@relay.com":
+                drawable = context.getResources().getDrawable(R.drawable.ic_demo_gal);
+                pic = ImageConverter.ConvertBitmapToBytes(((BitmapDrawable)drawable).getBitmap());
+                node = new Node(UUID.fromString(userUUID), oldCalendarTime,oldCalendarTime,
+                        2,email,"N/A","Gal","Gal Israel", pic,0,oldCalendarTime);
+                break;
+            default:
+                node = new Node(UUID.fromString(userUUID), oldCalendarTime,oldCalendarTime,
+                        2,email,"N/A",email.split("@")[0],email.split("@")[0], null,
+                        0,oldCalendarTime);
+                break;
+        }
+        return node;
+    }
 
     /**
      * 0-"Omer",1-"Barr",2-"Rachael",3-"Adi","4-Stav","5-Ido",6-"Eric",7-"Rinat",8-"Dana",9-"Michal",10-"Shlomit",11-"Shir"

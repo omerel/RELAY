@@ -69,8 +69,8 @@ public class BLEScan implements BLConstants {
                 public void run() {
                     mScanCallback = new CustomScanCallback();
                     mBluetoothLeScanner.startScan(buildScanFilters(), buildScanSettings(), mScanCallback);
-                    Log.e(TAG, "Start Scanning for BLE Advertisements on the "+counter+ " th time");
-                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_SEARCH,TAG+": Start BLE Search");
+                    Log.e(TAG, "Start Scanning for BLE Advertisements on the " + counter + " th time");
+                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_SEARCH, TAG + ": Start BLE Search");
                 }
             });
         }
@@ -200,6 +200,9 @@ public class BLEScan implements BLConstants {
                     "Fails to start scan due an internal error");
                     break;
             }
+            // to do test
+            mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+            mBluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
             Log.e(TAG, "Error - Scan failed with error: "+ errorCode);
             sendResultToBLECentral(BLE_SCAN_ERROR,null);
 
