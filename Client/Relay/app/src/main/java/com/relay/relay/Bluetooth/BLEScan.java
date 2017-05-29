@@ -199,10 +199,10 @@ public class BLEScan implements BLConstants {
                     mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_ERROR,TAG+": Scan failed with error: "+
                     "Fails to start scan due an internal error");
                     break;
+
             }
+
             // to do test
-            mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-            mBluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
             Log.e(TAG, "Error - Scan failed with error: "+ errorCode);
             sendResultToBLECentral(BLE_SCAN_ERROR,null);
 

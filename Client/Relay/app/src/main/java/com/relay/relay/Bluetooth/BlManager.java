@@ -359,9 +359,10 @@ public class BLManager extends Thread implements BLConstants {
 
                 case DEVICE_FAILED_CONNECTING_ME:
                     Log.e(TAG, "DEVICE_FAILED_CONNECTING_ME");
+                    //make sure not scanning
+                    stopSearch(FOUND_NEW_DEVICE);
                     // update status
                     mStatus = DISCONNECTED;
-                    startPeripheral();
                     break;
 
                 case SUCCEED_CONNECTING_TO_DEVICE:

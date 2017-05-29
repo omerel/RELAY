@@ -101,31 +101,31 @@ public class Test {
                 drawable = context.getResources().getDrawable(R.drawable.ic_demo_boris);
                 pic = ImageConverter.ConvertBitmapToBytes(((BitmapDrawable)drawable).getBitmap());
                 node = new Node(UUID.fromString(userUUID), oldCalendarTime,oldCalendarTime,
-                        2,email,"N/A","Boris","Boris Varsi", pic,0,oldCalendarTime);
+                        2,email,"N/A","Boris","Boris Vernik", pic,0,oldCalendarTime);
                 break;
             case "yaron@relay.com":
                 drawable = context.getResources().getDrawable(R.drawable.ic_demo_yaron);
                 pic = ImageConverter.ConvertBitmapToBytes(((BitmapDrawable)drawable).getBitmap());
                 node = new Node(UUID.fromString(userUUID), oldCalendarTime,oldCalendarTime,
-                        2,email,"N/A","Yaron","Yaron Levy", pic,0,oldCalendarTime);
+                        2,email,"+97259462273","Yaron","Yaron Levy", pic,0,oldCalendarTime);
                 break;
-            case "dor@relay.com":
+            case "avi@relay.com":
                 drawable = context.getResources().getDrawable(R.drawable.ic_demo_dor);
                 pic = ImageConverter.ConvertBitmapToBytes(((BitmapDrawable)drawable).getBitmap());
                 node = new Node(UUID.fromString(userUUID), oldCalendarTime,oldCalendarTime,
-                        2,email,"N/A","Dor","Dor Bar-tov", pic,0,oldCalendarTime);
+                        2,email,"N/A","Avi","Avi Cohen", pic,0,oldCalendarTime);
                 break;
-            case "suzan@relay.com":
+            case "shir@relay.com":
                 drawable = context.getResources().getDrawable(R.drawable.ic_demo_suzan);
                 pic = ImageConverter.ConvertBitmapToBytes(((BitmapDrawable)drawable).getBitmap());
                 node = new Node(UUID.fromString(userUUID), oldCalendarTime,oldCalendarTime,
-                        2,email,"N/A","Suzan","Suzan Vilner", pic,0,oldCalendarTime);
+                        2,email,"N/A","Shir","Shir Vilner", pic,0,oldCalendarTime);
                 break;
             case "sivan@relay.com":
                 drawable = context.getResources().getDrawable(R.drawable.ic_demo_sivan);
                 pic = ImageConverter.ConvertBitmapToBytes(((BitmapDrawable)drawable).getBitmap());
                 node = new Node(UUID.fromString(userUUID), oldCalendarTime,oldCalendarTime,
-                        2,email,"N/A","Sivan","Sivan wizeman", pic,0,oldCalendarTime);
+                        2,email,"+97258456971","Sivan","Sivan Wiseman", pic,0,oldCalendarTime);
                 break;
             case "gal@relay.com":
                 drawable = context.getResources().getDrawable(R.drawable.ic_demo_gal);

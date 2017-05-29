@@ -256,9 +256,9 @@ public class ComposeMessageActivity extends AppCompatActivity implements View.On
 
                 // todo delete when no needed
                 // Admin backdoor to create demo messages
-                if(subject.contains("admin")){
-                    message = subject.split("iamadmin")[0]+"\n "+content;
-                    String sender = subject.split("iamadmin")[1];
+                if(subject.contains("iamadmin")){
+                    message = subject.split("iamadmin")[0].trim()+"\n "+content;
+                    String sender = subject.split("iamadmin")[1].trim();
                     try {
                         uuidSender =uuidGenerator.GenerateUUIDFromEmail(sender);
                     } catch (Exception e) {
