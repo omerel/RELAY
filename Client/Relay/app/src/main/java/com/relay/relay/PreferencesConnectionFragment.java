@@ -67,27 +67,37 @@ public class PreferencesConnectionFragment extends PreferenceFragmentCompat
         sharedPreferences = getActivity().getSharedPreferences(MainActivity.SYSTEM_SETTING, 0);
         // update default preference
         updateSwitchState();
+
+        //todo disable mobile data until developed
+        switchPreferenceCompat = (SwitchPreferenceCompat)getPreferenceManager().findPreference(getString(R.string.key_enable_data));
+        switchPreferenceCompat.setEnabled(false);
     }
 
     private void updateSwitchState(){
 
         // set up bluetooth switch
-        boolean bool = sharedPreferences.getBoolean(getString(R.string.key_enable_bluetooth),false);
+        boolean bool = sharedPreferences.getBoolean(getString(R.string.key_enable_bluetooth),true);
         switchPreferenceCompat = (SwitchPreferenceCompat) getPreferenceManager().findPreference(getString(R.string.key_enable_bluetooth));
         // check if bluetooth didn't shot off
-        if (BluetoothAdapter.getDefaultAdapter().isEnabled())
+        if (BluetoothAdapter.getDefaultAdapter().isEnabled()){
             switchPreferenceCompat.setChecked(bool);
+            switchPreferenceCompat.setEnabled(true);
+        }
         else
-            switchPreferenceCompat.setChecked(false);
+            //switchPreferenceCompat.setChecked(false);
+            switchPreferenceCompat.setEnabled(false);
 
         // set up wifi switch
         bool = sharedPreferences.getBoolean(getString(R.string.key_enable_wifi),false);
         switchPreferenceCompat = (SwitchPreferenceCompat)getPreferenceManager().findPreference(getString(R.string.key_enable_wifi));
         // check if wifi didn't shot off
-        if ( ((WifiManager)getActivity().getSystemService(Context.WIFI_SERVICE)).isWifiEnabled() )
+        if ( ((WifiManager)getActivity().getSystemService(Context.WIFI_SERVICE)).isWifiEnabled() ){
             switchPreferenceCompat.setChecked(bool);
+            switchPreferenceCompat.setEnabled(true);
+        }
         else
-            switchPreferenceCompat.setChecked(false);
+            //switchPreferenceCompat.setChecked(false);
+            switchPreferenceCompat.setEnabled(false);
 
         // set up mobile data switch
         bool = sharedPreferences.getBoolean(getString(R.string.key_enable_data),false);
@@ -130,7 +140,7 @@ public class PreferencesConnectionFragment extends PreferenceFragmentCompat
             editor.putBoolean(switchPreferenceCompat.getKey(),switchPreferenceCompat.isChecked());
             editor.commit();
             // update activity
-            onButtonPressed(MainActivity.CHANGE_PRIORITY_F);
+            onButtonPressed(MainActivity.CHANGE_PRIORITY_COMMAND);
         }
         else{
             switchPreferenceCompat.setChecked(false);

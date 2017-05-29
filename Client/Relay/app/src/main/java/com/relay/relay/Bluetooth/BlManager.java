@@ -163,8 +163,11 @@ public class BLManager extends Thread implements BLConstants {
         if (mBluetoothServer != null)
             mBluetoothServer.cancel();
 
-        mBLECentral.close();
-        mBlePeripheral.close();
+
+        if (mBLECentral != null)
+            mBLECentral.close();
+        if (mBlePeripheral != null)
+            mBlePeripheral.close();
         // Stop advertising
         mBleAdvertising.stopAdvertising();
         Log.d(TAG, "Cancel thread");

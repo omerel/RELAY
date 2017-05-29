@@ -15,7 +15,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.media.MediaPlayer;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -38,6 +37,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.relay.relay.SubSystem.DataManager;
 import com.relay.relay.SubSystem.RelayConnectivityManager;
@@ -61,7 +61,7 @@ public class MainActivity extends AppCompatActivity
     public static final String USER_UUID = "relay.intent.uuid_user";
     public static final String USER_NAME = "relay.intent.user_name";
     public static final String SYSTEM_SETTING = "relay.system_setting";
-    public static final String CHANGE_PRIORITY_F = "relay.change_priority";
+    public static final String CHANGE_PRIORITY_COMMAND = "relay.change_priority";
     public static final String MESSAGE_RECEIVED = "relay.BroadcastReceiver.MESSAGE";
     public static final String FRESH_FRAGMENT = "relay.BroadcastReceiver.FRESH_FRAGMENT";
     public static final String REQUEST_FOR_MANUAL_HAND_SHAKE = "relay.BroadcastReceiver.REQUEST_FOR_MANUAL_HAND_SHAKE";
@@ -546,7 +546,7 @@ public class MainActivity extends AppCompatActivity
 
     public void changePriority(){
         //  BroadCast to service
-        Intent updateActivity = new Intent(RelayConnectivityManager.CHANGE_PRIORITY_B);
+        Intent updateActivity = new Intent(RelayConnectivityManager.CHANGE_PRIORITY_CONNECTION);
         sendBroadcast(updateActivity);
     }
 
@@ -554,11 +554,12 @@ public class MainActivity extends AppCompatActivity
     public void onFragmentInteraction(String string) {
 
 
-        if (string.equals(CHANGE_PRIORITY_F)){
+        if (string.equals(CHANGE_PRIORITY_COMMAND)){
             //Changing connection priority
             changePriority();
-            Snackbar.make(this.mContentView, " Changing connection priority " , Snackbar.LENGTH_SHORT)
-                    .setAction("Action", null).show();
+            Toast.makeText(this, "Connection priority has benn changed", Toast.LENGTH_LONG).show();
+//            Snackbar.make(this.mContentView, " Changing connection priority " , Snackbar.LENGTH_SHORT)
+//                    .setAction("Action", null).show();
             mStatusBar.clear();
 
         }
