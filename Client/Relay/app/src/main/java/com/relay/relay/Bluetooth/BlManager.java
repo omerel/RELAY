@@ -299,10 +299,10 @@ public class BLManager extends Thread implements BLConstants {
         // stop ble search
         stopSearch(FOUND_NEW_DEVICE);
 
-        mStatus = CONNECTING;
-
         // create server socket
         openBluetoothServerSocketConnection();
+
+        mStatus = CONNECTING;
 
         mBluetoothScan.startScan();
         Log.e(TAG, "Start Bluetooth scan ");
