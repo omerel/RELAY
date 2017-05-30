@@ -169,7 +169,6 @@ public class MainActivity extends AppCompatActivity
 
         // start on inbox
         displayFragment(0);
-        refreshFragment(mFragment); //todo ADDED. mite not needed
 
         // initial status bar
         mStatusBar = new StatusBar(this);

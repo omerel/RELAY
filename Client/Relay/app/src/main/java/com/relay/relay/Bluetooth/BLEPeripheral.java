@@ -71,7 +71,6 @@ public class BLEPeripheral implements BLConstants {
                 disconnectFromDevices();
                 mGattServer.clearServices();
                 mGattServer.close();
-                mGattServerCallback = null;
             }
         }
     }

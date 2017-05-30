@@ -134,9 +134,8 @@ public class BLEScan implements BLConstants {
     }
 
     public boolean isResultsInQueue(){
-        if (listBluetoothDeviceResults != null)
-            if (listBluetoothDeviceResults.size() != 0)
-                return true;
+        if (listBluetoothDeviceResults.size() != 0)
+            return true;
         Log.e(TAG,"There are no devices in queue");
         return false;
     }
