@@ -310,18 +310,19 @@ public class BLManager extends Thread implements BLConstants {
 
     public void openBluetoothServerSocketConnection(){
         // Open server socket if not already connected
-        if (mStatus != CONNECTED) {
+        if (mStatus != CONNECTED && mStatus != CONNECTING) {
 
-            try {
-                if (bluetoothSocket != null)
-                bluetoothSocket.close();
-            } catch (IOException e) {
-                e.printStackTrace();
+            if (!mBluetoothServer.isWaitingToAccept()){
+                try {
+                    if (bluetoothSocket != null)
+                        bluetoothSocket.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                mBluetoothServer.cancel();
+                mBluetoothServer = new BluetoothServer(mBluetoothAdapter, mMessenger,mRelayConnectivityManager);
+                mBluetoothServer.start();
             }
-            mBluetoothServer.cancel();
-            mBluetoothServer = new BluetoothServer(mBluetoothAdapter, mMessenger,mRelayConnectivityManager);
-            mBluetoothServer.start();
-
         }
     }
 

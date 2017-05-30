@@ -28,6 +28,7 @@ import com.relay.relay.R;
 import com.relay.relay.viewsAndViewAdapters.StatusBar;
 
 import static com.relay.relay.MainActivity.SYSTEM_SETTING;
+import static com.relay.relay.viewsAndViewAdapters.StatusBar.FLAG_NO_CHANGE;
 
 /**
  * Created by omer on 13/12/2016.
@@ -291,7 +292,7 @@ public class RelayConnectivityManager extends Service implements BLConstants {
                             unregisterReceiver(mModeBroadcastReceiver);
                             Log.e(TAG, " Bluetooth switch turned off ");
                         }else if (mCurrentMode == WIFI_MODE){
-                            broadCastFlag(0,TAG+": Wifi mode turned on");
+                            broadCastFlag(FLAG_NO_CHANGE,TAG+": Wifi mode turned on");
                             // TODO stop wifi mode
                             unregisterReceiver(mModeBroadcastReceiver);
                             Log.e(TAG, " Wifi turned off ");
@@ -315,7 +316,7 @@ public class RelayConnectivityManager extends Service implements BLConstants {
                         }
                         if (state == BluetoothAdapter.STATE_ON) {
                             startConnectivityByPriority();
-                            broadCastFlag(0,TAG+": Bluetooth is on");
+                            broadCastFlag(FLAG_NO_CHANGE,TAG+": Bluetooth is on");
                         }
                         break;
 
@@ -364,7 +365,6 @@ public class RelayConnectivityManager extends Service implements BLConstants {
         // refresh fragment
         Intent updateActivity = new Intent(MainActivity.FRESH_FRAGMENT);
         sendBroadcast(updateActivity);
-        broadCastFlag(0,TAG+": State was changed");
     }
     /**
      * Kill service
@@ -431,7 +431,7 @@ public class RelayConnectivityManager extends Service implements BLConstants {
 //                                startConnectivityByPriority();
                                 break;
                             case BluetoothAdapter.STATE_TURNING_OFF:
-                                broadCastFlag(0,TAG+": Bluetooth turned off");
+                                broadCastFlag(FLAG_NO_CHANGE,TAG+": Bluetooth turned off");
                                 // stop bluetooth mode
                                 stopBluetoothMode();
                                 break;
