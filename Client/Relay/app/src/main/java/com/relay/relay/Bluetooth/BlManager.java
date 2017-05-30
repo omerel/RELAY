@@ -480,6 +480,9 @@ public class BLManager extends Thread implements BLConstants {
                     break;
 
                 case BLE_SCAN_ERROR:
+                    // todo test initial ble central again
+                    mBLECentral.close();
+                    mBLECentral = new BLECentral(mBluetoothAdapter,mMessenger,mLastConnectedDevices, mRelayConnectivityManager);
                     Log.e(TAG, "BLE_SCAN_ERROR");
                     mStatus = DISCONNECTED;
                     break;

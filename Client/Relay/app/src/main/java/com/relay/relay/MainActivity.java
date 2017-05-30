@@ -557,7 +557,7 @@ public class MainActivity extends AppCompatActivity
         if (string.equals(CHANGE_PRIORITY_COMMAND)){
             //Changing connection priority
             changePriority();
-            Toast.makeText(this, "Connection priority has benn changed", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Connection priority has been changed", Toast.LENGTH_LONG).show();
 //            Snackbar.make(this.mContentView, " Changing connection priority " , Snackbar.LENGTH_SHORT)
 //                    .setAction("Action", null).show();
             mStatusBar.clear();
