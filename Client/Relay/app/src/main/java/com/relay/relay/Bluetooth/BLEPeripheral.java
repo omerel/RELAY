@@ -71,6 +71,7 @@ public class BLEPeripheral implements BLConstants {
                 disconnectFromDevices();
                 mGattServer.clearServices();
                 mGattServer.close();
+                mGattServerCallback = null;
             }
         }
     }
@@ -85,7 +86,6 @@ public class BLEPeripheral implements BLConstants {
         // openGattServer() will return null.
         if (mGattServer!= null)
             mGattServer.close();
-
         /**
          * BluetoothGattServerCallback
          */

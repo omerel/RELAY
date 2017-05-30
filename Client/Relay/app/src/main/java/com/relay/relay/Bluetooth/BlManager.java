@@ -511,7 +511,6 @@ public class BLManager extends Thread implements BLConstants {
                     Log.e(TAG, "NOT_FOUND_ADDRESS_FROM_BLSCAN");
                     mStatus = DISCONNECTED;
                     mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,TAG+": Found non in bluetooth scan");
-
                     startPeripheral();
 
                     break;
