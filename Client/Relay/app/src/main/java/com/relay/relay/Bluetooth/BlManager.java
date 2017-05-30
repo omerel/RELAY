@@ -17,6 +17,7 @@ import com.relay.relay.Util.DataTransferred;
 import com.relay.relay.Util.MacAddressFinder;
 import com.relay.relay.viewsAndViewAdapters.StatusBar;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -65,6 +66,8 @@ public class BLManager extends Thread implements BLConstants {
     private DataManager mDataManager;
     private DataTransferred mDataTransferred;
     private DataTransferred.Metadata metadata; // calculate in BLManager saves time
+
+    private BluetoothSocket bluetoothSocket;
 
     // in handshake
 
@@ -308,10 +311,16 @@ public class BLManager extends Thread implements BLConstants {
     public void openBluetoothServerSocketConnection(){
         // Open server socket if not already connected
         if (mStatus != CONNECTED) {
-            if(!mBluetoothServer.isWaitingToAccept()){
-                mBluetoothServer = new BluetoothServer(mBluetoothAdapter, mMessenger,mRelayConnectivityManager);
-                mBluetoothServer.start();
+
+            try {
+                if (bluetoothSocket != null)
+                bluetoothSocket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
+            mBluetoothServer.cancel();
+            mBluetoothServer = new BluetoothServer(mBluetoothAdapter, mMessenger,mRelayConnectivityManager);
+            mBluetoothServer.start();
 
         }
     }
@@ -321,7 +330,6 @@ public class BLManager extends Thread implements BLConstants {
      */
     class IncomingHandler extends Handler {
 
-        BluetoothSocket bluetoothSocket;
         String address;
         BluetoothDevice bl;
 
@@ -482,9 +490,7 @@ public class BLManager extends Thread implements BLConstants {
                     break;
 
                 case BLE_SCAN_ERROR:
-                    // todo test initial ble central again
                     mBLECentral.close();
-                    mBLECentral = new BLECentral(mBluetoothAdapter,mMessenger,mLastConnectedDevices, mRelayConnectivityManager);
                     Log.e(TAG, "BLE_SCAN_ERROR");
                     mStatus = DISCONNECTED;
                     break;
