@@ -84,8 +84,8 @@ public class HandShakeHistory {
      * add event to HandShakeEvents
      * @return
      */
-    public boolean addEvent(){
-        mHandShakeEvents.add(new HandShakeEvent());
+    public boolean addEvent(boolean initiator){
+        mHandShakeEvents.add(new HandShakeEvent(initiator));
         mHandShakeCounter++;
         calculateHandShakeRank();
         return true;
@@ -133,12 +133,14 @@ public class HandShakeHistory {
      *  TODO for now the geo location is not usable;
      */
      public class HandShakeEvent{
-         private String geoLocation;
-         private Calendar timeStamp;
+        private String geoLocation;
+        private Calendar timeStamp;
+        private boolean initiator;
 
-        public HandShakeEvent(){
+        public HandShakeEvent(boolean initiator){
             this.geoLocation = "IL";
             this.timeStamp = Calendar.getInstance();
+            this.initiator = initiator;
         }
 
         public String getGeoLocation() {
@@ -148,5 +150,7 @@ public class HandShakeHistory {
         public Calendar getTimeStamp() {
             return timeStamp;
         }
+
+        public boolean getInitiator() {return  initiator;}
     }
 }

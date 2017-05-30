@@ -41,11 +41,11 @@ public class HandShakeDB {
      * @param nodeId
      * @return true if success
      */
-    public boolean addEventToHandShakeHistoryWith(UUID nodeId){
+    public boolean addEventToHandShakeHistoryWith(UUID nodeId,boolean initator){
         HandShakeHistory temp;
         if (!dbManager.isKeyExist(nodeId)) {
             temp = new HandShakeHistory();
-            temp.addEvent();
+            temp.addEvent(initator);
             dbManager.putJsonObject(nodeId,JsonConvertor.convertToJson(temp));
             addNumNodes();
             return true;
@@ -58,7 +58,7 @@ public class HandShakeDB {
             // check if time pass between two events. makes the history handshake rank be more accurate
             timestamp1.add(Calendar.HOUR,DELAY_BETWEEN_EVENTS);
             if ( timestamp1.before(timestamp2)){
-                temp.addEvent();
+                temp.addEvent(initator);
                 dbManager.putJsonObject(nodeId, JsonConvertor.convertToJson(temp));
                 return true;
             }

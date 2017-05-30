@@ -30,6 +30,7 @@ public class BluetoothServer extends Thread implements BLConstants {
     private BluetoothDevice mConnectedDevice;
     private BluetoothSocket mBluetoothSocket;
     private RelayConnectivityManager mRelayConnectivityManager;
+    private boolean mWaitingToAccept;
 
     /**
      * BluetoothServer constructor
@@ -44,6 +45,7 @@ public class BluetoothServer extends Thread implements BLConstants {
         this.mBluetoothSocket = null;
         this.mConnectedDevice = null;
         this.mRelayConnectivityManager = relayConnectivityManager;
+        this.mWaitingToAccept = false;
 
         // Use a temporary object that is later assigned to mmServerSocket,
         // because mmServerSocket is final
@@ -73,8 +75,10 @@ public class BluetoothServer extends Thread implements BLConstants {
         while (true) {
             try {
                 Log.e(TAG, "Waiting to mmServerSocket.accept() ");
+                mWaitingToAccept = true;
                 socket = mmServerSocket.accept();
                 Log.e(TAG, "SUCCESSFULLY CONNECTED");
+                mWaitingToAccept = false;
             } catch (IOException e) {
                 cancel();
                 Log.e(TAG, "Problem with mmServerSocket.accept()  IOException:"+e.getMessage());
@@ -111,14 +115,18 @@ public class BluetoothServer extends Thread implements BLConstants {
      */
     public void cancel() {
         try {
-            if (mmServerSocket != null)
+            if (mmServerSocket != null) {
                 mmServerSocket.close();
                 Log.d(TAG, "Thread was closed");
+                mWaitingToAccept = false;
+            }
         } catch (IOException e) {
             Log.e(TAG, "Problem with mmServerSocket.close() ");
         }
     }
 
+
+    public boolean isWaitingToAccept(){ return mWaitingToAccept;}
     /**
      * BluetoothSocket getter
      * @return BluetoothSocket

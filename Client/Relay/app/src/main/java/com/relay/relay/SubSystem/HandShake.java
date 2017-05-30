@@ -734,7 +734,7 @@ public class HandShake implements BLConstants {
     private void finishHandshake() {
         // On BLManager  there will be update messages status
         //  add event in history
-        mDataManager.getHandShakeDB().addEventToHandShakeHistoryWith(receivedMetadata.getMyNode().getId());
+        mDataManager.getHandShakeDB().addEventToHandShakeHistoryWith(receivedMetadata.getMyNode().getId(),mInitiator);
         //  add edge between node
         mDataManager.getGraphRelations().addEdge(mMyNode.getId(), receivedMetadata.getMyNode().getId());
         sendFinishMessageToManager(FINISHED_HANDSHAKE, mBluetoothSocket.getRemoteDevice().getAddress());
