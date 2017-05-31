@@ -156,7 +156,6 @@ public class BLEPeripheral implements BLConstants {
     }
 
 
-
     /**
      * Disconnect From Devices
      */

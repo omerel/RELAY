@@ -17,6 +17,7 @@ import android.os.RemoteException;
 import android.util.Log;
 
 import com.relay.relay.SubSystem.RelayConnectivityManager;
+import com.relay.relay.Util.MacAddressFinder;
 import com.relay.relay.viewsAndViewAdapters.StatusBar;
 
 import java.util.List;
@@ -93,6 +94,7 @@ public class BLECentral implements BLConstants {
                 if (status == BluetoothGatt.GATT_SUCCESS) {
                     Log.e(TAG, "GATT server services Discovered");
                     mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,TAG+": GATT server services Discovered ");
+
                     // get services
                     mBluetoothGattService =  gatt.getServices();
                     // Find RELAY_SERVICE_UUID and get Characteristics

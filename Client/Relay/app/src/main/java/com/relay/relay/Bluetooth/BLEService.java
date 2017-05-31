@@ -42,5 +42,9 @@ public class BLEService implements BLConstants  {
         return mAddressService;
     }
 
+    public BluetoothGattCharacteristic getAddressCharacteristic() {
+        return mAddressCharacteristic;
+    }
+
 
 }
