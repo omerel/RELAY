@@ -96,7 +96,6 @@ public class BLEPeripheral implements BLConstants {
                 if (status == BluetoothGatt.GATT_SUCCESS) {
                     if (newState == BluetoothGatt.STATE_CONNECTED) {
                         //mGattServer.connect(device,false);
-                        // Add BLEService
                         mConnectionCounter++;
                         mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,TAG+": Device Connected to my bluetooth GATT");
                         Log.e(TAG, "Device Connected to my bluetooth GATT: " + device.getAddress());

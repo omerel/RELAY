@@ -40,107 +40,8 @@ public class BLECentral implements BLConstants {
     private BluetoothGatt mBluetoothGatt;
     List<BluetoothGattService>  mBluetoothGattService;
     List<BluetoothGattCharacteristic>  mBluetoothGattCharacteristic;
+    private BluetoothGattCallback mGattCallback;
 
-
-
-    /**
-     * Implements callback methods for GATT events that needed dor connection between devices.
-     */
-    private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
-        @Override
-        public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
-
-            if (newState == BluetoothProfile.STATE_CONNECTED) {
-                Log.e(TAG, "Connected to GATT server.( I'm the client side)");
-                mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,TAG+": Connected to GATT server.( I'm the client side)");
-                // Attempts to discover services after successful connection.
-                new Handler(Looper.getMainLooper()).post(new Runnable() {
-                    @Override
-                    public void run() {
-                        Log.e(TAG, "Ask GATT server to discover services:" + mBluetoothGatt.discoverServices());
-                    }
-                });
-            } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                Log.e(TAG, "Disconnected from GATT server!");
-                mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,TAG+": Disconnected from GATT server");
-                //close();
-
-            }
-        }
-
-        @Override
-        public void onServicesDiscovered(final BluetoothGatt gatt, int status) {
-            if (status == BluetoothGatt.GATT_SUCCESS) {
-                Log.e(TAG, "GATT server services Discovered");
-                mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,TAG+": GATT server services Discovered ");
-                // get services
-                mBluetoothGattService =  gatt.getServices();
-                // Find RELAY_SERVICE_UUID and get Characteristics
-                Log.e(TAG, "mBluetoothGattService.size()= "+mBluetoothGattService.size());
-                for (int i = 0; i < mBluetoothGattService.size(); i++ ){
-                    if (mBluetoothGattService.get(i).getUuid().equals(RELAY_SERVICE_UUID)) {
-                        mBluetoothGattCharacteristic = mBluetoothGattService.get(i).getCharacteristics();
-                        Log.e(TAG, "Found RELAY_SERVICE_UUID in index: "+i+". Get MAC_ADDRESS_UUID Characteristic");
-                        // read Characteristic
-                        // relay BlePeripheral has only one Characteristic ==> index 0
-                        Log.e(TAG, "mBluetoothGattCharacteristic.size()= "+mBluetoothGattCharacteristic.size());
-                        new Handler(Looper.getMainLooper()).post(new Runnable() {
-                            @Override
-                            public void run() {
-                                if (gatt.getServices().size() != 0) {
-                                    gatt.readCharacteristic(mBluetoothGattCharacteristic.get(0));
-                                    Log.e(TAG, "Ask from GATT server MAC_ADDRESS_UUID Characteristic");
-                                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE, TAG + ":Ask from GATT server MAC_ADDRESS_UUID Characteristic ");
-                                }
-                            }
-                        });
-
-
-//                        for (int j = 0; j < mBluetoothGattCharacteristic.size(); j++ ){
-//                            if (mBluetoothGattCharacteristic.get(i).getUuid().equals(MAC_ADDRESS_UUID)) {
-//                                gatt.readCharacteristic(mBluetoothGattCharacteristic.get(j));
-//                                Log.e(TAG, "Ask from GATT server MAC_ADDRESS_UUID Characteristic");
-//                                mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,TAG+":Ask from GATT server MAC_ADDRESS_UUID Characteristic ");
-//                            }
-//                        }
-                    }
-                }
-
-            } else {
-                Log.d(TAG, "onServicesDiscovered received: " + status);
-            }
-        }
-
-        @Override
-        public void onCharacteristicRead(BluetoothGatt gatt,
-                                         BluetoothGattCharacteristic characteristic,
-                                         int status) {
-            if (status == BluetoothGatt.GATT_SUCCESS) {
-                Log.e(TAG, "On Characteristic Read ");
-                mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,TAG+":Read MAC_ADDRESS_UUID Characteristic from GATT server");
-                if (MAC_ADDRESS_UUID.equals(characteristic.getUuid())) {
-
-                    // get address value
-                    String address = new String(characteristic.getValue());
-
-                    // Check if the device is new and we did'nt sync with it
-                    if (!mLastConnectedDevices.contains(address)) {
-                        sendResultToManager(FOUND_MAC_ADDRESS, address);
-                        Log.e(TAG, "Found new device that not in connected list :" + address);
-                        mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,
-                                TAG+": Found new device that not in connected list :" + address);
-                    }
-                    else{
-                        Log.e(TAG, "The device that is in the connected list :" + address);
-                        mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,
-                                TAG+": The device that is in the connected list :" + address);
-                        // try the next device in results
-                        mBleScan.checkResults();
-                    }
-                }
-            }
-        }
-    };
 
     /**
      * BLECentral constructor
@@ -156,10 +57,111 @@ public class BLECentral implements BLConstants {
         this.mManagerMessenger = messenger;
         this.mLastConnectedDevices = lastConnectedDevices;
         this.mBleScan = new BLEScan(mBluetoothAdapter,mMessenger, relayConnectivityManager);
+        initialBluetoothGattCallback();
         Log.d(TAG, "Class created");
     }
 
 
+    public void initialBluetoothGattCallback(){
+        /**
+         * Implements callback methods for GATT events that needed dor connection between devices.
+         */
+        this.mGattCallback = new BluetoothGattCallback() {
+            @Override
+            public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
+
+                if (newState == BluetoothProfile.STATE_CONNECTED) {
+                    Log.e(TAG, "Connected to GATT server.( I'm the client side)");
+                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,TAG+": Connected to GATT server.( I'm the client side)");
+                    // Attempts to discover services after successful connection.
+                    new Handler(Looper.getMainLooper()).post(new Runnable() {
+                        @Override
+                        public void run() {
+                            Log.e(TAG, "Ask GATT server to discover services:" + mBluetoothGatt.discoverServices());
+                        }
+                    });
+                } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                    Log.e(TAG, "Disconnected from GATT server!");
+                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,TAG+": Disconnected from GATT server");
+                    //close();
+
+                }
+            }
+
+            @Override
+            public void onServicesDiscovered(final BluetoothGatt gatt, int status) {
+                if (status == BluetoothGatt.GATT_SUCCESS) {
+                    Log.e(TAG, "GATT server services Discovered");
+                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,TAG+": GATT server services Discovered ");
+                    // get services
+                    mBluetoothGattService =  gatt.getServices();
+                    // Find RELAY_SERVICE_UUID and get Characteristics
+                    Log.e(TAG, "mBluetoothGattService.size()= "+mBluetoothGattService.size());
+                    for (int i = 0; i < mBluetoothGattService.size(); i++ ){
+                        if (mBluetoothGattService.get(i).getUuid().equals(RELAY_SERVICE_UUID)) {
+                            mBluetoothGattCharacteristic = mBluetoothGattService.get(i).getCharacteristics();
+                            Log.e(TAG, "Found RELAY_SERVICE_UUID in index: "+i+". Get MAC_ADDRESS_UUID Characteristic");
+                            // read Characteristic
+                            // relay BlePeripheral has only one Characteristic ==> index 0
+                            Log.e(TAG, "mBluetoothGattCharacteristic.size()= "+mBluetoothGattCharacteristic.size());
+                            new Handler(Looper.getMainLooper()).post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (gatt.getServices().size() != 0) {
+                                        gatt.readCharacteristic(mBluetoothGattCharacteristic.get(0));
+                                        Log.e(TAG, "Ask from GATT server MAC_ADDRESS_UUID Characteristic");
+                                        mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE, TAG + ":Ask from GATT server MAC_ADDRESS_UUID Characteristic ");
+                                    }
+                                }
+                            });
+
+
+//                        for (int j = 0; j < mBluetoothGattCharacteristic.size(); j++ ){
+//                            if (mBluetoothGattCharacteristic.get(i).getUuid().equals(MAC_ADDRESS_UUID)) {
+//                                gatt.readCharacteristic(mBluetoothGattCharacteristic.get(j));
+//                                Log.e(TAG, "Ask from GATT server MAC_ADDRESS_UUID Characteristic");
+//                                mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,TAG+":Ask from GATT server MAC_ADDRESS_UUID Characteristic ");
+//                            }
+//                        }
+                        }
+                    }
+
+                } else {
+                    Log.d(TAG, "onServicesDiscovered received: " + status);
+                }
+            }
+
+            @Override
+            public void onCharacteristicRead(BluetoothGatt gatt,
+                                             BluetoothGattCharacteristic characteristic,
+                                             int status) {
+                if (status == BluetoothGatt.GATT_SUCCESS) {
+                    Log.e(TAG, "On Characteristic Read ");
+                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,TAG+":Read MAC_ADDRESS_UUID Characteristic from GATT server");
+                    if (MAC_ADDRESS_UUID.equals(characteristic.getUuid())) {
+
+                        // get address value
+                        String address = new String(characteristic.getValue());
+
+                        // Check if the device is new and we did'nt sync with it
+                        if (!mLastConnectedDevices.contains(address)) {
+                            sendResultToManager(FOUND_MAC_ADDRESS, address);
+                            Log.e(TAG, "Found new device that not in connected list :" + address);
+                            mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,
+                                    TAG+": Found new device that not in connected list :" + address);
+                        }
+                        else{
+                            Log.e(TAG, "The device that is in the connected list :" + address);
+                            mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,
+                                    TAG+": The device that is in the connected list :" + address);
+                            // try the next device in results
+                            mBleScan.checkResults();
+                        }
+                    }
+                }
+            }
+        };
+    }
     /**
      * Connects to the GATT server hosted on the Bluetooth LE device.
      * @param bluetoothDevice the device that found on ble scan
@@ -192,7 +194,6 @@ public class BLECentral implements BLConstants {
             Log.e(TAG, "BluetoothGatt not initialized");
             return;
         }
-//        mBleScan.stopScanning();
         if (mBluetoothAdapter.isEnabled()) {
             mBluetoothGatt.close();
             Log.e(TAG, " mBluetoothGatt.close()");

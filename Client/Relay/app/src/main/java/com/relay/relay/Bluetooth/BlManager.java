@@ -432,15 +432,13 @@ public class BLManager extends Thread implements BLConstants {
 
                 case SCAN_FINISHED_WITHOUT_CHANGES:
                     Log.e(TAG, "SCAN_FINISHED_WITHOUT_CHANGES");
-                    mStatus = DISCONNECTED;
                     stopSearch(SCAN_FINISHED_WITHOUT_CHANGES);
                     mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,TAG+": Scan finished without changes");
+                    mStatus = DISCONNECTED;
                     break;
 
                 case FINISHED_HANDSHAKE:
                     Log.e(TAG, "FINISHED_HANDSHAKE");
-                    // update status
-                    mStatus = DISCONNECTED;
 
                     // update service finish handshake
                     sendMessageToConnectivityManager(FINISHED_HANDSHAKE,null);
@@ -458,6 +456,9 @@ public class BLManager extends Thread implements BLConstants {
 
                     // startPeripheral
                     startPeripheral();
+
+                    // update status
+                    mStatus = DISCONNECTED;
                     break;
 
                 case READ_PACKET:
@@ -487,11 +488,13 @@ public class BLManager extends Thread implements BLConstants {
                 case BLE_ADVERTISE_ERROR:
                     Log.e(TAG, "BLE_ADVERTISE_ERROR");
                     // try to turn on  advertiser
-                    //todo need to fix it, not class calling it
                     break;
 
                 case BLE_SCAN_ERROR:
+                    // close Gatt connection
                     mBLECentral.close();
+                    // Reset BluetoothGattCallback
+                    mBLECentral.initialBluetoothGattCallback();
                     Log.e(TAG, "BLE_SCAN_ERROR");
                     mStatus = DISCONNECTED;
                     break;
@@ -518,10 +521,9 @@ public class BLManager extends Thread implements BLConstants {
 
                 case NOT_FOUND_ADDRESS_FROM_BLSCAN:
                     Log.e(TAG, "NOT_FOUND_ADDRESS_FROM_BLSCAN");
-                    mStatus = DISCONNECTED;
                     mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,TAG+": Found non in bluetooth scan");
                     startPeripheral();
-
+                    mStatus = DISCONNECTED;
                     break;
 
                 case GET_BLUETOOTH_SERVER_READY:

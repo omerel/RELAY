@@ -174,7 +174,7 @@ public class MainActivity extends AppCompatActivity
         mStatusBar = new StatusBar(this);
 
         mIsInFront = true;
-        
+
     }
 
     @Override
