@@ -100,6 +100,8 @@ public class BLEPeripheral implements BLConstants {
                         mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,TAG+": Device Connected to my bluetooth GATT");
                         Log.e(TAG, "Device Connected to my bluetooth GATT: " + device.getAddress());
 
+                        sendResultToManager(GET_BLUETOOTH_SERVER_READY);
+
                     } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
                         Log.d(TAG, " device Disconnected from my bluetooth GATT ");
                         mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,TAG+": device Disconnected from my bluetooth GATT ");
@@ -131,7 +133,6 @@ public class BLEPeripheral implements BLConstants {
                         }
                     });
                 }
-                sendResultToManager(GET_BLUETOOTH_SERVER_READY);
                 Log.e(TAG, "Connection counter: "+ mConnectionCounter +"!!!");
             }
         };

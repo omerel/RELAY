@@ -100,6 +100,7 @@ public class BLECentral implements BLConstants {
                     // Find RELAY_SERVICE_UUID and get Characteristics
                     Log.e(TAG, "mBluetoothGattService.size()= "+mBluetoothGattService.size());
                     for (int i = 0; i < mBluetoothGattService.size(); i++ ){
+                        Log.e(TAG, "index "+i+ "equal? "+ mBluetoothGattService.get(i).getUuid().equals(RELAY_SERVICE_UUID));
                         if (mBluetoothGattService.get(i).getUuid().equals(RELAY_SERVICE_UUID)) {
                             mBluetoothGattCharacteristic = mBluetoothGattService.get(i).getCharacteristics();
                             Log.e(TAG, "Found RELAY_SERVICE_UUID in index: "+i+". Get MAC_ADDRESS_UUID Characteristic");
@@ -116,15 +117,6 @@ public class BLECentral implements BLConstants {
                                     }
                                 }
                             });
-
-
-//                        for (int j = 0; j < mBluetoothGattCharacteristic.size(); j++ ){
-//                            if (mBluetoothGattCharacteristic.get(i).getUuid().equals(MAC_ADDRESS_UUID)) {
-//                                gatt.readCharacteristic(mBluetoothGattCharacteristic.get(j));
-//                                Log.e(TAG, "Ask from GATT server MAC_ADDRESS_UUID Characteristic");
-//                                mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_NO_CHANGE,TAG+":Ask from GATT server MAC_ADDRESS_UUID Characteristic ");
-//                            }
-//                        }
                         }
                     }
 
