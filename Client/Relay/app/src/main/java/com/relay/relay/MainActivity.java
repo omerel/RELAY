@@ -464,7 +464,7 @@ public class MainActivity extends AppCompatActivity
      */
     public void notifyMessageArrived(String msg){
 
-        boolean  mute = sharedPreferences.getBoolean(SYSTEM_SETTING_MUTE, true);
+        boolean  mute = !sharedPreferences.getBoolean(SYSTEM_SETTING_MUTE, true);
         Log.e(TAG,"mute: "+mute);
 
         //Define Notification Manager

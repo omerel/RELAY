@@ -135,6 +135,7 @@ public class BLEPeripheral implements BLConstants {
                 }
                 Log.e(TAG, "Connection counter: "+ mConnectionCounter +"!!!");
             }
+
         };
 
 

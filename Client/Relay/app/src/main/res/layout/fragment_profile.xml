@@ -18,7 +18,7 @@
                 android:layout_height="130dp"
                 android:scaleType="centerCrop"
                 android:background="@drawable/profile_background"
-                android:src="@drawable/relay_icon" />
+                />
 
 
             <de.hdodenhof.circleimageview.CircleImageView

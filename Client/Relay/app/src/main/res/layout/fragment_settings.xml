@@ -43,7 +43,7 @@
                 android:layout_toLeftOf="@id/settings_fragment_button_3"
                 android:lines="2"
                 android:layout_below="@id/settings_fragment_title_3"
-                android:text="mute application notifications" />
+                android:text="Allows application notifications" />
 
             <View
                 android:layout_width="match_parent"
@@ -89,7 +89,7 @@
                 android:layout_toLeftOf="@id/settings_fragment_button_1"
                 android:lines="2"
                 android:layout_below="@id/settings_fragment_title_1"
-                android:text="changing user password require internet connection" />
+                android:text="changing user password( require internet connection)" />
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
@@ -129,7 +129,7 @@
                 android:layout_toLeftOf="@id/settings_fragment_button_5"
                 android:lines="2"
                 android:layout_below="@id/settings_fragment_title_5"
-                android:text="the new password will be sent to your signed email" />
+                android:text="the new password will be sent to your signed email( require internet connection)" />
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
@@ -155,7 +155,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textColor="@color/black"
-                android:text="Clean user data" />
+                android:text="Clear messages" />
 
             <Button
                 android:id="@+id/settings_fragment_button_2"
@@ -175,7 +175,7 @@
                 android:layout_toLeftOf="@id/settings_fragment_button_2"
                 android:lines="2"
                 android:layout_below="@id/settings_fragment_title_2"
-                android:text="cleans all the data that aren't necessary to the device  " />
+                android:text="cleans all the messages in the device that aren't part of the device's graph.  " />
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
@@ -189,8 +189,7 @@
             android:layout_width="match_parent"
             android:layout_marginTop="20dp"
             android:layout_height="wrap_content"
-            android:background="@android:color/holo_red_light"
-
+            android:background="@android:color/holo_red_dark"
             android:textColor="@android:color/white"
             android:text="delete user and data"/>
 

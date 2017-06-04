@@ -344,6 +344,9 @@ public class BLManager extends Thread implements BLConstants {
                     // this device is the  server. not the Initiator
                     mInitiator = false;
 
+                    // close peripheral
+                    mBlePeripheral.close();
+
                     // update status
                     mStatus = CONNECTED;
                     bluetoothSocket = mBluetoothServer.getBluetoothSocket();
