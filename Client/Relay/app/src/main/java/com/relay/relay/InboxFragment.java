@@ -138,15 +138,11 @@ public class InboxFragment extends Fragment {
         view = inflater.inflate(R.layout.fragment_inbox, container, false);
 
 
-        // TODO DELETE THIS- only fore testing
-        final Bitmap pic = BitmapFactory.decodeResource(this.getResources(),R.drawable.view);
-
         // init fab view
         fab = (FloatingActionButton) view.findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(final View view) {
-
 //                Snackbar.make(view, "Creating new mail message", Snackbar.LENGTH_SHORT)
 //                        .setAction("Action", null).show();
                 goToComposeActivity();
