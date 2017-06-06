@@ -128,18 +128,52 @@ public class SyncWithServer implements NetworkConstants{
 
         // start Sync with server
         test();
-
         // goToSyncStep(0);
     }
+    private void goToSyncStep(int step){
+        Map<String, String>  params;
+        switch (step){
+            // start sync, send meta data
+            case STEP_1_META_DATA:
+                params = new HashMap<String, String>();
 
+                // create metadata
+                metadata = mDataTransferred.createMetaData();
+                params.put("metadata",JsonConvertor.convertToJson(metadata));
+
+                // request metadata from server
+                mStringRequest = new StringRequest(RELAY_URL+API_SYNC_METADATA, mListener, mErrorListener, params);
+                mQueue.add(mStringRequest);
+                break;
+
+            // create content and send to server
+            case STEP_2_BODY:
+                params = new HashMap<String, String>();
+
+                params.put("updateNodeAndRelations",JsonConvertor.convertToJson(updateNodeAndRelations));
+                params.put("updateMessages",JsonConvertor.convertToJson(updateMessages));
+
+                // request data
+                mStringRequest = new StringRequest(RELAY_URL+API_SYNC_BODY,mListener,mErrorListener,params);
+                mQueue.add(mStringRequest);
+                break;
+        }
+    }
+    private void test(){
+        String s = "{ mId: '592e5be1038c0baa59bae8d7', mTimeStampRankFromServer: '2017-05-31T06:00:01.233Z', mFullName: 'The Omer', mUserName: 'Omer', mPhoneNumber: '050-5050505', mEmail: 'a@relay.com', mRank: '2' }";
+
+        Map<String, String> par = new HashMap<String, String>();
+        par.put("node",s);
+        mStringRequest = new StringRequest(RELAY_URL+NODE+"592e5be1038c0baa59bae8d7",mListener,mErrorListener,par);
+        mQueue.add(mStringRequest);
+        Log.e(TAG, "create  mStringRequest");
+    }
 
 
     private void startSync(){
         mStatus = SYNC_WITH_SERVER;
         sendMessageToManager(START_SYNC,"");
-
     }
-
     private void stopSync(){
         mStatus = NOT_SYNC_WITH_SERVER;
         sendMessageToManager(FINISH_SYNC,"");
@@ -286,46 +320,6 @@ public class SyncWithServer implements NetworkConstants{
             }
         }
         return messages;
-    }
-
-
-    private void goToSyncStep(int step){
-        Map<String, String>  params;
-        switch (step){
-            // start sync, send meta data
-            case STEP_1_META_DATA:
-                params = new HashMap<String, String>();
-
-                // create metadata
-                metadata = mDataTransferred.createMetaData();
-                params.put("metadata",JsonConvertor.convertToJson(metadata));
-
-                // request metadata from server
-                mStringRequest = new StringRequest(RELAY_URL+API_SYNC_METADATA, mListener, mErrorListener, params);
-                mQueue.add(mStringRequest);
-                break;
-
-            // create content and send to server
-            case STEP_2_BODY:
-                params = new HashMap<String, String>();
-
-                params.put("updateNodeAndRelations",JsonConvertor.convertToJson(updateNodeAndRelations));
-                params.put("updateMessages",JsonConvertor.convertToJson(updateMessages));
-
-                // request data
-                mStringRequest = new StringRequest(RELAY_URL+API_SYNC_BODY,mListener,mErrorListener,params);
-                mQueue.add(mStringRequest);
-                break;
-        }
-    }
-    private void test(){
-        String s = "{ mId: '592e5be1038c0baa59bae8d7', mTimeStampRankFromServer: '2017-05-31T06:00:01.233Z', mFullName: 'The Omer', mUserName: 'Omer', mPhoneNumber: '050-5050505', mEmail: 'a@relay.com', mRank: '2' }";
-
-        Map<String, String> par = new HashMap<String, String>();
-        par.put("node",s);
-        mStringRequest = new StringRequest(RELAY_URL+NODE+"592e5be1038c0baa59bae8d7",mListener,mErrorListener,par);
-        mQueue.add(mStringRequest);
-        Log.e(TAG, "create  mStringRequest");
     }
 
 
