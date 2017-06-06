@@ -1,6 +1,5 @@
 # RELAY
 [![Build Status](https://img.shields.io/travis/barrinbar/RELAY.svg?style=flat-square)](https://travis-ci.org/barrinbar/RELAY)
-branch=master)
 
 A Dynamic Network Framework for remote areas without access to the Internet
 
