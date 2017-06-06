@@ -34,7 +34,7 @@ import java.util.UUID;
 public class BlConnectionLogDB {
 
     final String TAG = "RELAY_DEBUG: "+ BlConnectionLogDB.class.getSimpleName();
-    final String FORMATTER_DATE = "yyyyMMddHHmmssSSS";
+    final String FORMATTER_DATE = "yyyyMMddHHmmssSSSS";
     final String DB_NAME = "bl_connection_logger_db";
 
     private Database mDatabase = null;

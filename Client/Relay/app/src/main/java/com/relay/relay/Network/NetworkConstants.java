@@ -36,7 +36,7 @@ public interface NetworkConstants {
     int START_SYNC = 121;
     int FINISH_SYNC = 122;
     int ERROR_WHILE_SYNC = 123;
-    int PROGRESS = 124;
+    int RESPONSE = 124;
 
     // Delimiter in bluetoothConnected
     String DELIMITER = "<!-12341234@12341234-!>";

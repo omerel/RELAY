@@ -40,6 +40,8 @@ public class StatusBar {
     public static final int FLAG_WIFI_ON = 20;
     public static final int FLAG_WIFI_OFF = 21;
     public static final int FLAG_NO_CHANGE = 16;
+    public static final int FLAG_SERVER_RESPONSE = 17;
+
 
 
     private Activity mActivity;
@@ -140,6 +142,9 @@ public class StatusBar {
             case FLAG_WIFI_OFF:
                 mAdvertisementFlag.setImageDrawable(mActivity.getDrawable(R.drawable.ic_flag_non));
                 break;
+            case FLAG_SERVER_RESPONSE:
+                blinkFlag(FLAG_SERVER_RESPONSE);
+                break;
             case 0 :
                 mAdvertisementFlag.setImageDrawable(mActivity.getDrawable(R.drawable.ic_flag_non));
                 mSearchFlag.setImageDrawable(mActivity.getDrawable(R.drawable.ic_flag_non));
@@ -165,9 +170,24 @@ public class StatusBar {
 
         if (flag == FLAG_HANDSHAKE){
             // flash hand shake
+            mHandShakeFlag = (ImageView) mActivity.findViewById(R.id.flag_handshake);
             new CountDownTimer(1000, 1000) {
                 public void onTick(long millisUntilFinished) {
                     mHandShakeFlag.setVisibility(View.VISIBLE);
+                }
+                public void onFinish() {
+                    mHandShakeFlag.setVisibility(View.INVISIBLE);
+                }
+            }.start();
+        }
+
+        if (flag == FLAG_SERVER_RESPONSE){
+            mHandShakeFlag.setImageDrawable(mActivity.getDrawable(R.drawable.ic_flag_cloud));
+            mHandShakeFlag.setVisibility(View.VISIBLE);
+            // flash cloud
+            new CountDownTimer(2000, 1000) {
+                public void onTick(long millisUntilFinished) {
+
                 }
                 public void onFinish() {
                     mHandShakeFlag.setVisibility(View.INVISIBLE);

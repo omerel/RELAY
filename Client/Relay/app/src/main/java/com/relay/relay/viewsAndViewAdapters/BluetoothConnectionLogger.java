@@ -31,7 +31,7 @@ public class BluetoothConnectionLogger {
         String hour = time.substring(8,10);
         String min = time.substring(10,12);
         String sec = time.substring(12,14);
-        String milsec = time.substring(14,17);
+        String milsec = time.substring(14,18);
         return day+"/"+month+"/"+year+" "+hour+":"+min+":"+sec+":"+milsec;
     }
 

@@ -58,7 +58,7 @@ public class NetworkManager extends Thread implements NetworkConstants {
         mDataManager.openAllDataBase();
         mSyncWithServer = new SyncWithServer(mMessenger,mRelayConnectivityManager,mDataManager);
         intervalSync();
-        mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_WIFI_ON,TAG+": Wifi mode turned on");
+        mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_WIFI_ON,TAG+": Start WIFI MODE");
     }
 
 
@@ -118,9 +118,9 @@ public class NetworkManager extends Thread implements NetworkConstants {
                     message = msg.getData().getString("message");
                     mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_ERROR,TAG+": "+message);
                     break;
-                case PROGRESS:
+                case RESPONSE:
                     message = msg.getData().getString("message");
-                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_WIFI_ON,TAG+": "+message);
+                    mRelayConnectivityManager.broadCastFlag(StatusBar.FLAG_SERVER_RESPONSE,TAG+": "+message);
                     break;
                 default:
                     super.handleMessage(msg);

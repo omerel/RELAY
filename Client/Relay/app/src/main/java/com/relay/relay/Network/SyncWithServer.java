@@ -6,21 +6,16 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
 
-import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
-import com.google.gson.JsonObject;
 import com.relay.relay.SubSystem.DataManager;
 import com.relay.relay.SubSystem.RelayConnectivityManager;
 import com.relay.relay.Util.DataTransferred;
 import com.relay.relay.Util.JsonConvertor;
 import com.relay.relay.system.Node;
 import com.relay.relay.system.RelayMessage;
-
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -63,7 +58,7 @@ public class SyncWithServer implements NetworkConstants{
 
     public SyncWithServer(Messenger messenger, RelayConnectivityManager relayConnectivityManager, DataManager dataManager) {
 
-        this.mStep = -1;
+        this.mStep = 115;
         this.mMessenger = messenger;
         this.mDataManager = dataManager;
         this.mRelayConnectivityManager = relayConnectivityManager;
@@ -76,18 +71,11 @@ public class SyncWithServer implements NetworkConstants{
             @Override
             public void onResponse(String response) {
                 mJson = response;
-                Log.e(TAG,"THE RESPONSE IS :"+response);
+
                 switch (mStatus){
-                    // test
-                    case -1:
-                        startSync();
-                        Log.e(TAG,"THE RESPONSE IS :"+response);
-                        sendMessageToManager(PROGRESS,"this is step test");
-                        stopSync();
-                        break;
                     //received metadata from server
                     case STEP_1_META_DATA:
-                        sendMessageToManager(PROGRESS," received metadata from server");
+                        sendMessageToManager(RESPONSE," received metadata from server");
                         receivedMetadata = JsonConvertor.getMetadataFromJsonContent(mJson);
                         receivedKnownMessage = receivedMetadata.getKnownMessagesList();
                         receivedKnownRelations = receivedMetadata.getKnownRelationsList();
@@ -98,7 +86,7 @@ public class SyncWithServer implements NetworkConstants{
                         break;
                     case STEP_2_BODY:
                         HashMap<String,String> body = (HashMap<String, String>) JsonConvertor.getJsonBody(mJson);
-                        sendMessageToManager(PROGRESS," received body from server");
+                        sendMessageToManager(RESPONSE," received body from server");
                         // update node and relations
                         receivedUpdateNodeAndRelations = JsonConvertor.getUpdateNodeAndRelationsFromJsonContent(body.get("updateNodeAndRelations"));
                         updateNodeAndRelations(receivedUpdateNodeAndRelations);
@@ -117,7 +105,7 @@ public class SyncWithServer implements NetworkConstants{
                             }
                         }
                         // finish sync with server
-                        sendMessageToManager(PROGRESS," finish successfully");
+                        sendMessageToManager(RESPONSE," finish successfully");
                         stopSync();
                         break;
                 }
@@ -134,8 +122,8 @@ public class SyncWithServer implements NetworkConstants{
         };
 
         // start Sync with server
-        test();
-        // goToSyncStep(0);
+        startSync();
+        goToSyncStep(mStep);
     }
     private void goToSyncStep(int step){
         Map<String, String>  params;
@@ -143,13 +131,13 @@ public class SyncWithServer implements NetworkConstants{
             // start sync, send meta data
             case STEP_1_META_DATA:
                 params = new HashMap<String, String>();
-
                 // create metadata
                 metadata = mDataTransferred.createMetaData();
-                params.put("metadata",JsonConvertor.convertToJson(metadata));
-
+                params.put("node",JsonConvertor.convertToJson(metadata.getMyNode()));
+                params.put("knownRelationsList",JsonConvertor.convertToJson(metadata.getKnownRelationsList()));
+                params.put("knownMessagesList",JsonConvertor.convertToJson(metadata.getKnownMessagesList()));
                 // request metadata from server
-                mStringRequest = new StringRequest(RELAY_URL+API_SYNC_METADATA, mListener, mErrorListener, params);
+                mStringRequest = new StringRequest(RELAY_URL+API_SYNC_METADATA+mDataManager.getMyUuid(), mListener, mErrorListener, params);
                 mQueue.add(mStringRequest);
                 break;
 
