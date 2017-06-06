@@ -37,6 +37,8 @@ public class StatusBar {
     public static final int FLAG_CONNECTING = 13;
     public static final int FLAG_HANDSHAKE = 14;
     public static final int FLAG_ERROR = 15;
+    public static final int FLAG_WIFI_ON = 20;
+    public static final int FLAG_WIFI_OFF = 21;
     public static final int FLAG_NO_CHANGE = 16;
 
 
@@ -131,6 +133,12 @@ public class StatusBar {
                 break;
             case FLAG_ERROR :
                 blinkFlag(FLAG_ERROR);
+                break;
+            case FLAG_WIFI_ON:
+                mAdvertisementFlag.setImageDrawable(mActivity.getDrawable(R.drawable.ic_flag_wifi));
+                break;
+            case FLAG_WIFI_OFF:
+                mAdvertisementFlag.setImageDrawable(mActivity.getDrawable(R.drawable.ic_flag_non));
                 break;
             case 0 :
                 mAdvertisementFlag.setImageDrawable(mActivity.getDrawable(R.drawable.ic_flag_non));

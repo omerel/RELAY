@@ -92,18 +92,16 @@ public class HandShakeHistory {
     }
 
     /**
-     * clean all the events that happened before @week ago
-     * @param weeks
+     * clean all the events that happened before @hour ago
+     * @param hour
      * @return
      */
-    public boolean cleanHandShakeEvents(int weeks){
+    public boolean moveOldHandShakEventsToLog(int hour){
 
         ArrayList<HandShakeEvent> tempEvents = new ArrayList<>();
         Calendar cal = Calendar.getInstance();
-        cal.add(Calendar.WEEK_OF_MONTH,-weeks);
+        cal.add(Calendar.HOUR,-hour);
         for ( HandShakeEvent handShakeEvent : mHandShakeEvents){
-
-
             // reduce all the events that created before weeks from now
             if (handShakeEvent.timeStamp.after(cal)){
                 tempEvents.add(handShakeEvent);
@@ -120,10 +118,10 @@ public class HandShakeHistory {
     }
 
     /**
-     * reset HandShakeEventLog
+     * delete HandShakeEventLog
      * @return
      */
-    public boolean clearHandShakeEventLog(){
+    public boolean deleteHandShakeEventLog(){
         mHandShakeEventLog = new ArrayList<>();
         return true;
     }

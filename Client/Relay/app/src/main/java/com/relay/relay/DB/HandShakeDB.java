@@ -20,7 +20,7 @@ public class HandShakeDB {
 
     final String TAG = "RELAY_DEBUG: "+ HandShakeDB.class.getSimpleName();
     final UUID NUM_OF_NODES = UUID.fromString("3add4bd4-836f-4ee9-a728-a815c534b515");
-    final int DELAY_BETWEEN_EVENTS = 4;
+    final int TIME_BETWEEN_EVENTS = 4;
 
     private DBManager dbManager;
     final String DB = "handshake_db";
@@ -56,7 +56,7 @@ public class HandShakeDB {
             Calendar timestamp1 = handShakeEvents.get(handShakeEvents.size()-1).getTimeStamp();
             Calendar timestamp2 = Calendar.getInstance();
             // check if time pass between two events. makes the history handshake rank be more accurate
-            timestamp1.add(Calendar.HOUR,DELAY_BETWEEN_EVENTS);
+            timestamp1.add(Calendar.HOUR, TIME_BETWEEN_EVENTS);
             if ( timestamp1.before(timestamp2)){
                 temp.addEvent(initator);
                 dbManager.putJsonObject(nodeId, JsonConvertor.convertToJson(temp));

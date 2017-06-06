@@ -1,14 +1,11 @@
 package com.relay.relay.DB;
 
 import android.content.Context;
-import android.content.SharedPreferences;
-import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.util.Log;
 
-import com.relay.relay.MainActivity;
 import com.relay.relay.R;
 import com.relay.relay.SubSystem.DataManager;
 import com.relay.relay.Util.ImageConverter;
@@ -386,7 +383,7 @@ public class Test {
     }
 
     public void deleteDB(){
-        dataManager.deleteAlldataManager();
+        dataManager.deleteAllDataManager();
 
     }
 

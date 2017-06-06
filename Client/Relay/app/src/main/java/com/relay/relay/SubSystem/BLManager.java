@@ -1,4 +1,4 @@
-package com.relay.relay.Bluetooth;
+package com.relay.relay.SubSystem;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -10,9 +10,13 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
 
-import com.relay.relay.SubSystem.RelayConnectivityManager;
-import com.relay.relay.SubSystem.DataManager;
-import com.relay.relay.SubSystem.HandShake;
+import com.relay.relay.Bluetooth.BLConstants;
+import com.relay.relay.Bluetooth.BLEAdvertising;
+import com.relay.relay.Bluetooth.BLECentral;
+import com.relay.relay.Bluetooth.BLEPeripheral;
+import com.relay.relay.Bluetooth.BluetoothClient;
+import com.relay.relay.Bluetooth.BluetoothScan;
+import com.relay.relay.Bluetooth.BluetoothServer;
 import com.relay.relay.Util.DataTransferred;
 import com.relay.relay.Util.MacAddressFinder;
 import com.relay.relay.viewsAndViewAdapters.StatusBar;

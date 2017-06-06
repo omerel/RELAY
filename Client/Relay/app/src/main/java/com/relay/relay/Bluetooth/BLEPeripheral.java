@@ -50,7 +50,7 @@ public class BLEPeripheral implements BLConstants {
      * @param messenger to send result to bluetooth manager
      * @param relayConnectivityManager needed to create bluetooth gatt
      */
-    BLEPeripheral(BluetoothAdapter bluetoothAdapter, Messenger messenger,RelayConnectivityManager relayConnectivityManager){
+    public BLEPeripheral(BluetoothAdapter bluetoothAdapter, Messenger messenger, RelayConnectivityManager relayConnectivityManager){
 
         this.mRelayConnectivityManager = relayConnectivityManager;
         this.mBluetoothAdapter = bluetoothAdapter;

@@ -364,7 +364,7 @@ public class SignInActivity extends AppCompatActivity {
                             dialog.dismiss();
                             mButtonSignIn.setEnabled(true);
                             // delete all data base
-                            dataManager.deleteAlldataManager();
+                            dataManager.deleteAllDataManager();
 
                             dataManager = new DataManager(getApplicationContext());
 
@@ -414,7 +414,7 @@ public class SignInActivity extends AppCompatActivity {
                 new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
                         // delete all data base
-                        dataManager.deleteAlldataManager();
+                        dataManager.deleteAllDataManager();
                         // Start the Signup activity
                         Intent intent = new Intent(getApplicationContext(), SignupActivity.class);
                         startActivityForResult(intent, REQUEST_SIGNUP);
@@ -440,7 +440,7 @@ public class SignInActivity extends AppCompatActivity {
 
         // delete all data base
         dataManager = new DataManager(getBaseContext());
-        dataManager.deleteAlldataManager();
+        dataManager.deleteAllDataManager();
 
         // TODO retrieve user data from server
     }

@@ -20,7 +20,6 @@ import android.os.PowerManager;
 import android.util.Log;
 
 import com.relay.relay.Bluetooth.BLConstants;
-import com.relay.relay.Bluetooth.*;
 import com.relay.relay.DB.BlConnectionLogDB;
 import com.relay.relay.DB.InboxDB;
 import com.relay.relay.MainActivity;
@@ -29,6 +28,8 @@ import com.relay.relay.viewsAndViewAdapters.StatusBar;
 
 import static com.relay.relay.MainActivity.SYSTEM_SETTING;
 import static com.relay.relay.viewsAndViewAdapters.StatusBar.FLAG_NO_CHANGE;
+import static com.relay.relay.viewsAndViewAdapters.StatusBar.FLAG_WIFI_OFF;
+import static com.relay.relay.viewsAndViewAdapters.StatusBar.FLAG_WIFI_ON;
 
 /**
  * Created by omer on 13/12/2016.
@@ -72,6 +73,7 @@ public class RelayConnectivityManager extends Service implements BLConstants {
     // Handler for all incoming messages from Bluetooth Manager
     private final Messenger mMessenger = new Messenger(new IncomingHandler());
     private BLManager mBluetoothManager;
+    private NetworkManager mNetworkManager;
     private DataManager mDataManager;
     private SharedPreferences sharedPreferences;
 
@@ -116,9 +118,9 @@ public class RelayConnectivityManager extends Service implements BLConstants {
     private void startConnectivityByPriority() {
         if (mSwitchWifiConnection && isWifiAvailable() && isWifiConnected()){
             // start Wifi mode
-            //TODO initialWifiMode();
+            initialWifiMode();
             createWifiBroadcastReceiver();
-            // TODO startWIFIhMode();
+            startWIFIhMode();
             mCurrentMode = WIFI_MODE;
             Log.e(TAG,"Starting WIFI_MODE");
         }
@@ -139,6 +141,7 @@ public class RelayConnectivityManager extends Service implements BLConstants {
         }
 
     }
+
 
     @Override
     public void onCreate() {
@@ -202,6 +205,20 @@ public class RelayConnectivityManager extends Service implements BLConstants {
         sendBroadcast(updateActivity);
     }
 
+
+    private void initialWifiMode() { mNetworkManager = new NetworkManager(mMessenger,this);}
+
+    private void startWIFIhMode() {
+        Log.e(TAG, " WifiMode Starts");
+        mNetworkManager.start();}
+
+    private void stopWIFIMode(){
+        if(mNetworkManager != null)
+            mNetworkManager.cancel();
+        mNetworkManager = new NetworkManager(mMessenger,this);
+        Log.e(TAG, " WifiMode stopped");
+    }
+
     private void initialBluetoothMode(){
         this.mBluetoothManager = new BLManager(mMessenger,this);
     }
@@ -209,7 +226,8 @@ public class RelayConnectivityManager extends Service implements BLConstants {
     private void startBluetoothMode(){mBluetoothManager.start();}
 
     private void stopBluetoothMode(){
-        mBluetoothManager.cancel();
+        if (mBluetoothManager!= null)
+            mBluetoothManager.cancel();
         mBluetoothManager = new BLManager(mMessenger,this);
     }
 
@@ -232,9 +250,8 @@ public class RelayConnectivityManager extends Service implements BLConstants {
 
     public void broadCastFlag(final int flag, final String logMsg) {
 
-        if (mCurrentMode == BLUETOOTH_MODE){
-            mLogger.addToLog(flag,logMsg);
-        }
+        mLogger.addToLog(flag,logMsg);
+
         // BroadCast relay message to activity
         Intent updateActivity = new Intent(StatusBar.STATUS_BAR_RELAY);
         updateActivity.putExtra("flag", flag);
@@ -287,28 +304,29 @@ public class RelayConnectivityManager extends Service implements BLConstants {
                         break;
 
                     case CHANGE_PRIORITY_CONNECTION:
+                        setConnectivityValues();
+                        broadCastFlag(0,TAG+"");
                         if (mCurrentMode == BLUETOOTH_MODE){
                             stopBluetoothMode();
-                            unregisterReceiver(mModeBroadcastReceiver);
+                            if(mModeBroadcastReceiver!=null)
+                                unregisterReceiver(mModeBroadcastReceiver);
                             Log.e(TAG, " Bluetooth switch turned off ");
                         }else if (mCurrentMode == WIFI_MODE){
-                            broadCastFlag(FLAG_NO_CHANGE,TAG+": Wifi mode turned on");
-                            // TODO stop wifi mode
-                            unregisterReceiver(mModeBroadcastReceiver);
-                            Log.e(TAG, " Wifi turned off ");
+                            stopWIFIMode();
+                            if(mModeBroadcastReceiver!=null)
+                                unregisterReceiver(mModeBroadcastReceiver);
+                            Log.e(TAG, " Wifi switch off ");
                         }else if (mCurrentMode == DATA_MODE){
-
                         }
-                        setConnectivityValues();
                         startConnectivityByPriority();
+                        // refresh fragment
+                        refreshFragment();
                         break;
 
                     // When the device in wifi mode and bluetooth is on
                     case BluetoothAdapter.ACTION_STATE_CHANGED:
-
                         // refresh fragment
-                        refreshFragment();
-
+//                        refreshFragment();
                         final int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
                         if (state == BluetoothAdapter.STATE_OFF){
                             startConnectivityByPriority();
@@ -322,18 +340,17 @@ public class RelayConnectivityManager extends Service implements BLConstants {
 
                     // When the device in bluetooth and wifi switch in and connected to internet
                     case ConnectivityManager.CONNECTIVITY_ACTION:
-
                         // refresh fragment
-                        refreshFragment();
-
+                       // refreshFragment();
                         // Check if wifi connected and available
                         if (mSwitchWifiConnection && isWifiAvailable() && isWifiConnected()){
-
                             if (mCurrentMode == BLUETOOTH_MODE || mCurrentMode== NULL_MODE){
-                                stopBluetoothMode();
+                                if(mCurrentMode == BLUETOOTH_MODE)
+                                    stopBluetoothMode();
                                 // clear mode;
                                 mCurrentMode = NULL_MODE;
                                 // unregister broadcast
+                                if (mModeBroadcastReceiver!= null)
                                 unregisterReceiver(mModeBroadcastReceiver);
                                 // start startConnectivityByPriority
                                 startConnectivityByPriority();
@@ -374,7 +391,7 @@ public class RelayConnectivityManager extends Service implements BLConstants {
         if (mCurrentMode == BLUETOOTH_MODE)
             stopBluetoothMode();
         if (mCurrentMode == WIFI_MODE);
-        //TODO stop wifi
+            stopWIFIMode();
         mCurrentMode = NULL_MODE;
 
         // unregisterReceiver
@@ -478,20 +495,13 @@ public class RelayConnectivityManager extends Service implements BLConstants {
                 String action = intent.getAction();
 
                 switch (action) {
-                    // When incoming message received
-
                     case ConnectivityManager.CONNECTIVITY_ACTION:
+                        Log.e(TAG,"TEST TEST TEST TEST");
                         // Check if wifi connected and available
                         if (!isWifiAvailable()){
-
-//                            // saving state into sharedPreferences
-//                            SharedPreferences.Editor editor = sharedPreferences.edit();
-//                            editor.putBoolean(getString(R.string.key_enable_wifi),false);
-//                            editor.commit();
-
+                            broadCastFlag(StatusBar.FLAG_WIFI_OFF,TAG+": Wifi turned off ");
                             // stop Wifi mode
-                            // TODO stopWifiMode();
-
+                            stopWIFIMode();
                             // clear mode;
                             mCurrentMode = NULL_MODE;
                             // unregister broadcast
@@ -503,10 +513,11 @@ public class RelayConnectivityManager extends Service implements BLConstants {
                             Intent updateActivity = new Intent(MainActivity.FRESH_FRAGMENT);
                             sendBroadcast(updateActivity);
 
-                        }else if (!isWifiConnected()){
-                            // stop Wifi mode
-                            // TODO stopWifiMode();
 
+                        }else if (!isWifiConnected()){
+                            broadCastFlag(StatusBar.FLAG_WIFI_OFF,TAG+": Wifi not connected ");
+                            // stop Wifi mode
+                            stopWIFIMode();
                             // clear mode;
                             mCurrentMode = NULL_MODE;
                             // unregister broadcast
@@ -514,6 +525,7 @@ public class RelayConnectivityManager extends Service implements BLConstants {
                             // start startConnectivityByPriority
                             startConnectivityByPriority();
                             Log.e(TAG, " Wifi not connected ");
+
                         }
                         break;
                 }

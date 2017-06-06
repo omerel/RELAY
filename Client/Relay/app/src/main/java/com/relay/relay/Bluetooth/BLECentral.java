@@ -51,8 +51,8 @@ public class BLECentral implements BLConstants {
      * @param lastConnectedDevices list contains all the devices that sync with this device
      * @param relayConnectivityManager needed to create bluetooth gatt
      */
-    BLECentral(BluetoothAdapter bluetoothAdapter, Messenger messenger,
-               List<String> lastConnectedDevices,RelayConnectivityManager relayConnectivityManager){
+    public BLECentral(BluetoothAdapter bluetoothAdapter, Messenger messenger,
+                      List<String> lastConnectedDevices, RelayConnectivityManager relayConnectivityManager){
         this.mRelayConnectivityManager = relayConnectivityManager;
         this.mBluetoothAdapter = bluetoothAdapter;
         this.mManagerMessenger = messenger;

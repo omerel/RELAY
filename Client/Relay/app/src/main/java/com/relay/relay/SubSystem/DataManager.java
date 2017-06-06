@@ -97,7 +97,8 @@ public class DataManager {
     public InboxDB getInboxDB(){return mInboxDB;}
 
 
-    public boolean deleteAlldataManager(){
+    public boolean deleteAllDataManager(){
+
         mNodesDB.deleteNodedb();
         mInboxDB.deleteDB();
         mHandShakeDB.deleteHandShakeDB();
@@ -135,33 +136,36 @@ public class DataManager {
     }
 
     /**
-     * transfer all the events that happened before X weeks to history log.
-     * history log exist for delivering the log data to the server
-     * @param weeks
+     * Transfer all the events that happened before X hours to history log.
+     * history log exists for delivering the log data to the server
+     * @param hour
      * @return
      */
-    public boolean cleanHandShakeHistory(int weeks){
+    public boolean moveOldHandShakEventsToLogInAllNodes(int hour){
         ArrayList<UUID> nodesId = mHandShakeDB.getNodesIdList();
         HandShakeHistory temp;
         for (UUID nodeId : nodesId){
             temp = mHandShakeDB.getHandShakeHistoryWith(nodeId);
-            temp.cleanHandShakeEvents(weeks);
-            mHandShakeDB.updateHandShakeHistoryWith(nodeId,temp);
+            if(temp != null) {
+                temp.moveOldHandShakEventsToLog(hour);
+                mHandShakeDB.updateHandShakeHistoryWith(nodeId, temp);
+            }
         }
         return true;
     }
 
+
     /**
-     * Clear handshake history log.
+     * Delete handshake history log.
      * do it after handshake with the sever
      * @return
      */
-    public boolean clearHandShakeHistoryLog(){
+    public boolean deleteHandShakeHistoryLogInNodes(){
         ArrayList<UUID> nodesId = mHandShakeDB.getNodesIdList();
         HandShakeHistory temp;
         for (UUID nodeId : nodesId){
             temp = mHandShakeDB.getHandShakeHistoryWith(nodeId);
-            temp.clearHandShakeEventLog();
+            temp.deleteHandShakeEventLog();
             // if handshakeCounter is empty delete node from handshakdb;
             if(temp.getmHandShakeCounter() == 0)
                 mHandShakeDB.deleteNodeId(nodeId);
@@ -176,7 +180,7 @@ public class DataManager {
      * counter is 0 or not exist.
      * @return
      */
-    public boolean clearOldRelation(){
+    public boolean deleteOldRelation(){
 
         HashMap< Integer, ArrayList<UUID>> graphBFS =
                 mGraphRelations.bfs(mGraphRelations,mNodesDB.getMyNodeId());
@@ -198,9 +202,9 @@ public class DataManager {
 
 
     /**
-     * remove all the nodes in graph relation that not connected to the node when doing bfs max
+     * Delete all the nodes in graph relation and nodeDB that not connected to the node after doing bfs max
      */
-    public void removeAllSeparateNodesFromGraphRelation(){
+    public void deleteAllSeparateNodesFromGraphRelation(){
 
         HashMap< Integer, ArrayList<UUID>> graphBFS =
                 mGraphRelations.bfs(mGraphRelations,mNodesDB.getMyNodeId());
@@ -213,15 +217,18 @@ public class DataManager {
         // build arrayList of all node in graph relations
         ArrayList<UUID> uuidInGraphRelations = mGraphRelations.getNodesIdList();
 
-
         for(UUID uuid : uuidInGraphRelations){
-
             // if the arrayBfs not contain this node. delete it.
-            if( !uuidbfs.contains(uuid) )
+            if( !uuidbfs.contains(uuid) ) {
+                //delete node from graph relation
                 mGraphRelations.deleteNode(uuid);
+                // TODO in hte future don't delete  node that consider to be user's friends or nodes that sent msg to or received msg from this device
+                // delete node from nodeDB
+                mNodesDB.deleteNode(uuid);
+
+            }
         }
     }
-
 
     /**
      * go over all messages.

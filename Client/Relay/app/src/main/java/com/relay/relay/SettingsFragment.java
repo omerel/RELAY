@@ -301,7 +301,7 @@ public class SettingsFragment extends Fragment implements View.OnClickListener {
                         if (task.isSuccessful()) {
                             Log.d(TAG, "User account deleted.");
                             // delete all data base
-                            mDataManager.deleteAlldataManager();
+                            mDataManager.deleteAllDataManager();
                             // Start the Signup activity
                             Intent intent = new Intent(getContext(), SignupActivity.class);
                             startActivityForResult(intent, 1);

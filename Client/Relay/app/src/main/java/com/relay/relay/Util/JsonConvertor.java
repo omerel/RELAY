@@ -47,6 +47,13 @@ public class JsonConvertor {
         return map.get(CONTENT);
     }
 
+    public static Map<String,String> getJsonBody(String jsonString){
+        Gson gson = new Gson();
+        Type type = new TypeToken<Map<String,String>>(){}.getType();
+        Map<String,String> map = gson.fromJson(jsonString, type);
+        return map;
+    }
+
     public static DataTransferred.Metadata getMetadataFromJsonContent(String jsonString){
         String jsonMetadata = getJsonContent(jsonString);
         Gson gson = new Gson();

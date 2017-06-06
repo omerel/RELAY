@@ -444,7 +444,8 @@ public class MainActivity extends AppCompatActivity
                             } }).start();
                         break;
                     case FRESH_FRAGMENT:
-                        refreshFragment(mFragment);
+                        if (mIsInFront)
+                            refreshFragment(mFragment);
                         break;
                 }
 
@@ -559,8 +560,6 @@ public class MainActivity extends AppCompatActivity
             //Changing connection priority
             changePriority();
             Toast.makeText(this, "Connection priority has been changed", Toast.LENGTH_LONG).show();
-//            Snackbar.make(this.mContentView, " Changing connection priority " , Snackbar.LENGTH_SHORT)
-//                    .setAction("Action", null).show();
             mStatusBar.clear();
 
         }
