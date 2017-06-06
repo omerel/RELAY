@@ -496,7 +496,6 @@ public class RelayConnectivityManager extends Service implements BLConstants {
 
                 switch (action) {
                     case ConnectivityManager.CONNECTIVITY_ACTION:
-                        Log.e(TAG,"TEST TEST TEST TEST");
                         // Check if wifi connected and available
                         if (!isWifiAvailable()){
                             broadCastFlag(StatusBar.FLAG_WIFI_OFF,TAG+": Wifi turned off ");

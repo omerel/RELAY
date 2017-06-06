@@ -27,6 +27,8 @@ import com.android.volley.Response;
 import com.android.volley.Response.ErrorListener;
 import com.android.volley.Response.Listener;
 import com.android.volley.toolbox.HttpHeaderParser;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.google.gson.JsonObject;
 
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
@@ -35,9 +37,10 @@ import java.util.Map;
 /**
  * A canned request for retrieving the response body at a given URL as a String.
  */
-public class StringRequest extends Request<String>  implements NetworkConstants{
+public class StringRequest extends Request<String> implements NetworkConstants{
     private final Listener<String> mListener;
    // private String mJson;
+    private int mPutCommand;
     private Map<String, String>  mParams;
 
     /**

@@ -112,17 +112,17 @@ public class Test {
                 node = new Node(UUID.fromString(userUUID), oldCalendarTime,oldCalendarTime,
                         2,email,"N/A","Avi","Avi Cohen", pic,0,oldCalendarTime);
                 break;
-            case "shir@relay.com":
-                drawable = context.getResources().getDrawable(R.drawable.ic_demo_suzan);
+            case "Rachael@relay.com":
+                drawable = context.getResources().getDrawable(R.drawable.ic_demo_dana);
                 pic = ImageConverter.ConvertBitmapToBytes(((BitmapDrawable)drawable).getBitmap());
                 node = new Node(UUID.fromString(userUUID), oldCalendarTime,oldCalendarTime,
-                        2,email,"N/A","Shir","Shir Vilner", pic,0,oldCalendarTime);
+                        2,email,"N/A","Rachael","Rachael Murphy", pic,0,oldCalendarTime);
                 break;
-            case "sivan@relay.com":
+            case "adi@relay.com":
                 drawable = context.getResources().getDrawable(R.drawable.ic_demo_sivan);
                 pic = ImageConverter.ConvertBitmapToBytes(((BitmapDrawable)drawable).getBitmap());
                 node = new Node(UUID.fromString(userUUID), oldCalendarTime,oldCalendarTime,
-                        2,email,"+97258456971","Sivan","Sivan Wiseman", pic,0,oldCalendarTime);
+                        2,email,"+97258456971","Adi","Adi Sachi", pic,0,oldCalendarTime);
                 break;
             case "gal@relay.com":
                 drawable = context.getResources().getDrawable(R.drawable.ic_demo_gal);

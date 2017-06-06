@@ -39,7 +39,6 @@ public class HandShake implements BLConstants {
 
     private final String TAG = "RELAY_DEBUG: "+ HandShake.class.getSimpleName();;
 
-    final String FORMATTER_DATE = "yyyyMMddHHmmss";
 
     // commands
     private final int STEP_1_METADATA = 1;
@@ -789,11 +788,6 @@ public class HandShake implements BLConstants {
         mBluetoothConnected.cancel();
     }
 
-    private String convertCalendarToFormattedString(Calendar cal){
-
-        DateFormat date = new SimpleDateFormat(FORMATTER_DATE);
-        return (date.format(cal.getTime()));
-    }
 
 
 }

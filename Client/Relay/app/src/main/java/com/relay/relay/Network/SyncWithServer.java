@@ -6,10 +6,13 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
 
+import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.gson.JsonObject;
 import com.relay.relay.SubSystem.DataManager;
 import com.relay.relay.SubSystem.RelayConnectivityManager;
 import com.relay.relay.Util.DataTransferred;
@@ -17,7 +20,10 @@ import com.relay.relay.Util.JsonConvertor;
 import com.relay.relay.system.Node;
 import com.relay.relay.system.RelayMessage;
 
+import org.json.JSONObject;
+
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -70,6 +76,7 @@ public class SyncWithServer implements NetworkConstants{
             @Override
             public void onResponse(String response) {
                 mJson = response;
+                Log.e(TAG,"THE RESPONSE IS :"+response);
                 switch (mStatus){
                     // test
                     case -1:
@@ -160,13 +167,29 @@ public class SyncWithServer implements NetworkConstants{
         }
     }
     private void test(){
-        String s = "{ mId: '592e5be1038c0baa59bae8d7', mTimeStampRankFromServer: '2017-05-31T06:00:01.233Z', mFullName: 'The Omer', mUserName: 'Omer', mPhoneNumber: '050-5050505', mEmail: 'a@relay.com', mRank: '2' }";
+
+        String s = "{ mId: 592e5be1038c0baa59bae8d7, mTimeStampRankFromServer: 2017-05-31T06:00:01.233Z, mFullName: The Omer, mUserName: Omer, mPhoneNumber: 050-5050505, mEmail: a@relay.com, mRank: 2 }";
+
+        String s1 = "{ mId: '592e5be1038c0baa59bae8d7', mTimeStampRankFromServer: '2017-05-31T06:00:01.233Z', mFullName: 'The Dude', mUserName: 'Dude', mPhoneNumber: '050-5050505', mEmail: 'a@relay.com', mRank: '2' }";
+
+        String s2 = "{\"mId\": \"592e5be1038c0baa59bae8d7\",\n" +
+                "\t\t\"mTimeStampRankFromServer\": \"2017-05-31T06:00:01.233Z\",\n" +
+                "\t\t\"mFullName\": \"The Dude\",\n" +
+                "\t\t\"mUserName\": \"Dude 3\",\n" +
+                "\t\t\"mPhoneNumber\": \"050-5050505\",\n" +
+                "\t\t\"mEmail\": \"a@relay.com\",\n" +
+                "\t\t\"mRank\": \"2\"}";
+        UUID uuid =  UUID.randomUUID();
+        Node node = new Node(uuid, Calendar.getInstance(),Calendar.getInstance(),
+                2,"bobo@gmail.com","+97258456971","Sivan","Sivan Wiseman", null,0,Calendar.getInstance());
 
         Map<String, String> par = new HashMap<String, String>();
-        par.put("node",s);
+        par.put("node",JsonConvertor.convertToJson(node));
+       // par.put("node",s2);
         mStringRequest = new StringRequest(RELAY_URL+NODE+"592e5be1038c0baa59bae8d7",mListener,mErrorListener,par);
         mQueue.add(mStringRequest);
         Log.e(TAG, "create  mStringRequest");
+
     }
 
 
