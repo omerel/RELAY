@@ -325,7 +325,8 @@ public class ConversationActivity extends AppCompatActivity implements View.OnCl
             if (loadedBitmap != null) {
                 RelayMessage newMessage = new RelayMessage(
                         mDataManager.getNodesDB().getMyNodeId(), UUID.fromString(destination), RelayMessage.TYPE_MESSAGE_INCLUDE_ATTACHMENT,
-                        content,ImageConverter.ConvertBitmapToBytes(loadedBitmap));
+                        " "+content,ImageConverter.ConvertBitmapToBytes(loadedBitmap));
+                // the " " is must. to divide between old message to a message with only image. see InboxDb- method updateinboxDB line91
                 mDataManager.getMessagesDB().addMessage(newMessage);
                 requestForSearch();
             }

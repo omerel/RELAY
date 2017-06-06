@@ -280,7 +280,8 @@ public class ComposeMessageActivity extends AppCompatActivity implements View.On
 
                         RelayMessage newMessage = new RelayMessage(
                                 uuidSender, uuidDestination, RelayMessage.TYPE_MESSAGE_INCLUDE_ATTACHMENT,
-                                message, ImageConverter.ConvertBitmapToBytes(loadedBitmap));
+                                " "+message, ImageConverter.ConvertBitmapToBytes(loadedBitmap));
+                        // the " " is must. to divide between old message to a message with only image. see InboxDb- method updateinboxDB line91
                         mDataManager.getMessagesDB().addMessage(newMessage);
                         requestForSearch();
                     }

@@ -316,6 +316,7 @@ public class BLManager extends Thread implements BLConstants {
         // Open server socket if not already connected
         if (mStatus != CONNECTED && mStatus != CONNECTING) {
 
+            Log.e(TAG,"mBluetoothServer.isWaitingToAccept() : "+mBluetoothServer.isWaitingToAccept());
             if (!mBluetoothServer.isWaitingToAccept()){
                 try {
                     if (bluetoothSocket != null)

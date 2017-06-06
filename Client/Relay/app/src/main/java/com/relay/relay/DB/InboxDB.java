@@ -91,7 +91,7 @@ public class InboxDB {
         // in case of user recover, ignore a message that I sent or got that it status is delivered
         if(relayMessage.getStatus() == RelayMessage.STATUS_MESSAGE_DELIVERED &&
                 relayMessage.getContent().equals("") &&
-                relayMessage.getAttachment() == null )
+                relayMessage.getAttachment() == null)
             return false;
 
         /// check first if I'm the sender or the destination . in other words, if to to put the msg in the inbox
