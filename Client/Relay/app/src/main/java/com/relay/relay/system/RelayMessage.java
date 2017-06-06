@@ -3,6 +3,7 @@ package com.relay.relay.system;
 import android.graphics.Bitmap;
 
 import com.relay.relay.Util.ImageConverter;
+import com.relay.relay.Util.TimeConverter;
 
 import java.io.InputStream;
 import java.util.Calendar;
@@ -25,7 +26,7 @@ public class RelayMessage {
     public static int TYPE_MESSAGE_INCLUDE_ATTACHMENT = 12;
 
     private UUID mId;
-    private Calendar mTimeCreated;
+    private String mTimeCreated;
     private int mStatus;
     private UUID mSenderId;
     private UUID mDestinationId;
@@ -44,7 +45,7 @@ public class RelayMessage {
 
         this.mId = UUID.randomUUID(); // TODO check if is it the right generator
         this.mStatus = STATUS_MESSAGE_CREATED;
-        this.mTimeCreated = Calendar.getInstance();
+        this.mTimeCreated = TimeConverter.convertCalendarToFormattedDateString(Calendar.getInstance());
         this.mSenderId = mSenderId;
         this.mDestinationId = mDestinationId;
         this.mType = mType;
@@ -65,7 +66,7 @@ public class RelayMessage {
      * @return
      */
     public Calendar getTimeCreated() {
-        return mTimeCreated;
+        return TimeConverter.convertDateStringToFormattedCalendar(mTimeCreated);
     }
 
     /**

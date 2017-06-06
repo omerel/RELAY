@@ -132,18 +132,18 @@ public class DataTransferred {
      */
     public class KnownRelations{
         private UUID nodeId;
-        private Calendar timeStampNodeDetails;
-        private Calendar timeStampNodeRelations;
-        private Calendar timeStampRankFromServer;
+        private String timeStampNodeDetails;
+        private String timeStampNodeRelations;
+        private String timeStampRankFromServer;
         private int nodeDegree;
         private int rank;
 
         public KnownRelations(UUID nodeId, Calendar timeStampNodeDetails,
                               Calendar timeStampNodeRelations, int nodeDegree,int rank,Calendar timeStampRankFromServer){
             this.nodeId = nodeId;
-            this.timeStampNodeDetails = timeStampNodeDetails;
-            this.timeStampNodeRelations = timeStampNodeRelations;
-            this.timeStampRankFromServer = timeStampRankFromServer;
+            this.timeStampNodeDetails = TimeConverter.convertCalendarToFormattedDateString(timeStampNodeDetails);
+            this.timeStampNodeRelations = TimeConverter.convertCalendarToFormattedDateString(timeStampNodeRelations);
+            this.timeStampRankFromServer = TimeConverter.convertCalendarToFormattedDateString(timeStampRankFromServer);
             this.nodeDegree = nodeDegree;
             this.rank = rank;
         }
@@ -157,14 +157,14 @@ public class DataTransferred {
         }
 
         public Calendar getTimeStampNodeDetails() {
-            return timeStampNodeDetails;
+            return TimeConverter.convertDateStringToFormattedCalendar(timeStampNodeDetails);
         }
 
         public Calendar getTimeStampNodeRelations() {
-            return timeStampNodeRelations;
+            return TimeConverter.convertDateStringToFormattedCalendar(timeStampNodeRelations);
         }
 
-        public Calendar getTimeStampRankFromServer(){return timeStampRankFromServer;}
+        public Calendar getTimeStampRankFromServer(){return TimeConverter.convertDateStringToFormattedCalendar(timeStampRankFromServer);}
 
         public int getNodeDegree() {
             return nodeDegree;
@@ -197,13 +197,13 @@ public class DataTransferred {
      */
     public class NodeRelations{
         private UUID nodeId;
-        private Calendar timeStampNodeRelations;
+        private String timeStampNodeRelations;
         private ArrayList<UUID> relations;
 
         public NodeRelations(UUID nodeId, Calendar timeStampNodeRelations,
                              ArrayList<UUID> relations) {
             this.nodeId = nodeId;
-            this.timeStampNodeRelations = timeStampNodeRelations;
+            this.timeStampNodeRelations = TimeConverter.convertCalendarToFormattedDateString(timeStampNodeRelations);
             this.relations = relations;
         }
 
@@ -212,7 +212,7 @@ public class DataTransferred {
         }
 
         public Calendar getTimeStampNodeRelations() {
-            return timeStampNodeRelations;
+            return TimeConverter.convertDateStringToFormattedCalendar(timeStampNodeRelations);
         }
 
         public ArrayList<UUID> getRelations() {

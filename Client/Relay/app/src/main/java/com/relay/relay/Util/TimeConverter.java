@@ -13,7 +13,7 @@ import java.util.Locale;
 
 public class TimeConverter {
 
-   public static final String FORMATTER_DATE = "yyyy-MM-dd-'T'HH:mm:ss.SSSS'Z'";
+   public static final String FORMATTER_DATE = "yyyy-MM-dd'T'HH:mm:ss.SSSS'Z'";
 
     public static String convertCalendarToFormattedDateString(Calendar cal){
 
@@ -21,7 +21,7 @@ public class TimeConverter {
         return (date.format(cal.getTime()));
     }
     public static Calendar convertDateStringToFormattedCalendar(String stringDate){
-        DateFormat format = new SimpleDateFormat("FORMATTER_DATE", Locale.ENGLISH);
+        DateFormat format = new SimpleDateFormat(FORMATTER_DATE);
         Date date = null;
         try {
             date = format.parse(stringDate);

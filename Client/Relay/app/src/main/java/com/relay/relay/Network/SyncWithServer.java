@@ -186,7 +186,7 @@ public class SyncWithServer implements NetworkConstants{
         Map<String, String> par = new HashMap<String, String>();
         par.put("node",JsonConvertor.convertToJson(node));
        // par.put("node",s2);
-        mStringRequest = new StringRequest(RELAY_URL+NODE+"592e5be1038c0baa59bae8d7",mListener,mErrorListener,par);
+        mStringRequest = new StringRequest(RELAY_URL+NODE+uuid,mListener,mErrorListener,par);
         mQueue.add(mStringRequest);
         Log.e(TAG, "create  mStringRequest");
 

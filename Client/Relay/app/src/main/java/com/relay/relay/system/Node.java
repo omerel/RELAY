@@ -3,6 +3,7 @@ package com.relay.relay.system;
 import android.graphics.Bitmap;
 
 import com.relay.relay.Util.ImageConverter;
+import com.relay.relay.Util.TimeConverter;
 
 import java.io.InputStream;
 import java.util.Calendar;
@@ -16,9 +17,9 @@ import java.util.UUID;
 public class Node {
 
     private UUID mId;
-    private Calendar mTimeStampNodeDetails;
-    private Calendar mTimeStampNodeRelations;
-    private Calendar mTimeStampRankFromServer;
+    private String mTimeStampNodeDetails;
+    private String mTimeStampNodeRelations;
+    private String mTimeStampRankFromServer;
     private int mRank;
     private String mEmail;
     private String mPhoneNumber;
@@ -44,8 +45,8 @@ public class Node {
                 String mEmail, String mPhoneNumber, String mUserName, String mFullName,
                 byte[] profilePicture, int mResidenceCode,Calendar mTimeStampRankFromServer) {
         this.mId = mId;
-        this.mTimeStampNodeDetails = mTimeStampNodeDetails;
-        this.mTimeStampNodeRelations = mTimeStampNodeRelations;
+        this.mTimeStampNodeDetails = TimeConverter.convertCalendarToFormattedDateString(mTimeStampNodeDetails);
+        this.mTimeStampNodeRelations = TimeConverter.convertCalendarToFormattedDateString(mTimeStampNodeRelations);
         this.mRank = mRank;
         this.mEmail = mEmail;
         this.mPhoneNumber = mPhoneNumber;
@@ -53,7 +54,7 @@ public class Node {
         this.mFullName = mFullName;
         this.mProfilePicture = profilePicture;
         this.mResidenceCode = mResidenceCode;
-        this.mTimeStampRankFromServer = mTimeStampRankFromServer;
+        this.mTimeStampRankFromServer = TimeConverter.convertCalendarToFormattedDateString(mTimeStampRankFromServer);
     }
 
     /**
@@ -69,7 +70,7 @@ public class Node {
      * @return
      */
     public Calendar getTimeStampNodeDetails() {
-        return mTimeStampNodeDetails;
+        return TimeConverter.convertDateStringToFormattedCalendar(mTimeStampNodeDetails);
     }
 
     /**
@@ -77,7 +78,7 @@ public class Node {
      * @param mTimeStampNodeDetails
      */
     public void setTimeStampNodeDetails(Calendar mTimeStampNodeDetails) {
-        this.mTimeStampNodeDetails = mTimeStampNodeDetails;
+        this.mTimeStampNodeDetails = TimeConverter.convertCalendarToFormattedDateString(mTimeStampNodeDetails);
     }
 
     /**
@@ -85,7 +86,7 @@ public class Node {
      * @return
      */
     public Calendar getTimeStampNodeRelations() {
-        return mTimeStampNodeRelations;
+        return TimeConverter.convertDateStringToFormattedCalendar(mTimeStampNodeRelations);
     }
 
     /**
@@ -93,15 +94,15 @@ public class Node {
      * @param mTimeStampNodeRelations
      */
     public void setTimeStampNodeRelations(Calendar mTimeStampNodeRelations) {
-        this.mTimeStampNodeRelations = mTimeStampNodeRelations;
+        this.mTimeStampNodeRelations = TimeConverter.convertCalendarToFormattedDateString(mTimeStampNodeRelations);
     }
 
     public Calendar getTimeStampRankFromServer() {
-        return mTimeStampRankFromServer;
+        return TimeConverter.convertDateStringToFormattedCalendar(mTimeStampRankFromServer);
     }
 
     public void setTimeStampRankFromServer(Calendar mTimeStampRankFromServer) {
-        this.mTimeStampRankFromServer = mTimeStampRankFromServer;
+        this.mTimeStampRankFromServer = TimeConverter.convertCalendarToFormattedDateString(mTimeStampRankFromServer);
     }
 
     /**
