@@ -288,7 +288,7 @@ public class HandShake implements BLConstants {
                         // check content in case its a message that I received again after i recover my user
                         if (destId.equals(mMyNode.getId()) && !relayMessage.getContent().equals("")) {
                             step=14;//14
-                            String msg = "@"+receivedMetadata.getMyNode().getUserName()+DELIMITER+relayMessage.getContent();
+                            String msg = "New message "+DELIMITER+relayMessage.getContent();
                             sendMessageToManager(NEW_RELAY_MESSAGE, msg);
                         }
                     }
@@ -372,7 +372,7 @@ public class HandShake implements BLConstants {
                     step=13;//13
                     if (destId.equals(mMyNode.getId())) {
                         step=14;//14
-                        String msg = "@"+receivedMetadata.getMyNode().getUserName()+DELIMITER+"Received image";
+                        String msg = "New message"+DELIMITER+"Received image";
                         sendMessageToManager(NEW_RELAY_MESSAGE, msg);
                     }
                     Log.e(TAG, "ACK object message");

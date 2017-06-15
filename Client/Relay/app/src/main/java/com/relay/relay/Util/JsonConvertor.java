@@ -101,6 +101,18 @@ public class JsonConvertor {
         return gson.fromJson(jsonString, type);
     }
 
+    public static Map<UUID,DataTransferred.KnownRelations> getKnownRelationsFromJsonContent(String jsonString){
+        Gson gson = new Gson();
+        Type type = new TypeToken<Map<UUID,DataTransferred.KnownRelations>>(){}.getType();
+        return gson.fromJson(jsonString, type);
+    }
+
+    public static Map<UUID,DataTransferred.KnownMessage> getKnownMessageFromJsonContent(String jsonString){
+        Gson gson = new Gson();
+        Type type = new TypeToken<Map<UUID,DataTransferred.KnownMessage>>(){}.getType();
+        return gson.fromJson(jsonString, type);
+    }
+
     public static Integer JsonToInt(String jsonString){
         Gson gson = new Gson();
         Type type = new TypeToken<Integer>(){}.getType();
