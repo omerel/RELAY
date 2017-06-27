@@ -23,8 +23,6 @@ public class JsonConvertor {
     final static int CONTENT = 2;
 
     public static String createJsonWithCommand(int command,String jsonContent){
-//        if ( jsonContent == null )
-//            return null;
         Map<Integer,String> map = new HashMap<>();
         map.put(COMMAND,String.valueOf(command));
         map.put(CONTENT,jsonContent);
