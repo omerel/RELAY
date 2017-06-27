@@ -23,8 +23,6 @@ public class JsonConvertor {
     final static int CONTENT = 2;
 
     public static String createJsonWithCommand(int command,String jsonContent){
-//        if ( jsonContent == null )
-//            return null;
         Map<Integer,String> map = new HashMap<>();
         map.put(COMMAND,String.valueOf(command));
         map.put(CONTENT,jsonContent);
@@ -98,6 +96,18 @@ public class JsonConvertor {
     public static ArrayList<UUID> JsonToUUIDArrayList(String jsonString){
         Gson gson = new Gson();
         Type type = new TypeToken<ArrayList<UUID>>(){}.getType();
+        return gson.fromJson(jsonString, type);
+    }
+
+    public static Map<UUID,DataTransferred.KnownRelations> getKnownRelationsFromJsonContent(String jsonString){
+        Gson gson = new Gson();
+        Type type = new TypeToken<Map<UUID,DataTransferred.KnownRelations>>(){}.getType();
+        return gson.fromJson(jsonString, type);
+    }
+
+    public static Map<UUID,DataTransferred.KnownMessage> getKnownMessageFromJsonContent(String jsonString){
+        Gson gson = new Gson();
+        Type type = new TypeToken<Map<UUID,DataTransferred.KnownMessage>>(){}.getType();
         return gson.fromJson(jsonString, type);
     }
 

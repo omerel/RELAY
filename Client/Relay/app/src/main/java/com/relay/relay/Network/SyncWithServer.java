@@ -17,6 +17,8 @@ import com.relay.relay.Util.JsonConvertor;
 import com.relay.relay.system.Node;
 import com.relay.relay.system.RelayMessage;
 
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -42,11 +44,9 @@ public class SyncWithServer implements NetworkConstants{
     private Response.ErrorListener mErrorListener;
     private DataTransferred mDataTransferred;
     private int mStatus;
-    private String mJson;
     private int mStep;
 
     private DataTransferred.Metadata metadata;
-    private  DataTransferred.Metadata receivedMetadata;
     private Map<UUID,DataTransferred.KnownMessage> receivedKnownMessage;
     private ArrayList<RelayMessage> updateMessages;
     private DataTransferred.UpdateNodeAndRelations updateNodeAndRelations;
@@ -70,22 +70,31 @@ public class SyncWithServer implements NetworkConstants{
         this.mListener = new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
-                mJson = response;
-
+                JSONObject obj;
                 switch (mStatus){
                     //received metadata from server
                     case STEP_1_META_DATA:
                         sendMessageToManager(RESPONSE," received metadata from server");
-                        receivedMetadata = JsonConvertor.getMetadataFromJsonContent(mJson);
-                        receivedKnownMessage = receivedMetadata.getKnownMessagesList();
-                        receivedKnownRelations = receivedMetadata.getKnownRelationsList();
-                        updateMessages = updateMessagesAndCreateMessagesListToSend();
-                        updateNodeAndRelations = createUpdateNodeAndRelations();
-                        mStep++;
-                        goToSyncStep(mStep);
+                        try {
+                            obj = new JSONObject(response);
+                            receivedKnownMessage = JsonConvertor.getKnownMessageFromJsonContent(obj.get("knownRelationsList").toString());
+                            receivedKnownRelations = JsonConvertor.getKnownRelationsFromJsonContent(obj.get("knownRelationsList").toString());
+                            updateMessages = updateMessagesAndCreateMessagesListToSend();
+                            updateNodeAndRelations = createUpdateNodeAndRelations();
+                            mStep++;
+                            goToSyncStep(mStep);
+
+                        } catch (Exception ex){
+                            Log.e(TAG, "Error while manging STEP_1_META_DATA");
+                            sendMessageToManager(ERROR_WHILE_SYNC,""+"Error while manging STEP_1_META_DATA");
+                            stopSync();
+                        } catch (Throwable t) {
+                            Log.e(TAG, "Could not parse malformed JSON: \"" + t.getMessage() + "\"");
+                        }
+
                         break;
                     case STEP_2_BODY:
-                        HashMap<String,String> body = (HashMap<String, String>) JsonConvertor.getJsonBody(mJson);
+                        HashMap<String,String> body = (HashMap<String, String>) JsonConvertor.getJsonBody(response);
                         sendMessageToManager(RESPONSE," received body from server");
                         // update node and relations
                         receivedUpdateNodeAndRelations = JsonConvertor.getUpdateNodeAndRelationsFromJsonContent(body.get("updateNodeAndRelations"));
@@ -100,7 +109,7 @@ public class SyncWithServer implements NetworkConstants{
                             UUID destId = relayMessage.getDestinationId();
                             // check content in case its a message that I received again after i recover my user
                             if (destId.equals(mDataManager.getMyUuid()) && !relayMessage.getContent().equals("")) {
-                                String msg = "@"+receivedMetadata.getMyNode().getUserName()+DELIMITER+relayMessage.getContent();
+                                String msg = "New message "+DELIMITER+relayMessage.getContent();
                                 sendMessageToManager(NEW_RELAY_MESSAGE, msg);
                             }
                         }
